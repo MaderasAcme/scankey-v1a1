@@ -79,7 +79,7 @@ const STORAGE_KEY_PENDING_FEEDBACK = "scankey_pending_feedback_v1";
 const MOTOR_BASE = "https://classify-llaves-2apb4vvlhq-ew.a.run.app";
 const API_ANALYZE = `${MOTOR_BASE}/api/analyze-key`;
 const API_FEEDBACK = `${MOTOR_BASE}/api/feedback`;
-const API_HEALTH = `${MOTOR_BASE}/api/health`;
+const API_HEALTH = `${MOTOR_BASE}/health`;
 
 // =====================
 // Storage helpers
