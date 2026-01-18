@@ -48,3 +48,7 @@ SANDBOX/
 ARCHIVE/
 _root_junk_*
 _git_mistakes/
+
+# Base44 exports (nunca versionar)
+backup-base44/
+*.base44.app/

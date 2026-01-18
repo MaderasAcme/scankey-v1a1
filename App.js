@@ -339,10 +339,9 @@ async function postAnalyzeReal(frontUri, backUri, modoTaller, onAttempt) {
   const fd = new FormData();
 
   await appendFileToFormData(fd, "front", frontUri, "front.jpg");
-  await appendFileToFormData(fd, "back", backUri, "back.jpg");
+  if (backUri) await appendFileToFormData(fd, "back", backUri, "back.jpg");
   await appendFileToFormData(fd, "image_front", frontUri, "front.jpg");
-  await appendFileToFormData(fd, "image_back", backUri, "back.jpg");
-
+  if (backUri) await appendFileToFormData(fd, "image_back", backUri, "back.jpg");
   fd.append("source", "app");
   fd.append("modo_taller", String(!!modoTaller));
 
