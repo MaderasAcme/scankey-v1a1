@@ -1,33 +1,33 @@
 steps:
-  - name: 'gcr.io/cloud-builders/docker'
+  - name: "gcr.io/cloud-builders/docker"
     args:
-      - build
-      - -t
-      - europe-west1-docker.pkg.dev/$PROJECT_ID/scankey-repo/scankey-v1a1-backend:$SHORT_SHA
-      - -f
-      - backend/Dockerfile
-      - backend
+      - "build"
+      - "-t"
+      - "europe-west1-docker.pkg.dev/$PROJECT_ID/scankey-repo/scankey-v1a1-backend:$SHORT_SHA"
+      - "-f"
+      - "Dockerfile"
+      - "."
 
-  - name: 'gcr.io/cloud-builders/docker'
+  - name: "gcr.io/cloud-builders/docker"
     args:
-      - push
-      - europe-west1-docker.pkg.dev/$PROJECT_ID/scankey-repo/scankey-v1a1-backend:$SHORT_SHA
+      - "push"
+      - "europe-west1-docker.pkg.dev/$PROJECT_ID/scankey-repo/scankey-v1a1-backend:$SHORT_SHA"
 
-  - name: 'gcr.io/cloud-builders/gcloud'
+  - name: "gcr.io/cloud-builders/gcloud"
     args:
-      - run
-      - deploy
-      - scankey-v1a1-backend
-      - --image
-      - europe-west1-docker.pkg.dev/$PROJECT_ID/scankey-repo/scankey-v1a1-backend:$SHORT_SHA
-      - --region
-      - europe-southwest1
-      - --allow-unauthenticated
-      - --port
+      - "run"
+      - "deploy"
+      - "scankey-v1a1-backend"
+      - "--image"
+      - "europe-west1-docker.pkg.dev/$PROJECT_ID/scankey-repo/scankey-v1a1-backend:$SHORT_SHA"
+      - "--region"
+      - "europe-southwest1"
+      - "--allow-unauthenticated"
+      - "--port"
       - "8080"
 
 images:
-  - europe-west1-docker.pkg.dev/$PROJECT_ID/scankey-repo/scankey-v1a1-backend:$SHORT_SHA
+  - "europe-west1-docker.pkg.dev/$PROJECT_ID/scankey-repo/scankey-v1a1-backend:$SHORT_SHA"
 
 options:
   logging: CLOUD_LOGGING_ONLY
