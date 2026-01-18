@@ -1,0 +1,40 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [ "main" ]
+
+jobs:
+  sanity:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Node setup
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Install JS deps (if package.json exists)
+        run: |
+          if [ -f package.json ]; then
+            if [ -f package-lock.json ]; then npm ci; else npm install; fi
+            npm run lint --if-present
+            npm run test --if-present
+          else
+            echo "No package.json at repo root; skipping JS."
+          fi
+
+      - name: Python syntax check (backend)
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Compile backend (syntax)
+        run: |
+          if [ -d backend ]; then
+            python -m compileall backend
+          else
+            echo "No backend/ folder; skipping."
+          fi
