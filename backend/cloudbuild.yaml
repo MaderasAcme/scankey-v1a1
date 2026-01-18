@@ -1,7 +1,4 @@
 steps:
-  - name: gcr.io/cloud-builders/docker
-    args: ["build","-t","europe-southwest1-docker.pkg.dev/scankey-dc007/scankey-docker/scankey-ocr:latest","."]
-  - name: gcr.io/cloud-builders/docker
-    args: ["push","europe-southwest1-docker.pkg.dev/scankey-dc007/scankey-docker/scankey-ocr:latest"]
-images:
-  - "europe-southwest1-docker.pkg.dev/scankey-dc007/scankey-docker/scankey-ocr:latest"
+- name: 'gcr.io/cloud-builders/gcloud'
+  entrypoint: 'bash'
+  args: ['-lc', 'echo "OK: cloudbuild wired (placeholder)"']
