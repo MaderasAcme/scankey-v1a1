@@ -167,3 +167,7 @@ def ocr_image_bytes(image_bytes: bytes, lang: str = "spa+eng", profile: str = "k
             "best": {k: out.get(k) for k in ["variant", "psm", "lang", "score"]},
         },
     }
+
+# Compatibilidad: lo que main.py esperaba
+def run_ocr(image_bytes: bytes, lang: str = "spa+eng", profile: str = "key"):
+    return ocr_image_bytes(image_bytes=image_bytes, lang=lang, profile=profile)
