@@ -2264,6 +2264,7 @@ function NativeApp() {
   );
 }
 
+}
 export default function App() {
   if (Platform.OS === "web") return <WebShell />;
   return <NativeApp />;
