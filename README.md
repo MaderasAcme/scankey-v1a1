@@ -12,3 +12,4 @@ cd scankey-v1a1
 npm i
 npx expo start
 ```
+
