@@ -114,5 +114,74 @@ Eso solo inspecciona y te dice ✅/⚠️/❌.
 - I2) Registro inmutable de eventos (hash chain).
 - I3) Señales de “posible llave sensible” → workflow seguro.
 
+
+### Megafactory — backlog “sin toque humano” (añadido completo)
+
+> Regla de oro: automatizar **ingest → QC → dataset → train → eval → release → monitor**.
+> Lo único no 100% automático: **captura real** y **verificaciones sensibles** (patentadas/identidad).
+
+#### A. Ingesta (entrada de datos)
+- A1) Canal de subida único (móvil/PC/bucket) + naming convention obligatorio.
+- A2) Inventario automático (lista + tamaño + hash SHA256) al entrar a RAW.
+- A3) Dedupe en RAW (mismo hash) y reporte de duplicados.
+- A4) Conversión automática HEIC→JPG (sin tocar el original; guardar “derivado”).
+- A5) Normalización de estructura: RAW/READY/BAD/{RECOVERABLE,AUX,DEAD} siempre presentes.
+
+#### B. QC automático (calidad antes de contaminar dataset)
+- B1) Blur/focus score + umbrales por tipo (serreta, tubular, etc.).
+- B2) Exposición (muy oscuro/quemado) + “recoverable” si se puede arreglar.
+- B3) Tamaño mínimo + ratio/orientación detectada (rechazo si inválido).
+- B4) Detector de “contenido basura” (pantallazos, memes, texto puro, etc.).
+- B5) Logs por imagen: motivo QC + métricas + timestamp + hash.
+
+#### C. Normalización y preprocesado (derivados reproducibles)
+- C1) Re-encode JPG estándar (calidad fija) y tamaño máximo controlado.
+- C2) Auto-rotate por EXIF; recorte leve opcional (sin inventar datos).
+- C3) Versionado de transformaciones: siempre conservar RAW intacto.
+- C4) Generar “preview” ligero para UI/inspección (sin usarlo para entrenar).
+
+#### D. Dataset builder (v2, v3…)
+- D1) Import READY → datasets/vX/REF/{A,B} por nombre (_A_/_B_) y/o matching.
+- D2) Dedupe dentro del dataset (hash) + diversidad mínima (evitar clones).
+- D3) Política por clase: mínimo **30A + 30B** para marcar “entrenable”.
+- D4) Balance y muestreo: evita sobre-representación de un taller/dispositivo.
+- D5) Split fijo train/val/test por hash (reproducible).
+
+#### E. Entrenamiento automático (pipeline reproducible)
+- E1) Entrenar solo si pasa gates (A/B mínimos + QC OK + splits OK).
+- E2) Config reproducible (seed, augmentations, input size, batch, epochs).
+- E3) Export automático a ONNX + .data + labels.json (artefactos completos).
+- E4) Guardar métricas y artefactos por versión (v2.0.0, v2.0.1…).
+- E5) “Early stop” y registro de curvas (loss/acc) para evitar overfit.
+
+#### F. Evaluación y “gates” (si no cumple, NO sale)
+- F1) Golden set fijo (no se toca) para evitar autoengaño.
+- F2) Métricas mínimas: top1/top3, confusión, recall por clase.
+- F3) Drift detector: alerta si baja rendimiento vs versión anterior.
+- F4) Robustez: test por condiciones (luz baja, reflejos, fondo, desgaste).
+- F5) Gate de “familias parecidas” (embedding/similitud) para evitar colisiones.
+
+#### G. Release automático (Cloud Run / GCS)
+- G1) Subida a GCS models/vX/ + checksum + manifest de versión.
+- G2) Deploy controlado (canary/rollout) + rollback instantáneo.
+- G3) Post-deploy verify: /health + /api/analyze-key + /api/ocr.
+- G4) Registro de “qué versión está en prod” (fuente única de verdad).
+
+#### H. Monitorización y operación
+- H1) Dashboard: colas RAW/READY/RECOVERABLE/DEAD + tiempos.
+- H2) Alertas: falta B, caída de calidad, drift, picos de tráfico.
+- H3) Auditoría: log por imagen (hash, timestamp, origen, QC, destino).
+
+#### I. Seguridad y abuso (automático)
+- I1) Rate limit + detección de patrones sospechosos (reintentos, scraping).
+- I2) Registro inmutable de eventos (hash-chain) para trazabilidad.
+- I3) Señales de “posible llave sensible” → workflow seguro (gated).
+
+#### J. Calidad de datos sin humanos (lo máximo posible)
+- J1) Score de “dataset health” por clase (diversidad, blur, exposición).
+- J2) Detectar duplicados “casi iguales” (aHash/pHash) a nivel dataset.
+- J3) Detectar mezcla accidental A/B (si el modelo lo infiere inconsistencias).
+- J4) Rechazo automático de datos que no aportan (redundancia alta).
+
 <!-- MEGAFACTORY_AUTOMATION_END -->
 
