@@ -52,3 +52,7 @@ _git_mistakes/
 # Base44 exports (nunca versionar)
 backup-base44/
 *.base44.app/
+
+__pycache__/
+backend/__pycache__/
+backend/modules/__pycache__/
