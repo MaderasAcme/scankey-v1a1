@@ -1,4 +1,8 @@
 from fastapi import FastAPI, UploadFile, File, Form
+try:
+    from .api_ocr import router as ocr_router
+except ImportError:
+    from api_ocr import router as ocr_router
 from fastapi.responses import JSONResponse
 import numpy as np
 import cv2
@@ -13,6 +17,9 @@ if run_ocr is None:
 
 
 app = FastAPI(title="ScanKey OCR Backend", version="v1")
+
+
+app.include_router(ocr_router)
 
 @app.get("/health")
 def health():
