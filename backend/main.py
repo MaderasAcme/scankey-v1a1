@@ -1,4 +1,6 @@
 from fastapi import FastAPI, UploadFile, File, Form
+from .api_similarity import router as similarity_router
+
 from fastapi.responses import JSONResponse
 import numpy as np
 import cv2
@@ -13,6 +15,9 @@ if run_ocr is None:
 
 
 app = FastAPI(title="ScanKey OCR Backend", version="v1")
+
+
+app.include_router(similarity_router)
 
 @app.get("/health")
 def health():
