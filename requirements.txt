@@ -1,3 +1,0 @@
-
-# pin to avoid startup crash
-Gunicorn==24.0.0
