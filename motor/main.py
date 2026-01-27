@@ -312,21 +312,39 @@ def _predict(img: Image.Image):
     return cands
 
 
-@app.post("/api/analyze-key")
-def analyze_key(front: UploadFile = File(...), back: UploadFile = File(None), modo: str | None = None):
-    raw = front.file.read()
-    if not raw:
-        raise HTTPException(400, "archivo vacío")
+@app.get("/debug/routes")
+def debug_routes():
+    return [{"path": r.path, "name": r.name, "methods": sorted(list(getattr(r, "methods", []) or []))} for r in app.router.routes]
+
+def _parse_gs(uri: str):
+    if not uri or not uri.startswith("gs://"):
+        return None, None
+    rest = uri[5:]
+    if "/" not in rest:
+        return None, None
+    b, o = rest.split("/", 1)
+    return b, o
+
+def _store_meta_sidecar(meta: dict, img_gcs_uri: str):
+    # Nunca rompe el request si falla
     try:
-        img = Image.open(BytesIO(raw))
-    except Exception:
-        raise HTTPException(400, "imagen inválida")
+        from google.cloud import storage
+        bucket, obj = _parse_gs(img_gcs_uri)
+        if not bucket or not obj:
+            return {"stored": False, "reason": "gcs_uri inválida"}
 
-    store = _maybe_store_sample_to_gcs(raw, getattr(front, "filename", "front.jpg"), modo)
+        # cambia extensión a .json
+        meta_obj = re.sub(r'\.(jpg|jpeg|png)$', '.json', obj, flags=re.I)
+        if meta_obj == obj:
+            meta_obj = obj + ".json"
 
-    cands = _predict(img)
-    return {"ok": True, "candidates": cands, "store": store}
-
+        client = storage.Client()
+        blob = client.bucket(bucket).blob(meta_obj)
+        payload = json.dumps(meta, ensure_ascii=False, separators=(",", ":"))
+        blob.upload_from_string(payload.encode("utf-8"), content_type="application/json")
+        return {"stored": True, "gcs_uri": f"gs://{bucket}/{meta_obj}"}
+    except Exception as e:
+        return {"stored": False, "reason": str(e)}
 
 @app.post("/api/analyze-key")
 def analyze_key(front: UploadFile = File(...), back: UploadFile = File(None), modo: str | None = None):
@@ -339,41 +357,27 @@ def analyze_key(front: UploadFile = File(...), back: UploadFile = File(None), mo
     except Exception:
         raise HTTPException(400, "imagen inválida")
 
-    store = _maybe_store_sample_to_gcs(data, getattr(front, "filename", "") or "front.jpg", modo)
-
-    cands = _predict(img)
-    return {"ok": True, "candidates": cands, "store": store}
-
-
-
-@app.post("/api/analyze-key")
-def analyze_key(front: UploadFile = File(...), back: UploadFile = File(None), modo: str | None = None):
-    data = front.file.read()
-    if not data:
-        raise HTTPException(400, "archivo vacío")
-
-    try:
-        img = Image.open(BytesIO(data)).convert("RGB")
-    except Exception:
-        raise HTTPException(400, "imagen inválida")
-
-    store = _maybe_store_sample_to_gcs(data, getattr(front, "filename", "") or "front.jpg", modo)
-
+    # 1) inferencia
     cands = _predict(img)
 
-    # Sidecar JSON SOLO si se guardó imagen (y nunca rompe)
-    if store.get("stored"):
+    # 2) store imagen (si modo=taller y flag activo)
+    store = _maybe_store_sample_to_gcs(data, getattr(front, "filename", "") or "front.jpg", modo)
+
+    # 3) sidecar JSON SOLO si imagen se guardó
+    if store.get("stored") and store.get("gcs_uri"):
         meta = {
             "ts_unix": int(time.time()),
             "ts_utc": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
             "modo": (modo or "").strip().lower(),
-            "candidates": cands,
-            "top_label": (cands[0]["label"] if cands else None),
-            "top_score": (cands[0]["score"] if cands else None),
             "img": {
                 "filename": (getattr(front, "filename", "") or "front.jpg"),
                 "bytes": len(data),
                 "sha256": hashlib.sha256(data).hexdigest(),
+            },
+            "result": {
+                "candidates": cands,
+                "top_label": (cands[0]["label"] if cands else None),
+                "top_score": (cands[0]["score"] if cands else None),
             },
             "runtime": {
                 "service": os.getenv("K_SERVICE", ""),
@@ -385,51 +389,7 @@ def analyze_key(front: UploadFile = File(...), back: UploadFile = File(None), mo
                 "labels_gcs_uri": os.getenv("LABELS_GCS_URI", ""),
             },
         }
-        store["meta"] = _maybe_store_meta_to_gcs(meta, store.get("gcs_uri", ""))
-
-    return {"ok": True, "candidates": cands, "store": store}
-
-
-@app.post("/api/analyze-key")
-def analyze_key(front: UploadFile = File(...), back: UploadFile = File(None), modo: str | None = None):
-    data = front.file.read()
-    if not data:
-        raise HTTPException(400, "archivo vacío")
-
-    try:
-        img = Image.open(BytesIO(data)).convert("RGB")
-    except Exception:
-        raise HTTPException(400, "imagen inválida")
-
-    store = _maybe_store_sample_to_gcs(data, getattr(front, "filename", "") or "front.jpg", modo)
-
-    cands = _predict(img)
-
-    # Sidecar JSON SOLO si se guardó imagen (y NUNCA rompe)
-    if store.get("stored"):
-        meta = {
-            "ts_unix": int(time.time()),
-            "ts_utc": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
-            "modo": (modo or "").strip().lower(),
-            "candidates": cands,
-            "top_label": (cands[0]["label"] if cands else None),
-            "top_score": (cands[0]["score"] if cands else None),
-            "img": {
-                "filename": (getattr(front, "filename", "") or "front.jpg"),
-                "bytes": len(data),
-                "sha256": hashlib.sha256(data).hexdigest(),
-            },
-            "runtime": {
-                "service": os.getenv("K_SERVICE", ""),
-                "revision": os.getenv("K_REVISION", ""),
-                "project": os.getenv("GOOGLE_CLOUD_PROJECT", ""),
-            },
-            "model": {
-                "model_gcs_uri": os.getenv("MODEL_GCS_URI", ""),
-                "labels_gcs_uri": os.getenv("LABELS_GCS_URI", ""),
-            },
-        }
-        store["meta"] = _maybe_store_meta_to_gcs(meta, store.get("gcs_uri", ""))
+        store["meta"] = _store_meta_sidecar(meta, store["gcs_uri"])
 
     return {"ok": True, "candidates": cands, "store": store}
 
