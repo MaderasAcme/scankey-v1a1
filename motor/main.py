@@ -391,5 +391,59 @@ def analyze_key(front: UploadFile = File(...), back: UploadFile = File(None), mo
         }
         store["meta"] = _store_meta_sidecar(meta, store["gcs_uri"])
 
+    # SCN_META_MIN_PATCH_V2
+    # Si hay sidecar meta en GCS, lo actualizamos con campos mínimos obligatorios.
+    try:
+        _w = _h = None
+        try:
+            from PIL import Image
+            from io import BytesIO
+            _w, _h = Image.open(BytesIO(data)).size
+        except Exception:
+            pass
+    
+        _sha = hashlib.sha256(data).hexdigest()
+        _rid = f"{int(time.time())}_{_sha[:10]}"
+        _meta_min = {
+            "meta_schema_v": 1,
+            "request_id": _rid,
+            "sha256_10": _sha[:10],
+            "width": _w,
+            "height": _h,
+            "top_label": (candidates[0].get("label") if candidates else None),
+            "top_score": (candidates[0].get("score") if candidates else None),
+        }
+    
+        _meta_uri = ""
+        try:
+            _meta_uri = ((store or {}).get("meta", {}) or {}).get("gcs_uri", "") or ""
+        except Exception:
+            _meta_uri = ""
+    
+        if isinstance(_meta_uri, str) and _meta_uri.startswith("gs://"):
+            # parse gs://bucket/object
+            _u = _meta_uri[5:]
+            _bkt = _u.split("/", 1)[0]
+            _obj = _u.split("/", 1)[1] if "/" in _u else ""
+            if _bkt and _obj:
+                try:
+                    from google.cloud import storage
+                    client = storage.Client()
+                    blob = client.bucket(_bkt).blob(_obj)
+                    try:
+                        cur_txt = blob.download_as_text()
+                        cur = json.loads(cur_txt) if cur_txt else {}
+                    except Exception:
+                        cur = {}
+                    cur.update(_meta_min)
+                    blob.upload_from_string(
+                        json.dumps(cur, ensure_ascii=False),
+                        content_type="application/json",
+                    )
+                except Exception:
+                    pass
+    except Exception:
+        pass
+
     return {"ok": True, "candidates": cands, "store": store}
 
