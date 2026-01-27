@@ -1,3 +1,5 @@
+import hashlib
+import re
 import os
 import time
 import json
@@ -31,6 +33,16 @@ _LABELS = None
 
 app = FastAPI()
 
+def _safe_name(name: str, max_len: int = 80) -> str:
+    name = (name or "front.jpg").strip()
+    out = []
+    for c in name:
+        if c.isalnum() or c in "._-":
+            out.append(c)
+        else:
+            out.append("_")
+    return ("".join(out)[:max_len]) or "front.jpg"
+
 def _maybe_store_sample_to_gcs(raw_bytes: bytes, filename_hint: str, modo: str | None):
     bucket_name = (os.getenv("GCS_BUCKET", "") or "").strip()
     if not bucket_name:
@@ -40,17 +52,61 @@ def _maybe_store_sample_to_gcs(raw_bytes: bytes, filename_hint: str, modo: str |
     if only_if_taller and (modo or "").strip().lower() != "taller":
         return {"stored": False, "reason": "STORE_ONLY_IF_MODO_TALLER=1 y modo!=taller"}
 
-    # path destino
+    prefix = (os.getenv("GCS_SAMPLES_PREFIX", "samples") or "samples").strip().strip("/")
+    safe = _safe_name(filename_hint or "front.jpg")
     ts = int(time.time())
-    safe = re.sub(r"[^a-zA-Z0-9_.-]+", "_", filename_hint or "front.jpg")
-    obj = f"samples/{ts}_{safe}"
+    obj = f"{prefix}/front_{ts}_{safe}"
+    gcs_uri = f"gs://{bucket_name}/{obj}"
 
-    client = storage.Client()
-    bucket = client.bucket(bucket_name)
-    blob = bucket.blob(obj)
-    blob.upload_from_string(raw_bytes, content_type="image/jpeg")
+    try:
+        client = storage.Client()
+        bucket = client.bucket(bucket_name)
+        blob = bucket.blob(obj)
+        blob.upload_from_string(raw_bytes, content_type="image/jpeg")
+        return {"stored": True, "gcs_uri": gcs_uri}
+    except Exception as e:
+        # CLAVE: no romper inferencia por fallo de storage
+        return {"stored": False, "reason": f"store_error: {type(e).__name__}: {e}", "gcs_uri": gcs_uri}
 
-    return {"stored": True, "gs_uri": f"gs://{bucket_name}/{obj}"}
+
+def _parse_gs_uri(uri: str):
+    if not uri or not uri.startswith("gs://"):
+        return None, None
+    rest = uri[5:]
+    if "/" not in rest:
+        return None, None
+    b, obj = rest.split("/", 1)
+    return b, obj
+
+def _maybe_store_meta_to_gcs(meta: dict, image_gcs_uri: str):
+    # Sidecar JSON junto a la imagen. Nunca debe romper la request.
+    try:
+        bucket_name, obj = _parse_gs_uri(image_gcs_uri)
+        if not bucket_name or not obj:
+            return {"stored": False, "reason": "image_gcs_uri inválida", "meta_uri": None}
+
+        # cambia extensión típica a .json (si no, añade .json)
+        meta_obj = obj
+        for ext in (".jpg", ".jpeg", ".png", ".webp"):
+            if meta_obj.lower().endswith(ext):
+                meta_obj = meta_obj[: -len(ext)] + ".json"
+                break
+        else:
+            meta_obj = meta_obj + ".json"
+
+        meta_uri = f"gs://{bucket_name}/{meta_obj}"
+
+        client = storage.Client()
+        bucket = client.bucket(bucket_name)
+        blob = bucket.blob(meta_obj)
+
+        payload = json.dumps(meta, ensure_ascii=False, separators=(",", ":"))
+        blob.upload_from_string(payload.encode("utf-8"), content_type="application/json")
+
+        return {"stored": True, "meta_uri": meta_uri}
+    except Exception as e:
+        return {"stored": False, "reason": f"meta_error: {type(e).__name__}: {e}", "meta_uri": None}
+
 
 
 def _labels_path() -> str:
@@ -258,17 +314,78 @@ def _predict(img: Image.Image):
 
 @app.post("/api/analyze-key")
 def analyze_key(front: UploadFile = File(...), back: UploadFile = File(None), modo: str | None = None):
+    raw = front.file.read()
+    if not raw:
+        raise HTTPException(400, "archivo vacío")
+    try:
+        img = Image.open(BytesIO(raw))
+    except Exception:
+        raise HTTPException(400, "imagen inválida")
+
+    store = _maybe_store_sample_to_gcs(raw, getattr(front, "filename", "front.jpg"), modo)
+
+    cands = _predict(img)
+    return {"ok": True, "candidates": cands, "store": store}
+
+
+@app.post("/api/analyze-key")
+def analyze_key(front: UploadFile = File(...), back: UploadFile = File(None), modo: str | None = None):
     data = front.file.read()
     if not data:
         raise HTTPException(400, "archivo vacío")
 
     try:
-        img = Image.open(BytesIO(data))
+        img = Image.open(BytesIO(data)).convert("RGB")
     except Exception:
         raise HTTPException(400, "imagen inválida")
 
+    store = _maybe_store_sample_to_gcs(data, getattr(front, "filename", "") or "front.jpg", modo)
+
     cands = _predict(img)
+    return {"ok": True, "candidates": cands, "store": store}
+
+
+
+@app.post("/api/analyze-key")
+def analyze_key(front: UploadFile = File(...), back: UploadFile = File(None), modo: str | None = None):
+    data = front.file.read()
+    if not data:
+        raise HTTPException(400, "archivo vacío")
+
+    try:
+        img = Image.open(BytesIO(data)).convert("RGB")
+    except Exception:
+        raise HTTPException(400, "imagen inválida")
 
     store = _maybe_store_sample_to_gcs(data, getattr(front, "filename", "") or "front.jpg", modo)
 
+    cands = _predict(img)
+
+    # Sidecar JSON SOLO si se guardó imagen (y nunca rompe)
+    if store.get("stored"):
+        meta = {
+            "ts_unix": int(time.time()),
+            "ts_utc": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+            "modo": (modo or "").strip().lower(),
+            "candidates": cands,
+            "top_label": (cands[0]["label"] if cands else None),
+            "top_score": (cands[0]["score"] if cands else None),
+            "img": {
+                "filename": (getattr(front, "filename", "") or "front.jpg"),
+                "bytes": len(data),
+                "sha256": hashlib.sha256(data).hexdigest(),
+            },
+            "runtime": {
+                "service": os.getenv("K_SERVICE", ""),
+                "revision": os.getenv("K_REVISION", ""),
+                "project": os.getenv("GOOGLE_CLOUD_PROJECT", ""),
+            },
+            "model": {
+                "model_gcs_uri": os.getenv("MODEL_GCS_URI", ""),
+                "labels_gcs_uri": os.getenv("LABELS_GCS_URI", ""),
+            },
+        }
+        store["meta"] = _maybe_store_meta_to_gcs(meta, store.get("gcs_uri", ""))
+
     return {"ok": True, "candidates": cands, "store": store}
+
