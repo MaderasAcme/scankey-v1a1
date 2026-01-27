@@ -5,6 +5,7 @@ import threading
 from io import BytesIO
 
 import numpy as np
+from google.cloud import storage
 import onnxruntime as ort
 from PIL import Image
 from fastapi import FastAPI, UploadFile, File, HTTPException
@@ -29,6 +30,27 @@ _SESSION = None
 _LABELS = None
 
 app = FastAPI()
+
+def _maybe_store_sample_to_gcs(raw_bytes: bytes, filename_hint: str, modo: str | None):
+    bucket_name = (os.getenv("GCS_BUCKET", "") or "").strip()
+    if not bucket_name:
+        return {"stored": False, "reason": "GCS_BUCKET vacío"}
+
+    only_if_taller = (os.getenv("STORE_ONLY_IF_MODO_TALLER", "0") or "0").strip() == "1"
+    if only_if_taller and (modo or "").strip().lower() != "taller":
+        return {"stored": False, "reason": "STORE_ONLY_IF_MODO_TALLER=1 y modo!=taller"}
+
+    # path destino
+    ts = int(time.time())
+    safe = re.sub(r"[^a-zA-Z0-9_.-]+", "_", filename_hint or "front.jpg")
+    obj = f"samples/{ts}_{safe}"
+
+    client = storage.Client()
+    bucket = client.bucket(bucket_name)
+    blob = bucket.blob(obj)
+    blob.upload_from_string(raw_bytes, content_type="image/jpeg")
+
+    return {"stored": True, "gs_uri": f"gs://{bucket_name}/{obj}"}
 
 
 def _labels_path() -> str:
@@ -235,7 +257,18 @@ def _predict(img: Image.Image):
 
 
 @app.post("/api/analyze-key")
-def analyze_key(front: UploadFile = File(...), back: UploadFile = File(None)):
-    img = _read_image(front)
+def analyze_key(front: UploadFile = File(...), back: UploadFile = File(None), modo: str | None = None):
+    data = front.file.read()
+    if not data:
+        raise HTTPException(400, "archivo vacío")
+
+    try:
+        img = Image.open(BytesIO(data))
+    except Exception:
+        raise HTTPException(400, "imagen inválida")
+
     cands = _predict(img)
-    return {"ok": True, "candidates": cands}
+
+    store = _maybe_store_sample_to_gcs(data, getattr(front, "filename", "") or "front.jpg", modo)
+
+    return {"ok": True, "candidates": cands, "store": store}

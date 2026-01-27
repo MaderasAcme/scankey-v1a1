@@ -1,0 +1,9 @@
+*.onnx
+*.pt
+*.zip
+*.jpg
+*.jpeg
+*.png
+__pycache__/
+.venv/
+venv/
