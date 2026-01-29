@@ -37,6 +37,15 @@ jobs:
           touch dist/.nojekyll
           cp dist/index.html dist/404.html
 
+      - name: Smoke test (dist metadata.json exists)
+
+        run: |
+
+          test -f dist/metadata.json
+
+          head -c 200 dist/metadata.json
+
+
       - uses: actions/upload-pages-artifact@v3
         with:
           path: dist
