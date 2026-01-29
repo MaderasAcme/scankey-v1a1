@@ -1,0 +1,137 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta name="theme-color" content="#050509" />
+  <title>ScanKey</title>
+  <style>
+    :root{
+      --bg:#050509; --card:#11121A; --card2:#181926;
+      --text:#F5F5F7; --muted:#A1A1AA; --line:#232433;
+      --accent:#4C6FFF;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0; font-family: ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial;
+      background: radial-gradient(1200px 700px at 20% 0%, rgba(76,111,255,.18), transparent 60%),
+                  radial-gradient(900px 600px at 80% 20%, rgba(76,111,255,.10), transparent 55%),
+                  var(--bg);
+      color:var(--text);
+    }
+    a{color:inherit; text-decoration:none}
+    .wrap{max-width:1100px; margin:0 auto; padding:28px 18px 60px}
+    .nav{display:flex; align-items:center; justify-content:space-between; gap:12px}
+    .brand{display:flex; align-items:center; gap:10px}
+    .logo{
+      width:34px; height:34px; border-radius:10px;
+      background: linear-gradient(145deg, rgba(76,111,255,.9), rgba(76,111,255,.35));
+      box-shadow: 0 10px 30px rgba(76,111,255,.18);
+    }
+    .brand b{letter-spacing:.2px}
+    .pill{display:inline-flex; align-items:center; gap:8px; padding:8px 12px; border:1px solid var(--line);
+      border-radius:999px; background:rgba(17,18,26,.55); color:var(--muted); font-size:13px}
+    .grid{display:grid; grid-template-columns: 1.2fr .8fr; gap:18px; margin-top:22px}
+    @media (max-width: 920px){ .grid{grid-template-columns:1fr} }
+    .hero{
+      padding:26px; border:1px solid var(--line); border-radius:18px;
+      background: linear-gradient(180deg, rgba(17,18,26,.75), rgba(17,18,26,.45));
+    }
+    h1{margin:8px 0 10px; font-size:44px; line-height:1.05}
+    .sub{color:var(--muted); font-size:16px; line-height:1.55; max-width:62ch}
+    .cta{display:flex; flex-wrap:wrap; gap:10px; margin-top:18px}
+    .btn{
+      padding:12px 14px; border-radius:14px; border:1px solid var(--line);
+      background:rgba(24,25,38,.75); color:var(--text); font-weight:650;
+      display:inline-flex; align-items:center; gap:10px
+    }
+    .btn.primary{background: rgba(76,111,255,.95); border-color: rgba(76,111,255,.95)}
+    .btn:hover{filter:brightness(1.05)}
+    .cards{display:grid; grid-template-columns:1fr; gap:12px}
+    .card{
+      padding:16px; border-radius:18px; border:1px solid var(--line);
+      background: linear-gradient(180deg, rgba(17,18,26,.70), rgba(17,18,26,.45));
+    }
+    .card h3{margin:0 0 6px; font-size:16px}
+    .card p{margin:0; color:var(--muted); font-size:14px; line-height:1.5}
+    .kpis{display:grid; grid-template-columns:repeat(3,1fr); gap:10px; margin-top:14px}
+    @media (max-width: 520px){ .kpis{grid-template-columns:1fr} }
+    .kpi{padding:12px; border-radius:16px; border:1px solid var(--line); background:rgba(24,25,38,.45)}
+    .kpi b{display:block; font-size:13px; color:var(--muted); margin-bottom:6px}
+    .kpi span{font-size:16px; font-weight:800}
+    .footer{margin-top:22px; color:var(--muted); font-size:13px}
+    code{background:rgba(24,25,38,.6); border:1px solid var(--line); padding:2px 6px; border-radius:8px}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="nav">
+      <div class="brand">
+        <div class="logo"></div>
+        <b>ScanKey</b>
+      </div>
+      <div class="pill">Estado: <span id="status">checking…</span></div>
+    </div>
+
+    <div class="grid">
+      <div class="hero">
+        <div class="pill">Identificación de llaves + flujo seguro (cliente / taller)</div>
+        <h1>Escanea. Identifica. Actúa.</h1>
+        <p class="sub">
+          ScanKey reconoce tu llave y te guía al siguiente paso: información general para cliente,
+          detalle protegido para taller autorizado, y un pipeline de mejora continua con corrección manual.
+        </p>
+
+        <div class="cta">
+          <a class="btn primary" href="https://snack.expo.dev/@guille3056/demo-2" target="_blank" rel="noreferrer">
+            Abrir demo (Expo Snack)
+          </a>
+          <a class="btn" href="https://scankey-motor-2apb4vvlhq-no.a.run.app/health" target="_blank" rel="noreferrer">
+            Ver estado API (/health)
+          </a>
+          <a class="btn" href="https://github.com/MaderasAcme/scankey-v1a1" target="_blank" rel="noreferrer">
+            Código (GitHub)
+          </a>
+        </div>
+
+        <div class="kpis">
+          <div class="kpi"><b>Modo cliente</b><span>Referencia general</span></div>
+          <div class="kpi"><b>Modo taller</b><span>Detalle autorizado</span></div>
+          <div class="kpi"><b>Entrenamiento</b><span>Corrección manual</span></div>
+        </div>
+
+        <div class="footer">
+          Nota: la “app” móvil se prueba desde Expo. Esta web es la landing oficial.
+        </div>
+      </div>
+
+      <div class="cards">
+        <div class="card">
+          <h3>Qué es hoy</h3>
+          <p>Una base real: motor en Cloud Run, flujo de análisis, y web oficial. Ya no es “demo”.</p>
+        </div>
+        <div class="card">
+          <h3>Qué falta</h3>
+          <p>Dataset robusto (mínimos por referencia), validación de calidad y ciclo de re-entrenamiento v2.</p>
+        </div>
+        <div class="card">
+          <h3>Próximo objetivo</h3>
+          <p>Probar inferencia con las referencias reales disponibles y medir confusiones antes de entrenar.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // status light (best-effort)
+    const el = document.getElementById("status");
+    fetch("https://scankey-motor-2apb4vvlhq-no.a.run.app/health")
+      .then(r => r.json())
+      .then(j => {
+        if (j && j.ok && j.model_ready) el.textContent = "API OK / modelo listo";
+        else el.textContent = "API OK / cargando modelo";
+      })
+      .catch(() => { el.textContent = "API no accesible"; });
+  </script>
+</body>
+</html>
