@@ -4,12 +4,11 @@ import os
 import time
 import json
 import threading
-from io import BytesIO
-
 import numpy as np
 from google.cloud import storage
 import onnxruntime as ort
-from PIL import Image
+from PIL import Image as PILImage
+import io
 from fastapi import FastAPI, UploadFile, File, HTTPException
 from fastapi.responses import JSONResponse
 
@@ -150,7 +149,7 @@ def _infer_shape_to_hw(shape):
     return 224, 224
 
 
-def _preprocess(img: Image.Image, input_shape):
+def _preprocess(img: PILImage.Image, input_shape):
     H, W = _infer_shape_to_hw(input_shape)
     img = img.convert("RGB").resize((W, H))
     x = np.asarray(img).astype(np.float32) / 255.0  # (H,W,3)
@@ -266,12 +265,12 @@ def debug_files():
     }
 
 
-def _read_image(file: UploadFile) -> Image.Image:
+def _read_image(file: UploadFile) -> PILImage.Image:
     data = file.file.read()
     if not data:
         raise HTTPException(400, "archivo vacío")
     try:
-        return Image.open(BytesIO(data))
+        return PILImage.open(io.BytesIO(data))
     except Exception:
         raise HTTPException(400, "imagen inválida")
 
@@ -286,7 +285,7 @@ def _softmax(v):
     return e / s if s > 0 else np.ones_like(v) / float(v.size)
 
 
-def _predict(img: Image.Image):
+def _predict(img: PILImage.Image):
     sess = _ensure_session()
     inp = sess.get_inputs()[0]
     x = _preprocess(img, inp.shape)
@@ -353,9 +352,9 @@ def analyze_key(front: UploadFile = File(...), back: UploadFile = File(None), mo
         raise HTTPException(400, "archivo vacío")
 
     try:
-        img = Image.open(BytesIO(data)).convert("RGB")
-    except Exception:
-        raise HTTPException(400, "imagen inválida")
+        img = PILImage.open(io.BytesIO(data)).convert("RGB")
+    except Exception as e:
+        raise HTTPException(400, f"imagen inválida ({type(e).__name__}: {e}) len={len(data) if data else 0} first16={(data[:16].hex() if data else None)} ct={getattr(front, 'content_type', None)} fn={getattr(front, 'filename', None)}")
 
     # 1) inferencia
     cands = _predict(img)
@@ -391,59 +390,46 @@ def analyze_key(front: UploadFile = File(...), back: UploadFile = File(None), mo
         }
         store["meta"] = _store_meta_sidecar(meta, store["gcs_uri"])
 
-    # SCN_META_MIN_PATCH_V2
-    # Si hay sidecar meta en GCS, lo actualizamos con campos mínimos obligatorios.
-    try:
-        _w = _h = None
-        try:
-            from PIL import Image
-            from io import BytesIO
-            _w, _h = Image.open(BytesIO(data)).size
-        except Exception:
-            pass
-    
-        _sha = hashlib.sha256(data).hexdigest()
-        _rid = f"{int(time.time())}_{_sha[:10]}"
-        _meta_min = {
-            "meta_schema_v": 1,
-            "request_id": _rid,
-            "sha256_10": _sha[:10],
-            "width": _w,
-            "height": _h,
-            "top_label": (candidates[0].get("label") if candidates else None),
-            "top_score": (candidates[0].get("score") if candidates else None),
-        }
-    
-        _meta_uri = ""
-        try:
-            _meta_uri = ((store or {}).get("meta", {}) or {}).get("gcs_uri", "") or ""
-        except Exception:
-            _meta_uri = ""
-    
-        if isinstance(_meta_uri, str) and _meta_uri.startswith("gs://"):
-            # parse gs://bucket/object
-            _u = _meta_uri[5:]
-            _bkt = _u.split("/", 1)[0]
-            _obj = _u.split("/", 1)[1] if "/" in _u else ""
-            if _bkt and _obj:
-                try:
-                    from google.cloud import storage
-                    client = storage.Client()
-                    blob = client.bucket(_bkt).blob(_obj)
-                    try:
-                        cur_txt = blob.download_as_text()
-                        cur = json.loads(cur_txt) if cur_txt else {}
-                    except Exception:
-                        cur = {}
-                    cur.update(_meta_min)
-                    blob.upload_from_string(
-                        json.dumps(cur, ensure_ascii=False),
-                        content_type="application/json",
-                    )
-                except Exception:
-                    pass
-    except Exception:
-        pass
-
     return {"ok": True, "candidates": cands, "store": store}
 
+
+
+# SCN_DEBUG_ECHO_UPLOAD_V1
+@app.post("/debug/echo-upload")
+def debug_echo_upload(front: UploadFile = File(...)):
+    try:
+        front.file.seek(0)
+    except Exception:
+        pass
+    data = front.file.read()
+    return {
+        "len": len(data) if data else 0,
+        "sha256": hashlib.sha256(data).hexdigest() if data else None,
+        "first16": data[:16].hex() if data else None,
+        "ct": getattr(front, "content_type", None),
+        "fn": getattr(front, "filename", None),
+    }
+
+
+# SCN_DEBUG_OPEN_IMAGE_V1
+@app.post("/debug/open-image")
+def debug_open_image(front: UploadFile = File(...)):
+    try:
+        front.file.seek(0)
+    except Exception:
+        pass
+    data = front.file.read()
+    info = {
+        "len": len(data) if data else 0,
+        "first16": data[:16].hex() if data else None,
+        "ct": getattr(front, "content_type", None),
+        "fn": getattr(front, "filename", None),
+    }
+    try:
+        im = PILImage.open(io.BytesIO(data))
+        im.load()
+        info.update({"ok": True, "format": im.format, "mode": im.mode, "size": im.size})
+        return info
+    except Exception as e:
+        info.update({"ok": False, "err_type": type(e).__name__, "err": str(e)})
+        return info
