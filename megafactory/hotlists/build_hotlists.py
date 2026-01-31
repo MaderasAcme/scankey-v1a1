@@ -37,69 +37,20 @@ def main():
         print("FILES=0 (no hay feedback)")
         return
 
-    print("FILES=", len(lines))
+    Path("/tmp/fb.list").write_text("\n".join(lines) + "\n", encoding="utf-8")
 
-    # 2) descarga local (rsync robusto, sin WARN cp)
+
+    print("FILES=", len(lines))
+# 2) descarga local (solo feedbacks listados; rápido y silencioso)
     tmp = Path("/tmp/fb_hotlists")
     if tmp.exists():
         sh(f"rm -rf '{tmp}'")
     tmp.mkdir(parents=True, exist_ok=True)
-    # trae solo feedbacks
-    sh(f"gsutil -m rsync -r \"gs://{args.bucket}/{args.prefix}\" /tmp/fb_hotlists >/dev/null 2>&1 || true")
-    if err.strip():
-        print("WARN(gsutil cp):", err.strip()[:300])
 
-    paths = list(Path("/tmp/fb_hotlists").glob("*.feedback.json"))
-    if not paths:
-        print("FILES_LOCAL=0 (no se descargó nada)")
-        return
+    # copia SOLO los feedbacks (sin bajar imágenes)
+    sh("gsutil -q -m cp -I /tmp/fb_hotlists/ < /tmp/fb.list 2>/dev/null || true")
 
-    overall = Counter()
-    by_country = defaultdict(Counter)
-    by_city = defaultdict(Counter)
-    by_taller = defaultdict(Counter)
 
-    ok=bad_json=bad_cat=0
-
-    for fp in paths:
-        try:
-            d = json.loads(fp.read_text(encoding="utf-8"))
-        except Exception:
-            bad_json += 1
-            continue
-
-        ref = norm(d.get("ref_final") or d.get("ref_best") or "")
-        if not ref:
-            continue
-        if ref not in catalog:
-            bad_cat += 1
-            continue
-
-        ctx = d.get("ctx") or {}
-        country = norm(d.get("country") or ctx.get("country") or "XX")
-        city = norm(d.get("city") or ctx.get("city") or "")
-        taller = norm(d.get("taller_id") or ctx.get("taller_id") or "")
-
-        overall[ref] += 1
-        by_country[country][ref] += 1
-        if city:
-            by_city[f"{country}:{city}"][ref] += 1
-        if taller:
-            by_taller[taller][ref] += 1
-        ok += 1
-
-    out_dir = Path("/tmp/hotlists_out")
-    (out_dir/"global.json").write_text(json.dumps(dump(overall, args.topn), ensure_ascii=False), encoding="utf-8")
-
-    for cc, cnt in by_country.items():
-        (out_dir/f"{cc}.json").write_text(json.dumps(dump(cnt, args.topn), ensure_ascii=False), encoding="utf-8")
-
-    for key, cnt in by_city.items():
-        safe = key.replace(":","_")
-        (out_dir/f"{safe}.json").write_text(json.dumps(dump(cnt, args.topn), ensure_ascii=False), encoding="utf-8")
-
-    print(f"STATS ok={ok} bad_json={bad_json} filtered_not_in_catalog={bad_cat}")
-    print("WROTE:", len(list(out_dir.glob("*.json"))), "files")
 
     # 3) sube a GCS
     dest = f"gs://{args.bucket}/{args.out_prefix}"
