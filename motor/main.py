@@ -530,3 +530,79 @@ def feedback(
     stored = _store_feedback_sidecar(meta, gcs_uri)
     return {"ok": True, "stored": stored}
 
+
+
+# --------------------------
+# HOTLISTS (por país/ciudad)
+# --------------------------
+_HOTLIST_CACHE = {}  # key -> (ts_unix, payload_dict)
+_HOTLIST_TTL_S = int((os.getenv("HOTLISTS_TTL_S", "300") or "300").strip())
+_HOTLISTS_PREFIX = (os.getenv("HOTLISTS_PREFIX", "hotlists") or "hotlists").strip().strip("/")
+_HOTLISTS_BUCKET = (os.getenv("HOTLISTS_BUCKET", "") or "").strip()  # opcional, si vacío usa GCS_BUCKET
+
+def _hot_city(city: str) -> str:
+    # VALENCIA / SAN_SEBASTIAN / PARIS_01
+    c = re.sub(r"[^A-Z0-9]+", "_", (city or "").upper()).strip("_")
+    return c
+
+def _hot_bucket() -> str:
+    b = _HOTLISTS_BUCKET
+    if b:
+        return b
+    # fallback al bucket de samples (ya lo usas en store)
+    return (os.getenv("GCS_BUCKET", "") or "").strip()
+
+def _gcs_read_json(bucket_name: str, obj: str):
+    client = storage.Client()
+    blob = client.bucket(bucket_name).blob(obj)
+    if not blob.exists():
+        return None
+    txt = blob.download_as_text(encoding="utf-8")
+    return json.loads(txt)
+
+def _hotlist_load(country: str, city: str):
+    bucket = _hot_bucket()
+    if not bucket:
+        return None, "NO_BUCKET"
+
+    cc = (country or "XX").strip().upper()
+    city2 = _hot_city(city)
+
+    # prioridad: ES_VALENCIA -> ES -> global
+    candidates = []
+    if city2:
+        candidates.append((f"{cc}:{city2}", f"{_HOTLISTS_PREFIX}/{cc}_{city2}.json"))
+    candidates.append((cc, f"{_HOTLISTS_PREFIX}/{cc}.json"))
+    candidates.append(("GLOBAL", f"{_HOTLISTS_PREFIX}/global.json"))
+
+    for scope, obj in candidates:
+        try:
+            data = _gcs_read_json(bucket, obj)
+            if isinstance(data, list) and data:
+                return {"scope": scope, "items": data}, None
+        except Exception:
+            continue
+    return None, "NOT_FOUND"
+
+@app.get("/api/hotlist")
+def hotlist(country: str = "XX", city: str = "", limit: int = 20):
+    # cache por (country, city, limit)
+    cc = (country or "XX").strip().upper()
+    cy = _hot_city(city)
+    key = f"{cc}:{cy}:{int(limit)}"
+
+    now = time.time()
+    hit = _HOTLIST_CACHE.get(key)
+    if hit and (now - hit[0]) < _HOTLIST_TTL_S:
+        payload = hit[1]
+        items = (payload.get("items") or [])[: int(limit)]
+        return {"ok": True, "cached": True, "scope": payload.get("scope"), "items": items}
+
+    payload, err = _hotlist_load(cc, cy)
+    if not payload:
+        return {"ok": False, "error": err or "UNKNOWN", "scope": None, "items": []}
+
+    items = (payload.get("items") or [])[: int(limit)]
+    out = {"ok": True, "cached": False, "scope": payload.get("scope"), "items": items}
+    _HOTLIST_CACHE[key] = (now, payload)
+    return out
