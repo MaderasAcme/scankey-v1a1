@@ -9,7 +9,7 @@ from google.cloud import storage
 import onnxruntime as ort
 from PIL import Image as PILImage
 import io
-from fastapi import FastAPI, UploadFile, File, HTTPException
+from fastapi import FastAPI, UploadFile, File, HTTPException, Body
 from fastapi.responses import JSONResponse
 
 from model_bootstrap import ensure_model
@@ -395,8 +395,24 @@ def _store_meta_sidecar(meta: dict, img_gcs_uri: str):
         return {"stored": False, "reason": str(e)}
 
 @app.post("/api/analyze-key")
-def analyze_key(front: UploadFile = File(...), back: UploadFile = File(None), modo: str | None = None, ref_hint: str | None = None):
+def analyze_key(front: UploadFile = File(...), back: UploadFile = File(None), modo: str | None = None, ref_hint: str | None = None, image_front: UploadFile | None = File(None), image_back: UploadFile | None = File(None), modo_taller: str | None = None):
+
+    # --- compat: acepta nombres alternativos de archivo ---
+    front_up = front or image_front
+    back_up = back or image_back
+
+    # si no vino modo por query, acepta modo_taller (form)
+    if not (locals().get("modo") or ""):
+        mt = (modo_taller or "").strip().lower()
+        modo = "taller" if mt in ("1","true","yes","y") else "cliente"
+
+    if front_up is None:
+        raise HTTPException(status_code=400, detail="front requerido (usa front o image_front)")
+
+    front = front_up
     data = front.file.read()
+    RAW_BACK_BYTES = (back_up.file.read()) if back_up is not None else b""
+
     if not data:
         raise HTTPException(400, "archivo vacío")
 
@@ -411,7 +427,11 @@ def analyze_key(front: UploadFile = File(...), back: UploadFile = File(None), mo
     # 2) store imagen (si modo=taller y flag activo)
     store = _maybe_store_sample_to_gcs(data, getattr(front, "filename", "") or "front.jpg", modo)
 
-    # 3) sidecar JSON SOLO si imagen se guardó
+    
+    store_back = {"stored": False, "reason": "no_back"}
+    if RAW_BACK_BYTES and len(RAW_BACK_BYTES) > 1000:
+        store_back = _maybe_store_sample_to_gcs(RAW_BACK_BYTES, (getattr(back_up,'filename',None) or 'back.jpg'), modo)
+# 3) sidecar JSON SOLO si imagen se guardó
     if store.get("stored") and store.get("gcs_uri"):
         meta = {
             "ts_unix": int(time.time()),
@@ -440,7 +460,8 @@ def analyze_key(front: UploadFile = File(...), back: UploadFile = File(None), mo
         }
         store["meta"] = _store_meta_sidecar(meta, store["gcs_uri"])
 
-    return {"ok": True, "candidates": cands, "hint": hint, "store": store}
+    return {"ok": True, "candidates": cands, "hint": hint, "store": store
+    "store_back": store_back,}
 
 
 
