@@ -510,6 +510,10 @@ def feedback(
         "ref_final": ref_final,
         "ref_final_canon": _canon(ref_final),
         "ref_source": (ref_source or "").strip().lower(),
+        "taller_id": taller_id,
+        "country": country,
+        "city": city,
+
         "ctx": {
             "taller_id": (taller_id or None),
             "country": (country or None),
