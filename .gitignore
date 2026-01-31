@@ -57,3 +57,18 @@ __pycache__/
 backend/__pycache__/
 backend/modules/__pycache__/
 requirements.txt
+
+# --- generated dumps / local artifacts ---
+scankey_dump.txt
+*_dump.txt
+*.dump
+*.log
+*.zip
+
+# --- catalog sources (NO subir PDFs al repo) ---
+backend/resources/catalog/_src/
+backend/resources/catalog/_extract_report.txt
+backend/resources/catalog/jma_catalog_refs_canon.json
+
+# --- megafactory generated outputs ---
+megafactory/reports/
