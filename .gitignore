@@ -80,3 +80,4 @@ backend/resources/catalog/jma_catalog_refs_canon.json
 # --- megafactory generated outputs ---
 megafactory/reports/
 >>>>>>> b07083b (chore: ignore dumps, catalog sources, and generated reports)
+SCN_MOTOR_SHELL_DUMP_*.txt
