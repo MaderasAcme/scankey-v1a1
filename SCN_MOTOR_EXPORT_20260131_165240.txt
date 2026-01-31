@@ -1,0 +1,155 @@
+SCA NKEY — EXPORT MOTOR (REGLAS + TIPOS + API) — 2026-01-31T16:52:40+00:00
+ROOT: /home/guille3056swatch/WORK/scankey/app/scankey-v1a1
+
+
+============================================================
+0) CONTEXTO REPO (git)
+============================================================
+BRANCH: main
+COMMIT: 0c5f2cda39de30e1ec5354b78f3dc523751b1237
+REMOTE:
+origin	https://github.com/MaderasAcme/scankey-v1a1.git (fetch)
+origin	https://github.com/MaderasAcme/scankey-v1a1.git (push)
+
+STATUS (porcelain):
+?? SCN_MOTOR_EXPORT_20260131_165240.txt
+?? scripts/export_motor_doc.sh
+
+============================================================
+1) ARCHIVOS RELEVANTES DETECTADOS (motor/backend/onnx/ocr/rules/ranking)
+============================================================
+- /home/guille3056swatch/WORK/scankey/app/scankey-v1a1/backend/catalog_match.py
+- /home/guille3056swatch/WORK/scankey/app/scankey-v1a1/backend/README_TRIGGER_TEST.md
+- /home/guille3056swatch/WORK/scankey/app/scankey-v1a1/backend/__init__.py
+- /home/guille3056swatch/WORK/scankey/app/scankey-v1a1/backend/resources/catalog/jma_catalog_refs_canon.clean.json
+- /home/guille3056swatch/WORK/scankey/app/scankey-v1a1/backend/resources/catalog/jma_catalog_refs_variants.json
+- /home/guille3056swatch/WORK/scankey/app/scankey-v1a1/backend/resources/catalog/jma_catalog_refs_canon.json
+- /home/guille3056swatch/WORK/scankey/app/scankey-v1a1/backend/cloudbuild.yaml
+- /home/guille3056swatch/WORK/scankey/app/scankey-v1a1/backend/modules/__init__.py
+- /home/guille3056swatch/WORK/scankey/app/scankey-v1a1/backend/modules/ocr_dual.py
+- /home/guille3056swatch/WORK/scankey/app/scankey-v1a1/backend/modules/catalog_service.py
+- /home/guille3056swatch/WORK/scankey/app/scankey-v1a1/backend/api_ocr.py
+- /home/guille3056swatch/WORK/scankey/app/scankey-v1a1/backend/ocr_engine.py
+- /home/guille3056swatch/WORK/scankey/app/scankey-v1a1/backend/main.py
+- /home/guille3056swatch/WORK/scankey/app/scankey-v1a1/motor/labels.json
+- /home/guille3056swatch/WORK/scankey/app/scankey-v1a1/motor/README.md
+- /home/guille3056swatch/WORK/scankey/app/scankey-v1a1/motor/label_map.py
+- /home/guille3056swatch/WORK/scankey/app/scankey-v1a1/motor/model_bootstrap.py
+- /home/guille3056swatch/WORK/scankey/app/scankey-v1a1/motor/main.py
+
+============================================================
+2) ENDPOINTS (FastAPI) — rutas @app.get/@app.post y add_api_route
+============================================================
+- /home/guille3056swatch/WORK/scankey/app/scankey-v1a1/backend/main.py:26:@app.get("/health")
+- /home/guille3056swatch/WORK/scankey/app/scankey-v1a1/backend/main.py:30:@app.post("/api/ocr")
+- /home/guille3056swatch/WORK/scankey/app/scankey-v1a1/motor/main.py:216:@app.get("/health")
+- /home/guille3056swatch/WORK/scankey/app/scankey-v1a1/motor/main.py:231:@app.get("/ready")
+- /home/guille3056swatch/WORK/scankey/app/scankey-v1a1/motor/main.py:247:@app.get("/debug/files")
+- /home/guille3056swatch/WORK/scankey/app/scankey-v1a1/motor/main.py:342:@app.get("/debug/routes")
+- /home/guille3056swatch/WORK/scankey/app/scankey-v1a1/motor/main.py:397:@app.post("/api/analyze-key")
+- /home/guille3056swatch/WORK/scankey/app/scankey-v1a1/motor/main.py:469:@app.post("/debug/echo-upload")
+- /home/guille3056swatch/WORK/scankey/app/scankey-v1a1/motor/main.py:486:@app.post("/debug/open-image")
+- /home/guille3056swatch/WORK/scankey/app/scankey-v1a1/motor/main.py:509:@app.post("/api/feedback")
+- /home/guille3056swatch/WORK/scankey/app/scankey-v1a1/motor/main.py:608:@app.get("/api/hotlist")
+
+============================================================
+3) VARIABLES DE ENTORNO (os.getenv / os.environ.get)
+============================================================
+- /home/guille3056swatch/WORK/scankey/app/scankey-v1a1/megafactory/ingest/triage.py:68:    inbox = Path(os.environ.get("SCN_INBOX", str(Path.home() / "WORK/scankey/train_inbox"))).expanduser()
+- /home/guille3056swatch/WORK/scankey/app/scankey-v1a1/megafactory/ingest/triage.py:78:    min_w = int(os.environ.get("SCN_MIN_W", "800"))
+- /home/guille3056swatch/WORK/scankey/app/scankey-v1a1/megafactory/ingest/triage.py:79:    min_h = int(os.environ.get("SCN_MIN_H", "600"))
+- /home/guille3056swatch/WORK/scankey/app/scankey-v1a1/megafactory/ingest/triage.py:80:    blur_min = float(os.environ.get("SCN_BLUR_MIN", "18.0"))
+- /home/guille3056swatch/WORK/scankey/app/scankey-v1a1/megafactory/ingest/triage.py:81:    bright_min = float(os.environ.get("SCN_BRIGHT_MIN", "35.0"))
+- /home/guille3056swatch/WORK/scankey/app/scankey-v1a1/megafactory/ingest/triage.py:82:    bright_max = float(os.environ.get("SCN_BRIGHT_MAX", "220.0"))
+- /home/guille3056swatch/WORK/scankey/app/scankey-v1a1/megafactory/ingest/fill_to_30_safe.py:6:TARGET=int(os.getenv("TARGET","30"))
+- /home/guille3056swatch/WORK/scankey/app/scankey-v1a1/megafactory/ingest/fill_to_30_safe.py:7:ONLY_REF=(os.getenv("ONLY_REF","") or "").strip().upper()
+- /home/guille3056swatch/WORK/scankey/app/scankey-v1a1/megafactory/ingest/fill_to_30_safe.py:8:ROOT=Path(os.getenv("DATASET_ROOT", str(Path.home()/ "WORK/scankey/datasets/v2")))
+- /home/guille3056swatch/WORK/scankey/app/scankey-v1a1/backend/catalog_match.py:14:CANON_OVERRIDE = os.getenv("SCN_CATALOG_CANON", "").strip()
+- /home/guille3056swatch/WORK/scankey/app/scankey-v1a1/backend/modules/ocr_dual.py:5:WORKSHOP_TOKEN = os.environ.get("WORKSHOP_TOKEN", "")  # ponlo en Cloud Run/Cloud Shell cuando toque
+- /home/guille3056swatch/WORK/scankey/app/scankey-v1a1/motor/label_map.py:7:        os.getenv("LABELS_PATH", "/app/labels.json"),
+- /home/guille3056swatch/WORK/scankey/app/scankey-v1a1/motor/model_bootstrap.py:37:    model_path = (os.getenv("MODEL_PATH", "/tmp/modelo_llaves.onnx") or "").strip()
+- /home/guille3056swatch/WORK/scankey/app/scankey-v1a1/motor/model_bootstrap.py:38:    gcs_uri = (os.getenv("MODEL_GCS_URI", "") or "").strip()
+- /home/guille3056swatch/WORK/scankey/app/scankey-v1a1/motor/model_bootstrap.py:39:    gcs_data_uri = (os.getenv("MODEL_DATA_GCS_URI", "") or "").strip()
+- /home/guille3056swatch/WORK/scankey/app/scankey-v1a1/motor/model_bootstrap.py:41:    labels_gcs_uri = (os.getenv("LABELS_GCS_URI", "") or "").strip()
+- /home/guille3056swatch/WORK/scankey/app/scankey-v1a1/motor/model_bootstrap.py:42:    labels_path = (os.getenv("LABELS_PATH", "/tmp/labels.json") or "").strip()
+- /home/guille3056swatch/WORK/scankey/app/scankey-v1a1/motor/main.py:22:    "model_path": os.getenv("MODEL_PATH", "/tmp/modelo_llaves.onnx"),
+- /home/guille3056swatch/WORK/scankey/app/scankey-v1a1/motor/main.py:50:    bucket_name = (os.getenv("GCS_BUCKET", "") or "").strip()
+- /home/guille3056swatch/WORK/scankey/app/scankey-v1a1/motor/main.py:54:    only_if_taller = (os.getenv("STORE_ONLY_IF_MODO_TALLER", "0") or "0").strip() == "1"
+- /home/guille3056swatch/WORK/scankey/app/scankey-v1a1/motor/main.py:58:    prefix = (os.getenv("GCS_SAMPLES_PREFIX", "samples") or "samples").strip().strip("/")
+- /home/guille3056swatch/WORK/scankey/app/scankey-v1a1/motor/main.py:117:    p = (os.getenv("LABELS_PATH", "") or "").strip()
+- /home/guille3056swatch/WORK/scankey/app/scankey-v1a1/motor/main.py:318:                boost = float(os.getenv("HINT_BOOST", "1.35"))
+- /home/guille3056swatch/WORK/scankey/app/scankey-v1a1/motor/main.py:452:                "service": os.getenv("K_SERVICE", ""),
+- /home/guille3056swatch/WORK/scankey/app/scankey-v1a1/motor/main.py:453:                "revision": os.getenv("K_REVISION", ""),
+- /home/guille3056swatch/WORK/scankey/app/scankey-v1a1/motor/main.py:454:                "project": os.getenv("GOOGLE_CLOUD_PROJECT", ""),
+- /home/guille3056swatch/WORK/scankey/app/scankey-v1a1/motor/main.py:457:                "model_gcs_uri": os.getenv("MODEL_GCS_URI", ""),
+- /home/guille3056swatch/WORK/scankey/app/scankey-v1a1/motor/main.py:458:                "labels_gcs_uri": os.getenv("LABELS_GCS_URI", ""),
+- /home/guille3056swatch/WORK/scankey/app/scankey-v1a1/motor/main.py:545:            "service": os.getenv("K_SERVICE", ""),
+- /home/guille3056swatch/WORK/scankey/app/scankey-v1a1/motor/main.py:546:            "revision": os.getenv("K_REVISION", ""),
+- /home/guille3056swatch/WORK/scankey/app/scankey-v1a1/motor/main.py:547:            "project": os.getenv("GOOGLE_CLOUD_PROJECT", ""),
+- /home/guille3056swatch/WORK/scankey/app/scankey-v1a1/motor/main.py:560:_HOTLIST_TTL_S = int((os.getenv("HOTLISTS_TTL_S", "300") or "300").strip())
+- /home/guille3056swatch/WORK/scankey/app/scankey-v1a1/motor/main.py:561:_HOTLISTS_PREFIX = (os.getenv("HOTLISTS_PREFIX", "hotlists") or "hotlists").strip().strip("/")
+- /home/guille3056swatch/WORK/scankey/app/scankey-v1a1/motor/main.py:562:_HOTLISTS_BUCKET = (os.getenv("HOTLISTS_BUCKET", "") or "").strip()  # opcional, si vacío usa GCS_BUCKET
+- /home/guille3056swatch/WORK/scankey/app/scankey-v1a1/motor/main.py:574:    return (os.getenv("GCS_BUCKET", "") or "").strip()
+
+============================================================
+4) REGLAS CLAVE (confianza, top3, almacenamiento, patentadas, manufacturer_hint)
+============================================================
+- /home/guille3056swatch/WORK/scankey/app/scankey-v1a1/megafactory/hotlists/build_hotlists.py:19:    ap.add_argument("--prefix", default="samples")
+- /home/guille3056swatch/WORK/scankey/app/scankey-v1a1/megafactory/ingest/fill_to_30_safe.py:40:        im=im.rotate(deg, resample=Image.BICUBIC, expand=True, fillcolor=bg)
+- /home/guille3056swatch/WORK/scankey/app/scankey-v1a1/megafactory/ingest/fill_to_30_safe.py:108:            ranked=sorted(real, key=quality, reverse=True)
+- /home/guille3056swatch/WORK/scankey/app/scankey-v1a1/megafactory/ingest/fill_to_30_safe.py:109:            base=ranked[:min(12,len(ranked))]
+- /home/guille3056swatch/WORK/scankey/app/scankey-v1a1/backend/modules/ocr_dual.py:22:            "confidence_bucket": "none",   # none|low|mid|high
+- /home/guille3056swatch/WORK/scankey/app/scankey-v1a1/backend/modules/ocr_dual.py:28:            "confidence": 0.0,
+- /home/guille3056swatch/WORK/scankey/app/scankey-v1a1/backend/modules/catalog_service.py:9:    Salida estable y fácil de consumir por motor/ranking.
+- /home/guille3056swatch/WORK/scankey/app/scankey-v1a1/backend/main.py:18:        return {"text": "", "confidence": 0.0, "enabled": False}
+- /home/guille3056swatch/WORK/scankey/app/scankey-v1a1/motor/main.py:49:def _maybe_store_sample_to_gcs(raw_bytes: bytes, filename_hint: str, modo: str | None):
+- /home/guille3056swatch/WORK/scankey/app/scankey-v1a1/motor/main.py:58:    prefix = (os.getenv("GCS_SAMPLES_PREFIX", "samples") or "samples").strip().strip("/")
+- /home/guille3056swatch/WORK/scankey/app/scankey-v1a1/motor/main.py:331:    topk = min(3, n)
+- /home/guille3056swatch/WORK/scankey/app/scankey-v1a1/motor/main.py:332:    idxs = np.argsort(-probs)[:topk]
+- /home/guille3056swatch/WORK/scankey/app/scankey-v1a1/motor/main.py:428:    store = _maybe_store_sample_to_gcs(data, getattr(front, "filename", "") or "front.jpg", modo)
+- /home/guille3056swatch/WORK/scankey/app/scankey-v1a1/motor/main.py:433:        store_back = _maybe_store_sample_to_gcs(RAW_BACK_BYTES, (getattr(back_up,'filename',None) or 'back.jpg'), modo)
+- /home/guille3056swatch/WORK/scankey/app/scankey-v1a1/motor/main.py:573:    # fallback al bucket de samples (ya lo usas en store)
+
+============================================================
+5) OCR (cuándo corre + regex + tesseract + boost ranking)
+============================================================
+- /home/guille3056swatch/WORK/scankey/app/scankey-v1a1/megafactory/ingest/fill_to_30_safe.py:40:        im=im.rotate(deg, resample=Image.BICUBIC, expand=True, fillcolor=bg)
+- /home/guille3056swatch/WORK/scankey/app/scankey-v1a1/backend/catalog_match.py:23:# Confusiones OCR típicas
+- /home/guille3056swatch/WORK/scankey/app/scankey-v1a1/backend/modules/ocr_dual.py:16:    - workshop: texto exacto (aquí todavía vacío; luego enchufamos OCR real + ROI)
+- /home/guille3056swatch/WORK/scankey/app/scankey-v1a1/backend/modules/ocr_dual.py:18:    # Por ahora sin OCR real -> devolvemos vacío pero con estructura ya lista.
+- /home/guille3056swatch/WORK/scankey/app/scankey-v1a1/backend/ocr_engine.py:7:# pytesseract ya te está funcionando (porque devuelve texto), así que lo usamos bien.
+- /home/guille3056swatch/WORK/scankey/app/scankey-v1a1/backend/ocr_engine.py:8:import pytesseract
+- /home/guille3056swatch/WORK/scankey/app/scankey-v1a1/backend/ocr_engine.py:13:def _otsu_threshold(gray_np: np.ndarray) -> int:
+- /home/guille3056swatch/WORK/scankey/app/scankey-v1a1/backend/ocr_engine.py:21:    threshold = 127
+- /home/guille3056swatch/WORK/scankey/app/scankey-v1a1/backend/ocr_engine.py:35:            threshold = t
+- /home/guille3056swatch/WORK/scankey/app/scankey-v1a1/backend/ocr_engine.py:36:    return int(threshold)
+- /home/guille3056swatch/WORK/scankey/app/scankey-v1a1/backend/ocr_engine.py:59:    base = base.filter(ImageFilter.UnsharpMask(radius=2, percent=180, threshold=3))
+- /home/guille3056swatch/WORK/scankey/app/scankey-v1a1/backend/ocr_engine.py:61:    # Binarizado Otsu
+- /home/guille3056swatch/WORK/scankey/app/scankey-v1a1/backend/ocr_engine.py:63:    thr = _otsu_threshold(npg)
+- /home/guille3056swatch/WORK/scankey/app/scankey-v1a1/backend/ocr_engine.py:70:    eq = ImageOps.equalize(imgL).filter(ImageFilter.UnsharpMask(radius=2, percent=160, threshold=3))
+- /home/guille3056swatch/WORK/scankey/app/scankey-v1a1/backend/ocr_engine.py:79:def _tess_data(img: Image.Image, lang: str, psm: int, whitelist: str) -> Dict[str, Any]:
+- /home/guille3056swatch/WORK/scankey/app/scankey-v1a1/backend/ocr_engine.py:80:    config = f'--oem 1 --psm {psm} -c tessedit_char_whitelist="{whitelist}"'
+- /home/guille3056swatch/WORK/scankey/app/scankey-v1a1/backend/ocr_engine.py:81:    data = pytesseract.image_to_data(img, lang=lang, config=config, output_type=pytesseract.Output.DICT)
+- /home/guille3056swatch/WORK/scankey/app/scankey-v1a1/backend/ocr_engine.py:131:        whitelist = ALNUM
+- /home/guille3056swatch/WORK/scankey/app/scankey-v1a1/backend/ocr_engine.py:136:        whitelist = ALNUM  # puedes ampliar luego si quieres
+- /home/guille3056swatch/WORK/scankey/app/scankey-v1a1/backend/ocr_engine.py:145:                r = _tess_data(vimg, lang_use, psm, whitelist)
+- /home/guille3056swatch/WORK/scankey/app/scankey-v1a1/backend/ocr_engine.py:157:    print(f"[OCR] bytes={len(image_bytes)} profile={profile} best_variant={out.get('variant')} psm={out.get('psm')} avg_conf={out.get('avg_conf'):.1f} text='{out.get('text','')[:80]}' dt={dt:.3f}s", flush=True)
+- /home/guille3056swatch/WORK/scankey/app/scankey-v1a1/backend/main.py:14:# OCR opcional: no dejes que un cambio en OCR tumbe el backend en Cloud Run
+- /home/guille3056swatch/WORK/scankey/app/scankey-v1a1/backend/main.py:21:app = FastAPI(title="ScanKey OCR Backend", version="v1")
+- /home/guille3056swatch/WORK/scankey/app/scankey-v1a1/motor/main.py:310:        "boost": None,
+- /home/guille3056swatch/WORK/scankey/app/scankey-v1a1/motor/main.py:318:                boost = float(os.getenv("HINT_BOOST", "1.35"))
+- /home/guille3056swatch/WORK/scankey/app/scankey-v1a1/motor/main.py:319:                hint["boost"] = boost
+- /home/guille3056swatch/WORK/scankey/app/scankey-v1a1/motor/main.py:320:                probs[j] = probs[j] * boost
+
+============================================================
+6) EXTRAER UMBRALES (si están codificados como números en rules/ranking)
+============================================================
+Encontradas líneas con posibles umbrales/constantes:
+- /home/guille3056swatch/WORK/scankey/app/scankey-v1a1/backend/ocr_engine.py:157  nums=['1', '80', '3']  | print(f"[OCR] bytes={len(image_bytes)} profile={profile} best_variant={out.get('variant')} psm={out.get('psm')} avg_conf={out.get('avg_conf'):.1f} text='{out.get('text','')[:80]}' dt={dt:.3f}s", flush=True)
+- /home/guille3056swatch/WORK/scankey/app/scankey-v1a1/backend/main.py:21  nums=['1']  | app = FastAPI(title="ScanKey OCR Backend", version="v1")
+- /home/guille3056swatch/WORK/scankey/app/scankey-v1a1/motor/main.py:318  nums=['1.35']  | boost = float(os.getenv("HINT_BOOST", "1.35"))
+
+============================================================
+7) LABELS / TIPOS SOPORTADOS (labels.json / labels*.json si existen)
+============================================================
+Labels file: /home/guille3056swatch/WORK/scankey/app/scankey-v1a1/motor/labels.json
