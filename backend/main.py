@@ -39,4 +39,18 @@ async def api_ocr(
     return JSONResponse({"ok": False, "error": "imagen inválida"}, status_code=400)
 
   out = run_ocr(img, lang=lang)
+
+  # Post-proceso: extrae tokens y los cruza con el catálogo JMA (refs)
+  try:
+    try:
+      from . import catalog_match
+    except Exception:
+      import catalog_match
+    cat = catalog_match.match_text(out.get("text",""))
+    out.update(cat)
+    out["catalog_hint"] = {"best_ref": cat.get("best_ref"), "best_ref_canon": cat.get("best_ref_canon"), "unique_hits": [x.get("display") for x in (cat.get("catalog_hits_unique") or [])]}
+  except Exception as e:
+    # Nunca tumbes el endpoint por el catálogo
+    out["catalog_error"] = str(e)
+
   return {"ok": True, **out}
