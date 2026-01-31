@@ -37,12 +37,15 @@ def main():
         print("FILES=0 (no hay feedback)")
         return
 
-    Path("/tmp/fb.list").write_text("\n".join(lines) + "\n", encoding="utf-8")
     print("FILES=", len(lines))
 
-    # 2) descarga local (NO revienta aunque haya algún fallo)
-    sh("rm -rf /tmp/fb_hotlists /tmp/hotlists_out; mkdir -p /tmp/fb_hotlists /tmp/hotlists_out")
-    rc, _, err = sh("gsutil -m cp -I /tmp/fb_hotlists/ < /tmp/fb.list || true")
+    # 2) descarga local (rsync robusto, sin WARN cp)
+    tmp = Path("/tmp/fb_hotlists")
+    if tmp.exists():
+        sh(f"rm -rf '{tmp}'")
+    tmp.mkdir(parents=True, exist_ok=True)
+    # trae solo feedbacks
+    sh(f"gsutil -m rsync -r \"gs://{args.bucket}/{args.prefix}\" /tmp/fb_hotlists >/dev/null 2>&1 || true")
     if err.strip():
         print("WARN(gsutil cp):", err.strip()[:300])
 
