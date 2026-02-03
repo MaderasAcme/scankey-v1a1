@@ -1,33 +1,32 @@
 """
-Catalog module (minimal stub) to avoid Cloud Run boot failure.
-This file exists to satisfy: `import catalog as _catalog`.
-
-If later we implement real catalog functionality, extend this module.
+Shim para Cloud Run.
+main.py hace: import catalog as _catalog
+Este archivo DEBE existir como /app/catalog.py dentro del contenedor.
 """
-from __future__ import annotations
+import json
+import os
 
-try:
-    from fastapi import APIRouter
-except Exception:
-    APIRouter = None  # type: ignore
+LABELS_PATH = os.getenv("LABELS_PATH", "/app/labels.json")
 
-router = APIRouter(prefix="/catalog", tags=["catalog"]) if APIRouter else None
-
-if router:
-    @router.get("/ping")
-    def ping():
-        return {"ok": True}
-
-def register(app):
-    """Attach routes to a FastAPI app if possible."""
+def _load_labels():
     try:
-        if router:
-            app.include_router(router)
+        with open(LABELS_PATH, "r", encoding="utf-8") as f:
+            data = json.load(f)
+        if isinstance(data, dict) and "labels" in data:
+            return list(data["labels"])
+        if isinstance(data, list):
+            return data
     except Exception:
         pass
+    return []
 
-# Common aliases (por si main usa otro nombre)
-register_routes = register
-mount = register
-attach = register
-init = lambda *a, **k: None
+LABELS = _load_labels()
+
+# Mínimo viable: catálogo por referencia
+CATALOG = {lab: {"ref": lab} for lab in LABELS}
+
+def get(ref, default=None):
+    return CATALOG.get(ref, default)
+
+def list_refs():
+    return list(CATALOG.keys())
