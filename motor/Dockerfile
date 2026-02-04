@@ -11,6 +11,7 @@ RUN pip install --no-cache-dir -r /app/requirements.txt
 
 COPY . /app
 
+COPY catalog.py /app/catalog.py
 CMD exec gunicorn -k uvicorn.workers.UvicornWorker -w 1 -b 0.0.0.0:${PORT} main:app
 
 COPY labels.json /app/labels.json
@@ -21,4 +22,3 @@ COPY start.sh /app/start.sh
 RUN chmod +x /app/start.sh
 ENV GUNICORN_TIMEOUT=300 GUNICORN_GRACEFUL_TIMEOUT=300
 CMD ["/app/start.sh"]
-COPY catalog.py /app/catalog.py
