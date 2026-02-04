@@ -9,8 +9,8 @@ except Exception:
         from motor import catalog as _catalog  # /app/motor/catalog.py
     except Exception:
         _catalog = None
-
-_catalog.load()
+if _catalog and hasattr(_catalog, "load"):
+    _catalog.load()
 import time
 import json
 import uuid
