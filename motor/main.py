@@ -1,8 +1,16 @@
 import hashlib
 import re
 import os
-import catalog as _catalog
-_catalog.load()
+# catalog es opcional: el motor NO debe caerse si falta
+try:
+    import catalog as _catalog  # /app/catalog.py
+except Exception:
+    try:
+        from motor import catalog as _catalog  # /app/motor/catalog.py
+    except Exception:
+        _catalog = None
+if _catalog and hasattr(_catalog, "load"):
+    _catalog.load()
 import time
 import json
 import uuid
@@ -43,7 +51,59 @@ app = FastAPI()
 
 
 
-# --- ScanKey bootstrap event (REAL) ---
+# --- Legacy compat: ensure out["results"] exists as 3 items derived from candidates ---
+from starlette.responses import Response
+
+@app.middleware("http")
+async def legacy_results_middleware(request, call_next):
+    resp = await call_next(request)
+
+    if request.url.path != "/api/analyze-key" or resp.status_code != 200:
+        return resp
+
+    ctype = (resp.headers.get("content-type") or "")
+    if "application/json" not in ctype:
+        return resp
+
+    # Read body safely (resp may be streaming)
+    body = b""
+    if getattr(resp, "body", None):
+        body = resp.body
+    else:
+        async for chunk in resp.body_iterator:
+            body += chunk
+
+    if not body:
+        return resp
+
+    import json
+    try:
+        obj = json.loads(body.decode("utf-8"))
+    except Exception:
+        return Response(content=body, status_code=resp.status_code, media_type="application/json")
+
+    res = obj.get("results") or []
+    if isinstance(res, list) and len(res) == 3:
+        return Response(content=body, status_code=resp.status_code, media_type="application/json")
+
+    cands = obj.get("candidates") or []
+    results=[]
+    if isinstance(cands, list):
+        for c in cands[:3]:
+            model = c.get("label") or c.get("model") or c.get("ref") or None
+            conf  = c.get("score") if c.get("score") is not None else c.get("confidence")
+            try: conf = float(conf)
+            except Exception: conf = None
+            results.append({"model": model, "confidence": conf})
+
+    while len(results) < 3:
+        results.append({"model": None, "confidence": None})
+
+    obj["results"] = results
+    new_body = json.dumps(obj, ensure_ascii=False).encode("utf-8")
+
+    return Response(content=new_body, status_code=resp.status_code, media_type="application/json")
+
 @app.on_event("startup")
 def _scankey_bootstrap_event():
     from model_bootstrap import ensure_model
@@ -758,10 +818,14 @@ def _startup2():
 # --- Catalog endpoints ---
 @app.get("/api/catalog/version")
 def api_catalog_version():
+    if not _catalog:
+        return {"ok": False, "enabled": False, "error": "catalog_disabled"}
     return _catalog.version()
 
 @app.get("/api/catalog/{ref}")
 def api_catalog_ref(ref: str):
+    if not _catalog:
+        return {"ok": False, "enabled": False, "error": "catalog_disabled"}
     it = _catalog.get(ref)
     if not it:
         return {"ok": False, "error": "not_found", "ref": ref}

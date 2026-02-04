@@ -1,4 +1,4 @@
-name: Deploy ScanKey Web (Expo) to GitHub Pages
+name: Deploy to GitHub Pages (Expo Web)
 
 on:
   push:
@@ -23,28 +23,40 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 20
-          cache: npm
 
       - name: Install deps
-        run: npm ci
-
-      - name: Export Expo web to dist
-        run: npx expo export -p web --output-dir dist
-
-      - name: Add Pages essentials (CNAME + nojekyll + SPA 404)
         run: |
-          echo "scankeyapp.com" > dist/CNAME
+          if [ -f package-lock.json ]; then
+            npm ci
+          else
+            npm install
+          fi
+
+      - name: Export web (Expo)
+        run: |
+          npx expo export -p web --output-dir dist
+
+          # 1) GitHub Pages + carpetas con "_" (ej: _expo) => NECESITA .nojekyll en dist
           touch dist/.nojekyll
-          cp dist/index.html dist/404.html
 
-      - name: Smoke test (dist metadata.json exists)
+          # 2) Si usas dominio propio, copia CNAME al artefacto publicado
+          if [ -f CNAME ]; then cp CNAME dist/CNAME; fi
 
-        run: |
+          # 3) Fix rutas absolutas tipo "/_expo/..." para que funcionen bajo /<repo>/
+          python - <<'PY'
+from pathlib import Path
+p = Path("dist/index.html")
+html = p.read_text(encoding="utf-8")
+html = html.replace('"/_expo/', '"./_expo/')
+html = html.replace("'/_expo/", "'./_expo/")
+html = html.replace('"/assets/', '"./assets/')
+html = html.replace("'/assets/", "'./assets/")
+p.write_text(html, encoding="utf-8")
 
-          test -f dist/metadata.json
-
-          head -c 200 dist/metadata.json
-
+# SPA refresh fix típico en Pages
+p404 = Path("dist/404.html")
+p404.write_text(html, encoding="utf-8")
+PY
 
       - uses: actions/upload-pages-artifact@v3
         with:
@@ -55,7 +67,5 @@ jobs:
     runs-on: ubuntu-latest
     environment:
       name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
     steps:
-      - id: deployment
-        uses: actions/deploy-pages@v4
+      - uses: actions/deploy-pages@v4
