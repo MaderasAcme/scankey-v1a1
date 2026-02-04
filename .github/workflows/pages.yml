@@ -1,4 +1,4 @@
-name: Deploy to GitHub Pages (Expo Web)
+name: Deploy Expo Web to GitHub Pages
 
 on:
   push:
@@ -18,54 +18,55 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout
+        uses: actions/checkout@v4
 
-      - uses: actions/setup-node@v4
+      - name: Setup Node
+        uses: actions/setup-node@v4
         with:
           node-version: 20
+          cache: npm
 
-      - name: Install deps
+      - name: Install
+        run: npm ci
+
+      - name: Build + Prepare (Expo Web)
         run: |
-          if [ -f package-lock.json ]; then
-            npm ci
-          else
-            npm install
+          # Build
+          npx expo export -p web
+
+          # Detect output dir (Expo suele usar dist/)
+          OUT="dist"
+          if [ ! -d "$OUT" ]; then
+            for cand in web-build build; do
+              if [ -d "$cand" ]; then OUT="$cand"; break; fi
+            done
           fi
 
-      - name: Export web (Expo)
-        run: |
-          npx expo export -p web --output-dir dist
+          echo "Using OUT=$OUT"
+          echo "OUT_DIR=$OUT" >> "$GITHUB_ENV"
 
-          # 1) GitHub Pages + carpetas con "_" (ej: _expo) => NECESITA .nojekyll en dist
-          touch dist/.nojekyll
+          # Needed for GH Pages
+          touch "$OUT/.nojekyll"
 
-          # 2) Si usas dominio propio, copia CNAME al artefacto publicado
-          if [ -f CNAME ]; then cp CNAME dist/CNAME; fi
+          # Custom domain (mantiene scankeyapp.com estable)
+          echo "scankeyapp.com" > "$OUT/CNAME"
 
-          # 3) Fix rutas absolutas tipo "/_expo/..." para que funcionen bajo /<repo>/
-          python - <<'PY'
-from pathlib import Path
-p = Path("dist/index.html")
-html = p.read_text(encoding="utf-8")
-html = html.replace('"/_expo/', '"./_expo/')
-html = html.replace("'/_expo/", "'./_expo/")
-html = html.replace('"/assets/', '"./assets/')
-html = html.replace("'/assets/", "'./assets/")
-p.write_text(html, encoding="utf-8")
+          # Sanity
+          test -f "$OUT/index.html" || (echo "ERROR: no index.html in $OUT" && ls -la "$OUT" && exit 1)
 
-# SPA refresh fix típico en Pages
-p404 = Path("dist/404.html")
-p404.write_text(html, encoding="utf-8")
-PY
-
-      - uses: actions/upload-pages-artifact@v3
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
         with:
-          path: dist
+          path: ${{ env.OUT_DIR }}
 
   deploy:
-    needs: build
-    runs-on: ubuntu-latest
     environment:
       name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    needs: build
     steps:
-      - uses: actions/deploy-pages@v4
+      - name: Deploy
+        id: deployment
+        uses: actions/deploy-pages@v4
