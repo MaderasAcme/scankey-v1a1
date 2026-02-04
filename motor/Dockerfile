@@ -14,3 +14,10 @@ COPY . /app
 CMD exec gunicorn -k uvicorn.workers.UvicornWorker -w 1 -b 0.0.0.0:${PORT} main:app
 
 COPY labels.json /app/labels.json
+
+# --- ScanKey: raise Gunicorn timeouts for model bootstrap ---
+RUN mkdir -p /app
+COPY start.sh /app/start.sh
+RUN chmod +x /app/start.sh
+ENV GUNICORN_TIMEOUT=300 GUNICORN_GRACEFUL_TIMEOUT=300
+CMD ["/app/start.sh"]

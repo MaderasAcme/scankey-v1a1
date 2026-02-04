@@ -1,69 +1,116 @@
-import os
-import shutil
-import subprocess
+import os, json, tempfile, urllib.parse, urllib.request, logging
+from pathlib import Path
 
-# En Cloud Shell: usa gsutil SIEMPRE (es lo que funciona).
-# En Cloud Run: gsutil normalmente no existe -> usarías google-cloud-storage (pero aquí no lo necesitamos).
-# Si algún día lo quieres para Cloud Run, te lo adapto luego, pero ahora cerramos el bug.
+log = logging.getLogger("scankey.bootstrap")
 
-def _size_ok(p: str) -> bool:
-    return os.path.exists(p) and os.path.getsize(p) > 0
+LOCK_PATH = "/tmp/scankey_bootstrap.lock"
 
-def _atomic_gsutil_cp(gcs_uri: str, dst_path: str):
-    # Cloud Run runtime no trae gsutil. Descargamos desde GCS con SDK.
-    import os
-    from google.cloud import storage
+MODEL_DST  = os.getenv("MODEL_DST", "/tmp/modelo_llaves.onnx")
+DATA_DST   = os.getenv("MODEL_DATA_DST", "/tmp/modelo_llaves.onnx.data")
+LABELS_DST = os.getenv("LABELS_DST", "/tmp/labels.json")
 
-    if not gcs_uri or not gcs_uri.startswith("gs://"):
-        raise RuntimeError(f"MODEL_GCS_URI inválida: {gcs_uri}")
+HTTP_TIMEOUT = int(os.getenv("BOOTSTRAP_HTTP_TIMEOUT", "900"))
+MODEL_MIN_BYTES = int(os.getenv("BOOTSTRAP_MODEL_MIN_BYTES", "100000"))
+DATA_MIN_BYTES  = int(os.getenv("BOOTSTRAP_DATA_MIN_BYTES", "1000000"))
+LABELS_MIN_BYTES= int(os.getenv("BOOTSTRAP_LABELS_MIN_BYTES", "2"))
 
-    # parse gs://bucket/obj
-    rest = gcs_uri[5:]
-    if "/" not in rest:
-        raise RuntimeError(f"GCS URI incompleta: {gcs_uri}")
-    bucket_name, blob_name = rest.split("/", 1)
 
-    os.makedirs(os.path.dirname(dst_path) or ".", exist_ok=True)
-    tmp_path = dst_path + f".tmp.{os.getpid()}"
+def _parse_gs(uri: str):
+    if not uri or not uri.startswith("gs://"):
+        raise ValueError(f"bad gs uri: {uri}")
+    rest = uri[5:]
+    bucket, _, name = rest.partition("/")
+    if not bucket or not name:
+        raise ValueError(f"bad gs uri: {uri}")
+    return bucket, name
 
-    client = storage.Client()
-    bucket = client.bucket(bucket_name)
-    blob = bucket.blob(blob_name)
+def _ensure_parent(p: str):
+    Path(p).parent.mkdir(parents=True, exist_ok=True)
 
-    # descarga atómica
-    blob.download_to_filename(tmp_path)
-    os.replace(tmp_path, dst_path)
-def ensure_model():
-    model_path = (os.getenv("MODEL_PATH", "/tmp/modelo_llaves.onnx") or "").strip()
-    gcs_uri = (os.getenv("MODEL_GCS_URI", "") or "").strip()
-    gcs_data_uri = (os.getenv("MODEL_DATA_GCS_URI", "") or "").strip()
+def _need(p: str, min_bytes: int) -> bool:
+    pp = Path(p)
+    return (not pp.exists()) or (pp.stat().st_size < min_bytes)
 
-    labels_gcs_uri = (os.getenv("LABELS_GCS_URI", "") or "").strip()
-    labels_path = (os.getenv("LABELS_PATH", "/tmp/labels.json") or "").strip()
+def _metadata_access_token() -> str:
+    req = urllib.request.Request(
+        "http://metadata.google.internal/computeMetadata/v1/instance/service-accounts/default/token",
+        headers={"Metadata-Flavor": "Google"},
+    )
+    with urllib.request.urlopen(req, timeout=5) as r:
+        payload = json.loads(r.read().decode("utf-8"))
+    return payload["access_token"]
 
-    if not model_path:
-        raise RuntimeError("MODEL_PATH vacío")
-    if not gcs_uri.startswith("gs://"):
-        raise RuntimeError(f"MODEL_GCS_URI inválida: {gcs_uri}")
+def _download_http_gcs(bucket: str, name: str, dst: str):
+    token = _metadata_access_token()
+    obj = urllib.parse.quote(name, safe="")
+    url = f"https://storage.googleapis.com/storage/v1/b/{bucket}/o/{obj}?alt=media"
+    req = urllib.request.Request(url, headers={"Authorization": f"Bearer {token}"})
 
-    data_path = model_path + ".data"
+    _ensure_parent(dst)
+    tmp_dir = str(Path(dst).parent)
 
-    # Descargar modelo si falta
-    if not _size_ok(model_path):
-        _atomic_gsutil_cp(gcs_uri, model_path)
+    log.warning(f"BOOTSTRAP http_start dst={dst} url={url}")
+    with urllib.request.urlopen(req, timeout=HTTP_TIMEOUT) as resp:
+        with tempfile.NamedTemporaryFile(delete=False, dir=tmp_dir, prefix=".tmp_", suffix=".part") as f:
+            tmp_path = f.name
+            while True:
+                chunk = resp.read(1024 * 1024)
+                if not chunk:
+                    break
+                f.write(chunk)
 
-    # Descargar .data si falta
-    if gcs_data_uri:
-        if not _size_ok(data_path):
-            _atomic_gsutil_cp(gcs_data_uri, data_path)
+    os.replace(tmp_path, dst)
+    log.warning(f"BOOTSTRAP http_done dst={dst} bytes={Path(dst).stat().st_size}")
 
-    # Descargar labels si se proporciona URI
-    if labels_gcs_uri:
-        if not labels_path:
-            raise RuntimeError("LABELS_PATH vacío")
-        if not labels_gcs_uri.startswith("gs://"):
-            raise RuntimeError(f"LABELS_GCS_URI inválida: {labels_gcs_uri}")
-        if not _size_ok(labels_path):
-            _atomic_gsutil_cp(labels_gcs_uri, labels_path)
+def _download_gcs(uri: str, dst: str):
+    bucket, name = _parse_gs(uri)
+    log.warning(f"BOOTSTRAP dl_start uri={uri} dst={dst}")
 
-    return model_path
+    # Intento 1: SDK (si está instalado)
+    try:
+        from google.cloud import storage
+        client = storage.Client()
+        blob = client.bucket(bucket).blob(name)
+
+        _ensure_parent(dst)
+        tmp_dir = str(Path(dst).parent)
+        with tempfile.NamedTemporaryFile(delete=False, dir=tmp_dir, prefix=".tmp_", suffix=".part") as f:
+            tmp_path = f.name
+
+        blob.download_to_filename(tmp_path)
+        os.replace(tmp_path, dst)
+        log.warning(f"BOOTSTRAP dl_done sdk dst={dst} bytes={Path(dst).stat().st_size}")
+        return
+    except Exception as e:
+        log.warning(f"BOOTSTRAP dl_sdk_failed uri={uri} err={type(e).__name__}:{e}")
+
+    # Intento 2: HTTP + token metadata
+    _download_http_gcs(bucket, name, dst)
+
+def ensure_model() -> bool:
+    model_uri  = os.getenv("MODEL_GCS_URI") or os.getenv("MODEL_GCS")
+    data_uri   = os.getenv("MODEL_GCS_DATA_URI") or os.getenv("MODEL_DATA_GCS_URI")
+    labels_uri = os.getenv("LABELS_GCS_URI") or os.getenv("LABELS_GCS")
+
+    log.warning(f"BOOTSTRAP enter model_uri={model_uri} data_uri={data_uri} labels_uri={labels_uri}")
+
+    if not model_uri:
+        log.warning("BOOTSTRAP missing MODEL_GCS_URI/MODEL_GCS -> skip")
+        return False
+
+    import fcntl
+    with open(LOCK_PATH, "w") as lock:
+        fcntl.flock(lock, fcntl.LOCK_EX)
+
+        if _need(MODEL_DST, MODEL_MIN_BYTES):
+            _download_gcs(model_uri, MODEL_DST)
+
+        if data_uri and _need(DATA_DST, DATA_MIN_BYTES):
+            _download_gcs(data_uri, DATA_DST)
+
+        if labels_uri and _need(LABELS_DST, LABELS_MIN_BYTES):
+            _download_gcs(labels_uri, LABELS_DST)
+
+    ok = Path(MODEL_DST).exists() and (not data_uri or Path(DATA_DST).exists())
+    log.warning(f"BOOTSTRAP exit ok={ok} model_exists={Path(MODEL_DST).exists()} data_exists={Path(DATA_DST).exists()} labels_exists={Path(LABELS_DST).exists()}")
+    return ok
