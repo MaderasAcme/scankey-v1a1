@@ -58,3 +58,4 @@ megafactory/reports/
 backup-base44/
 *.base44.app/
 _git_mistakes/
+dist/
