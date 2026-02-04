@@ -87,3 +87,23 @@ motor/*.bak_*
 out/
 megafactory/catalog/
 motor/catalog_runtime.json
+
+# --- SECURITY: NEVER COMMIT ---
+github-recovery-codes*.txt
+credentials.json
+*.pem
+*.p12
+*.key
+.env
+.env.*
+*.env
+
+# --- LOCAL DUMPS / PACKS ---
+*DUMP*.txt
+*dump*.txt
+scankey_dump*.txt
+SCN_*_DUMP_*.txt
+WORK_LITE_*.zip
+*_support.zip
+*_bundle.zip
+*_full.zip
