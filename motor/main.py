@@ -766,10 +766,14 @@ def _startup2():
 # --- Catalog endpoints ---
 @app.get("/api/catalog/version")
 def api_catalog_version():
+    if not _catalog:
+        return {"ok": False, "enabled": False, "error": "catalog_disabled"}
     return _catalog.version()
 
 @app.get("/api/catalog/{ref}")
 def api_catalog_ref(ref: str):
+    if not _catalog:
+        return {"ok": False, "enabled": False, "error": "catalog_disabled"}
     it = _catalog.get(ref)
     if not it:
         return {"ok": False, "error": "not_found", "ref": ref}
