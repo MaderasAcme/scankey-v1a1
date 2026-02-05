@@ -23,7 +23,9 @@ const MOD_MANIP = "expo-image-manipulator";
 
 function safeRequire(id) {
   try {
-    return require(id);
+    // Expo Web/Metro falla con require(id). Esta indirección evita el análisis estático.
+    const req = (0, eval)("require");
+    return req(id);
   } catch (e) {
     return null;
   }
