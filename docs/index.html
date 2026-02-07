@@ -66,10 +66,19 @@
 
   <script>
     const el = document.getElementById("status");
-    fetch("https://scankey-motor-2apb4vvlhq-no.a.run.app/health")
-      .then(r => r.json())
-      .then(j => el.textContent = (j && j.ok && j.model_ready) ? "OK / modelo listo" : "OK / cargando")
-      .catch(() => el.textContent = "no accesible");
+    const url = "https://scankey-motor-2apb4vvlhq-no.a.run.app/health";
+    const t = setTimeout(() => { el.textContent = "no accesible"; }, 3500);
+
+    fetch(url, { cache: "no-store" })
+      .then(r => r.ok ? r.json() : Promise.reject())
+      .then(j => {
+        clearTimeout(t);
+        el.textContent = (j && j.ok && j.model_ready) ? "OK / modelo listo" : "OK / cargando";
+      })
+      .catch(() => {
+        clearTimeout(t);
+        el.textContent = "no accesible";
+      });
   </script>
 </body>
 </html>
