@@ -26,13 +26,7 @@ jobs:
           if [ -f package-lock.json ]; then npm ci; else npm install; fi
 
       - name: Build (Expo Web -> dist)
-        run: |
-          # Si existe script build, úsalo. Si no, exporta con Expo a dist.
-          if npm run | grep -qE ' build'; then
-            npm run build
-          else
-            npx expo export --platform web --output-dir dist
-          fi
+        run: npm run build
 
       - name: Deploy to gh-pages
         uses: peaceiris/actions-gh-pages@v4
