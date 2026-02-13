@@ -51,7 +51,7 @@
         </p>
         <div class="cta">
           <a class="btn primary" href="https://snack.expo.dev/@guille3056/demo-2" target="_blank" rel="noreferrer">Abrir demo (Expo Snack)</a>
-          <a class="btn" href="https://scankey-motor-2apb4vvlhq-no.a.run.app/health" target="_blank" rel="noreferrer">Ver /health</a>
+          <a class="btn" href="https://scankey-gateway-2apb4vvlhq-no.a.run.app/health" target="_blank" rel="noreferrer">Ver /health</a>
           <a class="btn" href="https://github.com/MaderasAcme/scankey-v1a1" target="_blank" rel="noreferrer">GitHub</a>
         </div>
       </div>
@@ -65,8 +65,14 @@
   </div>
 
   <script>
+  globalThis.__SCN_CONFIG__ = {
+    API_BASE: "https://scankey-gateway-2apb4vvlhq-no.a.run.app"
+  };
+</script>
+
+<script>
     const el = document.getElementById("status");
-    fetch("https://scankey-motor-2apb4vvlhq-no.a.run.app/health")
+    fetch(apiUrl("/health"))
       .then(r => r.json())
       .then(j => el.textContent = (j && j.ok && j.model_ready) ? "OK / modelo listo" : "OK / cargando")
       .catch(() => el.textContent = "no accesible");
