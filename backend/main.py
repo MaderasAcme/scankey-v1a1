@@ -1,4 +1,5 @@
 from fastapi import FastAPI, UploadFile, File, Form
+from fastapi.middleware.cors import CORSMiddleware
 try:
     from .api_ocr import router as ocr_router
 except ImportError:
@@ -20,6 +21,20 @@ if run_ocr is None:
 
 app = FastAPI(title="ScanKey OCR Backend", version="v1")
 
+
+# --- CORS (web/app) ---
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=[
+        "http://localhost:5173",
+        "https://scankeyapp.com",
+        "https://www.scankeyapp.com",
+    ],
+    allow_credentials=False,
+    allow_methods=["GET", "POST", "OPTIONS"],
+    allow_headers=["*"],
+)
+# --- /CORS ---
 
 app.include_router(ocr_router)
 

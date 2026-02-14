@@ -76,11 +76,21 @@ const STORAGE_KEY_PENDING_FEEDBACK = "scankey_pending_feedback_v1";
 // Cloud Run endpoints (REAL)
 // - Puedes sobreescribir con EXPO_PUBLIC_MOTOR_BASE
 // =====================
-const MOTOR_BASE =
-  (typeof process !== "undefined" &&
-    process?.env &&
-    process.env.EXPO_PUBLIC_MOTOR_BASE) ||
-  "https://classify-llaves-2apb4vvlhq-ew.a.run.app";
+const ENV = (typeof process !== "undefined" && process && process.env) ? process.env : {};
+const WEB_API_BASE =
+  (typeof window !== "undefined" && window.__SCN_CONFIG__ && window.__SCN_CONFIG__.API_BASE)
+    ? String(window.__SCN_CONFIG__.API_BASE)
+    : "";
+
+// Base del backend (Gateway por defecto). Se puede sobreescribir con EXPO_PUBLIC_GATEWAY_BASE / EXPO_PUBLIC_API_BASE / EXPO_PUBLIC_MOTOR_BASE
+const MOTOR_BASE = (
+  ENV.EXPO_PUBLIC_GATEWAY_BASE ||
+  ENV.EXPO_PUBLIC_API_BASE ||
+  ENV.EXPO_PUBLIC_MOTOR_BASE ||
+  WEB_API_BASE ||
+  "https://scankey-gateway-2apb4vvlhq-no.a.run.app"
+).replace(/\/+$/, "");
+
 const API_ANALYZE = `${MOTOR_BASE}/api/analyze-key`;
 const API_FEEDBACK = `${MOTOR_BASE}/api/feedback`;
 

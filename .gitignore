@@ -73,3 +73,13 @@ node_modules/
 .expo/
 dist/
 App.js.bak.*
+
+# local trash
+_SANDBOX_TRASH/
+
+# secrets
+.env.local
+.env.*
+GATEWAY_API_KEY.txt
+*recovery-codes*
+credentials.json
