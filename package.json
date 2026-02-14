@@ -7,7 +7,8 @@
     "android": "expo start --android",
     "ios": "expo start --ios",
     "web": "expo start --web",
-    "build": "npx expo export --platform web --output-dir dist"
+    "build": "npx expo export --platform web --output-dir dist",
+    "postbuild": "node scripts/patch_dist_config.js"
   },
   "dependencies": {
     "@react-native-async-storage/async-storage": "2.2.0",
