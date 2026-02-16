@@ -1,0 +1,42 @@
+name: Sync AI Studio -> ui-studio (PR)
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "*/10 * * * *"
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout official repo
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Checkout AI Studio temp repo
+        uses: actions/checkout@v4
+        with:
+          repository: MaderasAcme/scankey-studio-temp
+          token: ${{ secrets.STUDIO_SYNC_TOKEN }}
+          path: _studio
+          fetch-depth: 1
+
+      - name: Copy studio -> ui-studio
+        run: |
+          rm -rf ui-studio
+          mkdir -p ui-studio
+          rsync -a --delete --exclude='.git' _studio/ ui-studio/
+          date -u > ui-studio/.synced_at_utc.txt
+
+      - name: Create Pull Request
+        uses: peter-evans/create-pull-request@v6
+        with:
+          commit-message: "sync: AI Studio -> ui-studio"
+          branch: "sync/ai-studio"
+          title: "sync: AI Studio -> ui-studio"
+          body: "Auto-sync from MaderasAcme/scankey-studio-temp into ui-studio/."
