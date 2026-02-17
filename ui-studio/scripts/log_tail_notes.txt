@@ -1,0 +1,29 @@
+
+# Lead Engineer - Operational Logging Runbook (Notes)
+
+ScanKey emite logs estructurados JSON diseñados para Google Cloud Logging.
+
+### ¿Qué buscar en incidentes?
+
+1. ERRORES CRÍTICOS (5xx):
+   Grep: '"severity":"ERROR"'
+   Check: 'status_code' 500 o 503.
+   Acción: Mirar 'latency_ms' para ver si es un timeout del motor.
+
+2. LATENCIAS ANÓMALAS:
+   Grep: '"latency_ms":'
+   Check: Si latency_ms > 15000, hay saturación en Cloud Run o "Cold Start" pesado.
+
+3. TRAZABILIDAD (Request Tracking):
+   Utiliza el 'request_id' (presente en la cabecera X-Request-Id del cliente)
+   para filtrar todos los eventos de una misma petición.
+
+4. MÉTRICAS DE MOTOR (Analyze Stats):
+   Filtra por: "message": "Key analysis finished"
+   Campos clave:
+   - 'top_confidence': Si baja del 0.40 consistentemente, el modelo está fallando.
+   - 'model_version': Verifica que sea la versión desplegada.
+   - 'high_confidence': 'true'/'false' ayuda a medir el éxito operativo.
+
+### Comandos Cloud SDK (Sugerencia):
+gcloud logging read "resource.type=cloud_run_revision AND severity>=ERROR" --limit 20 --format json

@@ -1,0 +1,56 @@
+name: Deploy Backend to Cloud Run
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - 'backend/**'
+  workflow_dispatch:
+
+env:
+  PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
+  REGION: europe-west1
+  SERVICE_NAME: scankey-api
+  IMAGE_NAME: scankey-backend
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+
+    steps:
+      - name: Checkout 🛎️
+        uses: actions/checkout@v4
+
+      - name: Google Auth 🔐
+        id: auth
+        uses: google-github-actions/auth@v2
+        with:
+          # Recomendado: Workload Identity Federation
+          workload_identity_provider: ${{ secrets.GCP_WIF_PROVIDER }}
+          service_account: ${{ secrets.GCP_WIF_SERVICE_ACCOUNT }}
+
+      - name: Set up Cloud SDK 🛠️
+        uses: google-github-actions/setup-gcloud@v2
+
+      - name: Authorize Docker 🐋
+        run: gcloud auth configure-docker gcr.io
+
+      - name: Build and Push Container 🏗️
+        run: |-
+          docker build -t gcr.io/${{ env.PROJECT_ID }}/${{ env.IMAGE_NAME }}:${{ github.sha }} ./backend
+          docker push gcr.io/${{ env.PROJECT_ID }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
+
+      - name: Deploy to Cloud Run 🚀
+        uses: google-github-actions/deploy-cloudrun@v2
+        with:
+          service: ${{ env.SERVICE_NAME }}
+          region: ${{ env.REGION }}
+          image: gcr.io/${{ env.PROJECT_ID }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
+          env_vars: |-
+            LOG_LEVEL=info
+            CORS_ORIGINS=${{ secrets.CORS_ORIGINS }}
+            MODEL_GCS=${{ secrets.MODEL_GCS }}
+            LABELS_GCS=${{ secrets.LABELS_GCS }}

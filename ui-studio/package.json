@@ -1,0 +1,28 @@
+
+{
+  "name": "scankey-pro",
+  "version": "2.1.0",
+  "private": true,
+  "scripts": {
+    "start": "expo start",
+    "android": "expo run:android",
+    "ios": "expo run:ios",
+    "web": "expo start --web",
+    "build:preview": "eas build -p android --profile preview",
+    "build:prod": "eas build -p android --profile production",
+    "qa:contract": "node scripts/contract_check.js scripts/sample_responses/normal.json",
+    "qa:secrets": "bash scripts/verify_no_secrets.sh",
+    "qa:smoke": "bash scripts/smoke_test_backend.sh",
+    "qa:all": "npm run qa:contract && npm run qa:secrets && npm run qa:smoke"
+  },
+  "dependencies": {
+    "expo": "~51.0.0",
+    "react": "18.2.0",
+    "react-native": "0.74.1",
+    "lucide-react": "^0.378.0",
+    "expo-constants": "~16.0.0"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.20.0"
+  }
+}

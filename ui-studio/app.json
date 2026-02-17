@@ -1,0 +1,45 @@
+
+{
+  "expo": {
+    "name": "ScanKey Pro",
+    "slug": "scankey-pro",
+    "version": "2.1.0",
+    "orientation": "portrait",
+    "icon": "./assets/images/icon.png",
+    "userInterfaceStyle": "dark",
+    "splash": {
+      "image": "./assets/images/splash-icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#1C1C1E"
+    },
+    "assetBundlePatterns": [
+      "**/*"
+    ],
+    "ios": {
+      "supportsTablet": false,
+      "bundleIdentifier": "com.scankey.pro"
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/images/icon.png",
+        "backgroundColor": "#1C1C1E"
+      },
+      "package": "com.scankey.pro",
+      "permissions": [
+        "CAMERA"
+      ]
+    },
+    "web": {
+      "favicon": "./assets/images/icon.png",
+      "dark": true
+    },
+    "extra": {
+      "apiBaseUrl": "https://api.scankey.tech/v1",
+      "timeoutMs": 25000,
+      "maxRetries": 2,
+      "eas": {
+        "projectId": "TU-PROJECT-ID-AQUI"
+      }
+    }
+  }
+}
