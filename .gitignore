@@ -83,3 +83,7 @@ _SANDBOX_TRASH/
 GATEWAY_API_KEY.txt
 *recovery-codes*
 credentials.json
+
+# --- allow env examples (TRACKED) ---
+!.env.example
+!.env.*.example
