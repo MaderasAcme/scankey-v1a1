@@ -3,12 +3,19 @@ import re
 import os
 # catalog es opcional: el motor NO debe caerse si falta
 try:
-    import catalog as _catalog  # /app/catalog.py
+    from . import catalog as _catalog  # /app/catalog.py
 except Exception:
     try:
         from motor import catalog as _catalog  # /app/motor/catalog.py
     except Exception:
         _catalog = None
+
+# Catalog matching module (multi-label enrichment)
+try:
+    from . import catalog_match
+except ImportError:
+    import catalog_match
+
 if _catalog and hasattr(_catalog, "load"):
     _catalog.load()
 import time
@@ -471,7 +478,7 @@ def debug_routes():
     return [{"path": r.path, "name": r.name, "methods": sorted(list(getattr(r, "methods", []) or []))} for r in app.router.routes]
 
 
-def _predict(img: PILImage.Image, ref_hint: Optional[str] = None) -> Tuple[List[Dict[str, Any]], Dict[str, Any]]:
+def _predict(img: PILImage.Image) -> Tuple[List[Dict[str, Any]], Dict[str, Any]]:
     if not STATE["model_ready"] or _SESSION is None:
         raise HTTPException(status_code=503, detail="ENGINE_NOT_READY")
 
@@ -483,7 +490,7 @@ def _predict(img: PILImage.Image, ref_hint: Optional[str] = None) -> Tuple[List[
     labels = _LABELS or []
     idxs = np.argsort(-probs)[:3]
     cands: List[Dict[str, Any]] = []
-    hint = {"ref_hint": (ref_hint or None)}
+    hint = {}
 
     for idx in idxs:
         idx = int(idx)
@@ -498,7 +505,7 @@ def analyze_key(
     front: UploadFile = File(...),
     back: UploadFile = File(None),
     modo: Optional[str] = Form(None),
-    ref_hint: Optional[str] = None,
+    ref_hint: Optional[str] = None, # Renamed from ref_hint to manufacturer_hint in frontend
     image_front: Optional[UploadFile] = File(None),
     image_back: Optional[UploadFile] = File(None),
     modo_taller: Optional[str] = Form(None),
@@ -543,11 +550,37 @@ def analyze_key(
         )
 
     t0 = time.time()
-    cands, hint = _predict(img, ref_hint)
+    cands, hint_from_predict = _predict(img) # _predict does not take ref_hint as input
     dt_ms = int((time.time() - t0) * 1000)
 
     top_label = (cands[0]["label"] if cands else None)
     top_score = float(cands[0]["score"]) if cands else 0.0
+
+    # Manufacturer hint processing
+    manufacturer_hint_obj = {"found": False, "name": None, "confidence": 0.0}
+    if ref_hint:
+        manufacturer_hint_obj["found"] = True
+        manufacturer_hint_obj["name"] = ref_hint
+        manufacturer_hint_obj["confidence"] = 0.85 # Assume high confidence if provided
+
+    # Catalog match enrichment
+    catalog_match_result = catalog_match.match_text(top_label or "", manufacturer_hint=manufacturer_hint_obj)
+
+    # Enrich candidates with rich data from catalog_match
+    enriched_cands = []
+    for cand in cands:
+        enriched_cand = cand.copy()
+        # Find if this cand's label matches any canon in catalog_match_result
+        matching_hits = [
+            h for h in catalog_match_result["catalog_hits"]
+            if h["canon"] == catalog_match.canon(cand["label"])
+        ]
+        if matching_hits:
+            # Take the rich_data from the first matching hit
+            rich_data = matching_hits[0]["rich_data"]
+            enriched_cand.update(rich_data) # Merge rich data into candidate
+        enriched_cands.append(enriched_cand)
+
 
     high_confidence = top_score >= 0.95
     low_confidence = top_score < 0.60
@@ -606,10 +639,10 @@ def analyze_key(
         "ts_utc": ts_utc,
         "modo": modo2,
         "result": {
-            "candidates": cands,
+            "candidates": cands, # Original candidates
             "top_label": top_label,
             "top_score": top_score,
-            "hint": hint,
+            "hint": hint_from_predict,
             "high_confidence": high_confidence,
             "low_confidence": low_confidence,
         },
@@ -656,8 +689,8 @@ def analyze_key(
         "ok": True,
         "input_id": input_id,
         "timestamp": ts_utc,
-        "candidates": cands,
-        "hint": hint,
+        "candidates": enriched_cands, # Return enriched candidates
+        "manufacturer_hint": manufacturer_hint_obj, # Return manufacturer hint object
         "high_confidence": high_confidence,
         "low_confidence": low_confidence,
         "should_store_sample": should_store_sample,

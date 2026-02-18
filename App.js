@@ -470,7 +470,27 @@ function normalizeEngineResponse(raw) {
             : null,
       };
     })
-    .sort((a, b) => (b.confidence || 0) - (a.confidence || 0));
+    .sort((a, b) => {
+      // Prioritize manufacturer hint if high confidence
+      const hintActive =
+        manufacturer_hint.found && manufacturer_hint.confidence >= 0.85;
+      const aIsHint =
+        hintActive &&
+        a.brand &&
+        manufacturer_hint.name &&
+        a.brand.toLowerCase() === manufacturer_hint.name.toLowerCase();
+      const bIsHint =
+        hintActive &&
+        b.brand &&
+        manufacturer_hint.name &&
+        b.brand.toLowerCase() === manufacturer_hint.name.toLowerCase();
+
+      if (aIsHint && !bIsHint) return -1; // a comes first
+      if (!aIsHint && bIsHint) return 1; // b comes first
+
+      // Fallback to confidence-based sorting
+      return (b.confidence || 0) - (a.confidence || 0);
+    });
 
   const results = mapped.slice(0, 3).map((r, idx) => ({ ...r, rank: idx + 1 }));
   while (results.length < 3) {
@@ -588,11 +608,15 @@ async function postAnalyzeOnce(frontUri, backUri, modoTaller, { timeoutMs = 1200
 // FEEDBACK: robust sender + fallback queue
 // =====================
 async function postFeedback(payload) {
-  const res = await fetch(API_FEEDBACK, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(payload),
-  });
+  const res = await fetchWithTimeout(
+    API_FEEDBACK,
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    },
+    DEFAULT_TIMEOUT_MS
+  );
 
   if (!res.ok) {
     const txt = await res.text().catch(() => "");
@@ -1475,7 +1499,7 @@ function CandidateCard({ rank, result, previewUri, previewSize, onPickCorrect, s
           ) : null}
 
           <Row style={{ flexWrap: "wrap", marginTop: 4 }}>
-            {result?.type ? <Tag text={String(result.type)} tone="accent" /> : null}
+            {result?.type ? <Tag text={`Tipo: ${result.type}`} tone="accent" /> : null}
             {result?.orientation ? <Tag text={`Orientación: ${result.orientation}`} /> : null}
             {result?.head_color ? <Tag text={`Cabezal: ${result.head_color}`} /> : null}
             {result?.visual_state ? <Tag text={`Estado: ${result.visual_state}`} /> : null}
