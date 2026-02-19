@@ -12,4 +12,7 @@ exec gunicorn \
   -b "0.0.0.0:${PORT}" \
   --timeout "${GUNICORN_TIMEOUT}" \
   --graceful-timeout "${GUNICORN_GRACEFUL_TIMEOUT}" \
+  --access-logfile - \
+  --error-logfile - \
+  --access-logformat '%(h)s %({X-Forwarded-For}i)s %({X-Request-ID}i)s %(l)s %(u)s %(t)s "%(r)s" %(s)s %(b)s "%(f)s" "%(a)s" %(D)s' \
   motor.main:app
