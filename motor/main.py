@@ -110,7 +110,7 @@ async def legacy_results_middleware(request, call_next):
 
 @app.on_event("startup")
 def _scankey_bootstrap_event():
-    from model_bootstrap import ensure_model
+    from motor.model_bootstrap import ensure_model
     print("BOOTSTRAP event_start", flush=True)
     try:
         ok = ensure_model()
@@ -499,7 +499,7 @@ def _ensure_session():
 
 @app.on_event("startup")
 def startup():
-    from model_bootstrap import ensure_model
+    from motor.model_bootstrap import ensure_model
     try:
         ensure_model()
         print('BOOTSTRAP startup_after_ensure', flush=True)
@@ -1004,7 +1004,7 @@ def debug_env():
 # --- Debug bootstrap (forzar descarga) ---
 @app.post("/debug/bootstrap-now")
 def debug_bootstrap_now():
-    from model_bootstrap import ensure_model, MODEL_DST, DATA_DST, LABELS_DST
+    from motor.model_bootstrap import ensure_model, MODEL_DST, DATA_DST, LABELS_DST
     from pathlib import Path
     err = None
     ok = False
