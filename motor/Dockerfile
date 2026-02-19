@@ -12,7 +12,7 @@ RUN pip install --no-cache-dir -r /app/requirements.txt
 COPY . /app
 
 COPY catalog.py /app/catalog.py
-CMD exec gunicorn -k uvicorn.workers.UvicornWorker -w 1 -b 0.0.0.0:${PORT} main:app
+# CMD removed (use /app/start.sh)
 
 COPY motor/labels.json /app/labels.json
 

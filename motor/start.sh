@@ -12,4 +12,4 @@ exec gunicorn \
   -b "0.0.0.0:${PORT}" \
   --timeout "${GUNICORN_TIMEOUT}" \
   --graceful-timeout "${GUNICORN_GRACEFUL_TIMEOUT}" \
-  main:app
+  motor.main:app
