@@ -89,7 +89,7 @@ def _download_gcs(uri: str, dst: str):
 
 def ensure_model() -> bool:
     model_uri  = os.getenv("MODEL_GCS_URI") or os.getenv("MODEL_GCS")
-    data_uri = os.getenv("MODEL_GCS_DATA_URI") or os.getenv("MODEL_DATA_GCS_URI") or os.getenv("DATA_GCS_URI")
+    data_uri = os.getenv("MODEL_GCS_DATA_URI") or os.getenv("MODEL_DATA_GCS_URI") or os.getenv("DATA_GCS_URI") or os.getenv("DATA_GCS_URI")
     labels_uri = os.getenv("LABELS_GCS_URI") or os.getenv("LABELS_GCS")
 
     log.warning(f"BOOTSTRAP enter model_uri={model_uri} data_uri={data_uri} labels_uri={labels_uri}")
