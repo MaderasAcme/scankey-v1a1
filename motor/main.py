@@ -11,10 +11,7 @@ except Exception:
         _catalog = None
 
 # Catalog matching module (multi-label enrichment)
-try:
-    from . import catalog_match
-except ImportError:
-    import catalog_match
+from common import catalog_match
 
 if _catalog and hasattr(_catalog, "load"):
     _catalog.load()
@@ -31,7 +28,7 @@ from google.cloud import storage
 import onnxruntime as ort
 from PIL import Image as PILImage
 import io
-from fastapi import FastAPI, UploadFile, File, HTTPException, Body, Form
+from fastapi import FastAPI, UploadFile, File, HTTPException, Body, Form, Query
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
@@ -300,6 +297,34 @@ def _store_feedback_sidecar(meta: Dict[str, Any], image_gcs_uri: str) -> Dict[st
         fb_obj = obj + ".feedback.json"
     return _store_json_sidecar(bucket_name, fb_obj, meta)
 
+def _store_inscription_event_to_gcs(inscription_norm: str, input_id: str, ts_utc: str, payload: Dict[str, Any]) -> Dict[str, Any]:
+    bucket_name = (os.getenv("INSCRIPTIONS_BUCKET", "") or "").strip()
+    if not bucket_name:
+        return {"stored_inscription_event": False, "reason": "INSCRIPTIONS_BUCKET env var is not set"}
+
+    if not inscription_norm:
+        return {"stored_inscription_event": False, "reason": "inscription_norm is empty"}
+
+    dt = datetime.datetime.utcnow()
+    date_path = dt.strftime("%Y/%m/%d")
+    ts = int(time.time())
+    
+    # Use original input_id and ts for the filename to ensure uniqueness for the event
+    event_obj = f"inscriptions/events/{date_path}/{input_id}_{ts}.json"
+    gcs_uri = f"gs://{bucket_name}/{event_obj}"
+
+    try:
+        client = storage.Client()
+        bucket = client.bucket(bucket_name)
+        blob = bucket.blob(event_obj)
+        blob.upload_from_string(
+            json.dumps(payload, ensure_ascii=False),
+            content_type="application/json"
+        )
+        return {"stored_inscription_event": True, "gcs_uri": gcs_uri}
+    except Exception as e:
+        return {"stored_inscription_event": False, "reason": f"store_error: {type(e).__name__}: {e}", "gcs_uri": gcs_uri}
+
 
 def _copy_to_by_ref(src_gcs_uri: str, ref_final_canon: str, side: str, input_id: str) -> Dict[str, Any]:
     enable = (os.getenv("ENABLE_CURATED_BY_REF", "1") or "1").strip() == "1"
@@ -349,6 +374,37 @@ def _copy_to_by_ref(src_gcs_uri: str, ref_final_canon: str, side: str, input_id:
         return {"stored": True, "gcs_uri": dst_gcs_uri, "count_before": cur, "max": max_n, "side": side2, "ref": ref2}
     except Exception as e:
         return {"stored": False, "reason": f"copy_error: {type(e).__name__}: {e}", "gcs_uri": dst_gcs_uri, "side": side2, "ref": ref2}
+
+
+# --- Inscriptions index (cached from GCS) ---
+_INSCRIPTIONS_INDEX_CACHE = {"data": None, "timestamp": 0}
+_INSCRIPTIONS_INDEX_TTL_SECONDS = 300 # 5 minutes
+
+def _load_inscriptions_index():
+    global _INSCRIPTIONS_INDEX_CACHE
+    now = time.time()
+
+    if _INSCRIPTIONS_INDEX_CACHE["data"] is not None and (now - _INSCRIPTIONS_INDEX_CACHE["timestamp"]) < _INSCRIPTIONS_INDEX_TTL_SECONDS:
+        return _INSCRIPTIONS_INDEX_CACHE["data"]
+
+    bucket_name = (os.getenv("INSCRIPTIONS_BUCKET", "") or "").strip()
+    if not bucket_name:
+        _INSCRIPTIONS_INDEX_CACHE = {"data": {"suggestions":[]}, "timestamp": now}
+        return _INSCRIPTIONS_INDEX_CACHE["data"]
+
+    index_obj = "inscriptions/index/inscriptions_index.json"
+    try:
+        client = storage.Client()
+        bucket = client.bucket(bucket_name)
+        blob = bucket.blob(index_obj)
+        data = blob.download_as_text()
+        index_data = json.loads(data)
+        _INSCRIPTIONS_INDEX_CACHE = {"data": index_data, "timestamp": now}
+        return index_data
+    except Exception as e:
+        print(f"Error loading inscriptions index from GCS: {type(e).__name__}: {e}")
+        _INSCRIPTIONS_INDEX_CACHE = {"data": {"suggestions":[]}, "timestamp": now} # Cache empty result to avoid hammering GCS
+        return _INSCRIPTIONS_INDEX_CACHE["data"]
 
 
 def _labels_path() -> str:
@@ -506,20 +562,11 @@ def analyze_key(
     back: UploadFile = File(None),
     modo: Optional[str] = Form(None),
     ref_hint: Optional[str] = None, # Renamed from ref_hint to manufacturer_hint in frontend
-    image_front: Optional[UploadFile] = File(None),
-    image_back: Optional[UploadFile] = File(None),
-    modo_taller: Optional[str] = Form(None),
 ):
-    front_up = front or image_front
-    back_up = back or image_back
-
-    if front_up is None:
-        raise HTTPException(status_code=400, detail="front requerido (usa front o image_front)")
+    if front is None:
+        raise HTTPException(status_code=400, detail="front requerido")
 
     modo2 = (modo or "").strip().lower()
-    if not modo2:
-        mt = (modo_taller or "").strip().lower()
-        modo2 = "taller" if mt in ("1", "true", "yes", "y") else "cliente"
     if modo2 not in ("taller", "cliente"):
         modo2 = "cliente"
 
@@ -561,7 +608,7 @@ def analyze_key(
     if ref_hint:
         manufacturer_hint_obj["found"] = True
         manufacturer_hint_obj["name"] = ref_hint
-        manufacturer_hint_obj["confidence"] = 0.85 # Assume high confidence if provided
+        manufacturer_hint_obj["confidence"] = 0.50  # weak hint by default
 
     # Catalog match enrichment
     catalog_match_result = catalog_match.match_text(top_label or "", manufacturer_hint=manufacturer_hint_obj)
@@ -717,6 +764,7 @@ def feedback(
     country: Optional[str] = None,
     city: Optional[str] = None,
     note: Optional[str] = None,
+    inscription_norm: Optional[str] = None, # New parameter for inscription
 ):
     if isinstance(payload, dict) and payload:
         gcs_uri = (payload.get("gcs_uri") or gcs_uri or "").strip()
@@ -733,6 +781,7 @@ def feedback(
         country = (payload.get("country") or country or None)
         city = (payload.get("city") or city or None)
         note = (payload.get("note") or note or None)
+        inscription_norm = (payload.get("inscription_norm") or inscription_norm or None) # Retrieve inscription_norm
 
     if not ref_final:
         raise HTTPException(400, "ref_final requerido")
@@ -770,6 +819,30 @@ def feedback(
     ref_best_canon = _canon(ref_best) if ref_best else None
 
     out_items: List[Dict[str, Any]] = []
+    inscription_event_status = {"stored_inscription_event": False, "reason": "no inscription_norm provided"}
+
+    # Store inscription event if available
+    if inscription_norm:
+        inscription_event_payload = {
+            "input_id": input_id2,
+            "ts_unix": now_unix,
+            "ts_utc": ts_utc,
+            "inscription_norm": inscription_norm,
+            "ref_final": ref_final,
+            "ref_final_canon": ref_final_canon,
+            "modo": modo2,
+            "ctx": {
+                "taller_id": (taller_id or None),
+                "country": (country or None),
+                "city": (city or None),
+            },
+            "runtime": {
+                "service": os.getenv("K_SERVICE", ""),
+                "revision": os.getenv("K_REVISION", ""),
+                "project": os.getenv("GOOGLE_CLOUD_PROJECT", ""),
+            },
+        }
+        inscription_event_status = _store_inscription_event_to_gcs(inscription_norm, input_id2, ts_utc, inscription_event_payload)
 
     for it in items:
         uri = (it.get("gcs_uri") or "").strip()
@@ -795,6 +868,7 @@ def feedback(
             "ref_final": ref_final,
             "ref_final_canon": ref_final_canon,
             "ref_source": (ref_source or "").strip().lower(),
+            "inscription_norm": inscription_norm, # Add inscription_norm here
             "ctx": {
                 "taller_id": (taller_id or None),
                 "country": (country or None),
@@ -839,7 +913,33 @@ def feedback(
         "ref_final_canon": ref_final_canon,
         "modo": modo2,
         "items": out_items,
+        "inscription_event": inscription_event_status,
     }
+
+
+@app.get("/api/inscription-suggest")
+def api_inscription_suggest(q: str = Query(..., min_length=1)):
+    q_upper = q.upper()
+    index_data = _load_inscriptions_index()
+    suggestions = []
+
+    # Exact match first
+    for s in index_data.get("suggestions", []):
+        text = s.get("text", "").upper()
+        if text == q_upper:
+            suggestions.append(s)
+            break # Only one exact match needed
+
+    # Prefix matches
+    for s in index_data.get("suggestions", []):
+        text = s.get("text", "").upper()
+        if text.startswith(q_upper) and text != q_upper: # Avoid re-adding exact match
+            suggestions.append(s)
+    
+    # Sort prefix matches by seen count descending, then text ascending
+    suggestions[1:] = sorted(suggestions[1:], key=lambda x: (-x.get("seen", 0), x.get("text", "")))
+
+    return {"ok": True, "query": q, "suggestions": suggestions[:10]} # Limit to top 10 suggestions
 
 
 # Arranca carga del modelo en startup

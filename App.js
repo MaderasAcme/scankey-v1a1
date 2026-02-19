@@ -69,7 +69,7 @@ const COLORS = {
   success: "#20C997",
 };
 
-const STORAGE_KEY = "scankey_demo_history_v2"; // v2 (sin fotos)
+const STORAGE_KEY = "scankey_history_v2";
 const STORAGE_KEY_PENDING_FEEDBACK = "scankey_pending_feedback_v1";
 
 // =====================
@@ -93,6 +93,7 @@ const MOTOR_BASE = (
 
 const API_ANALYZE = `${MOTOR_BASE}/api/analyze-key`;
 const API_FEEDBACK = `${MOTOR_BASE}/api/feedback`;
+const API_INSCRIPTION_SUGGEST = `${MOTOR_BASE}/api/inscription-suggest`; // New constant
 
 // =====================
 // Storage helpers (no fotos persistidas)
@@ -195,6 +196,12 @@ function parseModelParts(r) {
   const parts = s.split(/\s+/);
   if (parts.length === 1) return { brand: null, model: parts[0] };
   return { brand: parts[0] || null, model: parts.slice(1).join(" ") || null };
+}
+
+function normalizeInscription(text) {
+  if (!text) return "";
+  const normalized = text.toUpperCase().replace(/[^A-Z0-9-]/g, "");
+  return normalized.slice(0, 32);
 }
 
 // =====================
@@ -652,8 +659,30 @@ async function flushPendingFeedback() {
   return { sent, left: kept.length };
 }
 
+async function fetchInscriptionSuggestions(query, { signal } = {}) {
+  if (!query || query.length < 2) return [];
+  try {
+    const url = `${API_INSCRIPTION_SUGGEST}?q=${encodeURIComponent(query)}`;
+    const res = await fetchWithTimeout(url, { signal });
+    const data = await res.json();
+    if (res.ok && data?.ok) {
+      return data.suggestions || [];
+    }
+    console.error("Error fetching inscription suggestions:", data);
+    return [];
+  } catch (error) {
+    if (error.name === "AbortError") {
+      // Request was aborted, ignore
+    } else {
+      console.error("Network error fetching inscription suggestions:", error);
+    }
+    return [];
+  }
+}
+
 // =====================
 // UI primitives
+// =====================
 // =====================
 function Screen({ children }) {
   return (
@@ -1794,6 +1823,9 @@ function ManualCorrectionScreen({ goBack, go, scanDraft }) {
   const [type, setType] = useState("");
   const [orientation, setOrientation] = useState("");
   const [ocrText, setOcrText] = useState("");
+  const [inscription, setInscription] = useState("");
+  const [inscriptionSuggestions, setInscriptionSuggestions] = useState([]); // New state for suggestions
+  const abortControllerRef = useRef(null); // For aborting fetch requests
 
   useEffect(() => {
     const top = analysis?.results?.[0] || null;
@@ -1802,7 +1834,41 @@ function ManualCorrectionScreen({ goBack, go, scanDraft }) {
     setModel((top.model || "") + "");
     setType((top.type || "") + "");
     setOrientation((top.orientation || "") + "");
+    setOcrText((top.ocr_text || "") + ""); // Initialize ocrText from analysis
   }, [analysis]);
+
+  // Debounce and fetch inscription suggestions
+  useEffect(() => {
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+    }
+    const newAbortController = new AbortController();
+    abortControllerRef.current = newAbortController;
+
+    const handler = setTimeout(async () => {
+      if (inscription.length >= 2) { // Fetch only if query is at least 2 characters
+        try {
+          const suggestions = await fetchInscriptionSuggestions(inscription, {
+            signal: newAbortController.signal,
+          });
+          setInscriptionSuggestions(suggestions);
+        } catch (error) {
+          if (error.name === "AbortError") {
+            // Request was aborted, ignore
+          } else {
+            console.error("Error fetching inscription suggestions:", error);
+          }
+        }
+      } else {
+        setInscriptionSuggestions([]); // Clear suggestions if query is too short
+      }
+    }, 300); // 300ms debounce
+
+    return () => {
+      clearTimeout(handler);
+      abortControllerRef.current?.abort();
+    };
+  }, [inscription]);
 
   if (!analysis) {
     return (
@@ -1833,6 +1899,9 @@ function ManualCorrectionScreen({ goBack, go, scanDraft }) {
 
     setSending(true);
     try {
+      const normalizedInscription = normalizeInscription(inscription);
+      const inscriptionToSend = normalizedInscription.length >= 2 ? normalizedInscription : null;
+
       const payload = {
         input_id:
           scanDraft?.input_id ||
@@ -1845,12 +1914,16 @@ function ManualCorrectionScreen({ goBack, go, scanDraft }) {
         correct_model: model.trim(),
         correct_type: type ? String(type) : null,
         correct_orientation: orientation ? String(orientation) : null,
+        inscription_norm: inscriptionToSend,
       };
 
       await postFeedback(payload);
       safeAlert("OK", "Corrección enviada.");
       goBack();
     } catch (e) {
+      const normalizedInscription = normalizeInscription(inscription);
+      const inscriptionToSend = normalizedInscription.length >= 2 ? normalizedInscription : null;
+
       const count = await queueFeedback({
         input_id:
           scanDraft?.input_id ||
@@ -1863,6 +1936,7 @@ function ManualCorrectionScreen({ goBack, go, scanDraft }) {
         correct_model: model.trim(),
         correct_type: type ? String(type) : null,
         correct_orientation: orientation ? String(orientation) : null,
+        inscription_norm: inscriptionToSend,
       });
       safeAlert("Guardado", `Sin red. Corrección en cola.\nPendientes: ${count}`);
       goBack();
@@ -1948,6 +2022,36 @@ function ManualCorrectionScreen({ goBack, go, scanDraft }) {
           <Field label="Tipo" value={type} setValue={setType} placeholder="Ej: plana, dimple…" />
           <Field label="Orientación" value={orientation} setValue={setOrientation} placeholder="Ej: izquierda/derecha/simétrica" />
           <Field label="Texto cabezal (OCR)" value={ocrText} setValue={setOcrText} placeholder="Ej: TE8I, JMA…" />
+          <Field label="Texto/Inscripción en llave" value={inscription} setValue={setInscription} placeholder="Ej: ROTO, DO NOT DUPLICATE, .." />
+
+          {inscriptionSuggestions.length > 0 && (
+            <View style={{ marginTop: 12 }}>
+              <Text style={{ color: COLORS.textSoft, fontWeight: "900", fontSize: 12, letterSpacing: 1, marginBottom: 8 }}>
+                SUGERENCIAS DE INSCRIPCIÓN
+              </Text>
+              <Row style={{ flexWrap: "wrap", gap: 8 }}>
+                {inscriptionSuggestions.map((s, idx) => (
+                  <TouchableOpacity
+                    key={idx}
+                    activeOpacity={0.85}
+                    onPress={() => setInscription(s.text || "")} // Populate input on chip click
+                    style={{
+                      paddingHorizontal: 10,
+                      paddingVertical: 5,
+                      borderRadius: 999,
+                      backgroundColor: "rgba(255,255,255,0.06)",
+                      borderWidth: 1,
+                      borderColor: "rgba(255,255,255,0.08)",
+                    }}
+                  >
+                    <Text style={{ color: COLORS.textSoft, fontWeight: "900", fontSize: 13 }}>
+                      {s.text} ({s.seen || 0})
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </Row>
+            </View>
+          )}
         </Card>
 
         <PrimaryButton

@@ -92,42 +92,25 @@ def _expand_slash(tok: str):
             out.append(prefix + p)
     return out
 
-# Dummy rich ref db for demonstration
-DUMMY_RICH_REF_DB = {
-    "A00": {
-        "brand": "JMA",
-        "model": "A00",
-        "type": "standard",
-        "patentada": False,
-        "compatibility_tags": ["general", "classic"],
-        "aliases": ["A00_OLD", "A0_ZERO"],
-        "orientation_variants": []
-    },
-    "ABU10I": {
-        "brand": "ABUS",
-        "model": "ABU10I",
-        "type": "dimple",
-        "patentada": True,
-        "compatibility_tags": ["security", "abus-specific"],
-        "aliases": ["AB10", "ABUS10I"],
-        "orientation_variants": ["ABU10D"]
-    },
-    "TE8I": {
-        "brand": "TESA",
-        "model": "TE8I",
-        "type": "plana",
-        "patentada": False,
-        "compatibility_tags": ["residential"],
-        "aliases": ["TESA8I"],
-        "orientation_variants": ["TE8D"]
-    }
-}
+
 
 @lru_cache(maxsize=1)
 def _load_catalog():
     canon_set = set()
     preferred = {}
-    rich_ref_db = DUMMY_RICH_REF_DB.copy() # Start with dummy data
+    rich_ref_db = {} # Initialize as empty
+
+    # Load rich_ref_db from SCN_REF_DB_PATH
+    scn_ref_db_path = os.getenv("SCN_REF_DB_PATH", "").strip()
+    if scn_ref_db_path:
+        ref_db_path = Path(scn_ref_db_path)
+        if ref_db_path.exists():
+            try:
+                with open(ref_db_path, "r", encoding="utf-8") as f:
+                    rich_ref_db = json.load(f)
+            except Exception:
+                # If loading fails, rich_ref_db remains empty
+                pass
 
     paths = []
     if CANON_OVERRIDE:
