@@ -28,7 +28,7 @@ from google.cloud import storage
 import onnxruntime as ort
 from PIL import Image as PILImage
 import io
-from fastapi import FastAPI, UploadFile, File, HTTPException, Body, Form, Query
+from fastapi import FastAPI, UploadFile, File, HTTPException, Body, Form, Query, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
@@ -118,6 +118,16 @@ def _scankey_bootstrap_event():
     except Exception as e:
         print(f"BOOTSTRAP event_failed err={type(e).__name__}:{e}", flush=True)
         raise
+
+
+# Add Request ID middleware
+@app.middleware("http")
+async def add_request_id_middleware(request, call_next):
+    request_id = str(uuid.uuid4())
+    request.state.request_id = request_id
+    response = await call_next(request)
+    response.headers["X-Request-ID"] = request_id
+    return response
 
 app.add_middleware(
     CORSMiddleware,
@@ -500,13 +510,19 @@ def _ensure_session():
 @app.on_event("startup")
 def startup():
     from motor.model_bootstrap import ensure_model
+    print('BOOTSTRAP startup_start', flush=True)
     try:
+        # Attempt to ensure model, but do not block startup
         ensure_model()
-        print('BOOTSTRAP startup_after_ensure', flush=True)
+        STATE["model_ready"] = True
+        STATE["error"] = None
+        print('BOOTSTRAP startup_after_ensure ok=True', flush=True)
     except Exception as e:
-        print(f'BOOTSTRAP startup_failed err={type(e).__name__}:{e}', flush=True)
-        raise
-    _ensure_session()
+        STATE["model_ready"] = False
+        STATE["error"] = f"Startup model load failed: {type(e).__name__}: {e}"
+        print(f'BOOTSTRAP startup_failed err={STATE["error"]}', flush=True)
+    _ensure_session() # Start the background session loader anyway
+    print('BOOTSTRAP startup_end', flush=True)
 
 
 @app.get("/health")
@@ -558,6 +574,7 @@ def _predict(img: PILImage.Image) -> Tuple[List[Dict[str, Any]], Dict[str, Any]]
 
 @app.post("/api/analyze-key")
 def analyze_key(
+    request: Request,
     front: UploadFile = File(...),
     back: UploadFile = File(None),
     modo: Optional[str] = Form(None),
@@ -734,6 +751,7 @@ def analyze_key(
 
     return {
         "ok": True,
+        "request_id": request.state.request_id,
         "input_id": input_id,
         "timestamp": ts_utc,
         "candidates": enriched_cands, # Return enriched candidates
@@ -750,6 +768,7 @@ def analyze_key(
 
 @app.post("/api/feedback")
 def feedback(
+    request: Request,
     payload: Optional[Dict[str, Any]] = Body(default=None),
     gcs_uri: str = "",
     gcs_uri_back: Optional[str] = None,
@@ -907,6 +926,7 @@ def feedback(
 
     return {
         "ok": True,
+        "request_id": request.state.request_id,
         "input_id": input_id2,
         "ts_utc": ts_utc,
         "ref_final": ref_final,
