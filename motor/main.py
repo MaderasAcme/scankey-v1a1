@@ -32,7 +32,7 @@ from fastapi import FastAPI, UploadFile, File, HTTPException, Body, Form, Query
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
-from model_bootstrap import ensure_model
+from motor.model_bootstrap import ensure_model
 
 BOOT_TS = time.time()
 
