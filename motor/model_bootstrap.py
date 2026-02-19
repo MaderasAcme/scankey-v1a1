@@ -7,7 +7,7 @@ LOCK_PATH = "/tmp/scankey_bootstrap.lock"
 
 MODEL_DST  = os.getenv("MODEL_DST", "/tmp/modelo_llaves.onnx")
 DATA_DST   = os.getenv("MODEL_DATA_DST", "/tmp/modelo_llaves.onnx.data")
-LABELS_DST = os.getenv("LABELS_DST", "/tmp/labels.json")
+LABELS_DST = os.getenv("LABELS_DST", "/app/labels.json")
 
 HTTP_TIMEOUT = int(os.getenv("BOOTSTRAP_HTTP_TIMEOUT", "900"))
 MODEL_MIN_BYTES = int(os.getenv("BOOTSTRAP_MODEL_MIN_BYTES", "100000"))
@@ -89,7 +89,7 @@ def _download_gcs(uri: str, dst: str):
 
 def ensure_model() -> bool:
     model_uri  = os.getenv("MODEL_GCS_URI") or os.getenv("MODEL_GCS")
-    data_uri   = os.getenv("MODEL_GCS_DATA_URI") or os.getenv("MODEL_DATA_GCS_URI")
+    data_uri = os.getenv("MODEL_GCS_DATA_URI") or os.getenv("MODEL_DATA_GCS_URI") or os.getenv("DATA_GCS_URI")
     labels_uri = os.getenv("LABELS_GCS_URI") or os.getenv("LABELS_GCS")
 
     log.warning(f"BOOTSTRAP enter model_uri={model_uri} data_uri={data_uri} labels_uri={labels_uri}")
