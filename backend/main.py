@@ -57,10 +57,7 @@ async def api_ocr(
 
   # Post-proceso: extrae tokens y los cruza con el catálogo JMA (refs)
   try:
-    try:
-      from . import catalog_match
-    except Exception:
-      import catalog_match
+    from common import catalog_match
     cat = catalog_match.match_text(out.get("text",""))
     out.update(cat)
     out["catalog_hint"] = {"best_ref": cat.get("best_ref"), "best_ref_canon": cat.get("best_ref_canon"), "unique_hits": [x.get("display") for x in (cat.get("catalog_hits_unique") or [])]}

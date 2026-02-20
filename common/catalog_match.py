@@ -92,10 +92,25 @@ def _expand_slash(tok: str):
             out.append(prefix + p)
     return out
 
+
+
 @lru_cache(maxsize=1)
 def _load_catalog():
     canon_set = set()
     preferred = {}
+    rich_ref_db = {} # Initialize as empty
+
+    # Load rich_ref_db from SCN_REF_DB_PATH
+    scn_ref_db_path = os.getenv("SCN_REF_DB_PATH", "").strip()
+    if scn_ref_db_path:
+        ref_db_path = Path(scn_ref_db_path)
+        if ref_db_path.exists():
+            try:
+                with open(ref_db_path, "r", encoding="utf-8") as f:
+                    rich_ref_db = json.load(f)
+            except Exception:
+                # If loading fails, rich_ref_db remains empty
+                pass
 
     paths = []
     if CANON_OVERRIDE:
@@ -112,6 +127,10 @@ def _load_catalog():
             except Exception:
                 pass
 
+    # Ensure rich_ref_db keys are also in canon_set
+    for k in rich_ref_db.keys():
+        canon_set.add(k)
+
     if VARIANTS_PATH.exists():
         try:
             variants = json.load(open(VARIANTS_PATH, "r", encoding="utf-8"))
@@ -125,7 +144,7 @@ def _load_catalog():
             arr2.sort(key=lambda x: (0 if "-" in x else 1, len(x)))
             preferred[k2] = arr2[0]
 
-    return canon_set, preferred
+    return canon_set, preferred, rich_ref_db
 
 def _gen_variants(c: str, max_flips: int = 2, max_out: int = 64):
     out = {c}
@@ -176,8 +195,8 @@ def extract_tokens(text: str):
                 clean.append(y)
     return clean
 
-def match_tokens(tokens):
-    canon_set, preferred = _load_catalog()
+def match_tokens(tokens, manufacturer_hint=None):
+    canon_set, preferred, rich_ref_db = _load_catalog()
 
     hits = []
     for idx, tok in enumerate(tokens):
@@ -198,13 +217,23 @@ def match_tokens(tokens):
                     break
 
         if hit:
+            rich_data = rich_ref_db.get(hit, {}) # Get rich data, or empty dict if not found
             disp = preferred.get(hit) or pretty_ref(hit)
+            
+            # Prioritize hits that match manufacturer_hint if provided and confident
+            score = 1.0 # Base score for a match
+            if manufacturer_hint and manufacturer_hint.get("found") and manufacturer_hint.get("confidence", 0) >= 0.85:
+                if rich_data.get("brand") and rich_data["brand"].lower() == manufacturer_hint["name"].lower():
+                    score += 0.5 # Boost score for matching manufacturer hint
+
             hits.append({
                 "raw": tok,
                 "canon": hit,
                 "display": disp,
                 "index": idx,
                 "match_kind": match_kind,
+                "rich_data": rich_data, # Include the rich data
+                "score": score # Include score for later ranking adjustment
             })
 
     # únicos por canon (con primer índice)
@@ -218,7 +247,7 @@ def match_tokens(tokens):
             seen.add(h["canon"])
             uniq.append(h)
 
-    # best_ref: 1) mayor frecuencia 2) aparece antes 3) más corto
+    # best_ref: 1) mayor frecuencia 2) aparece antes 3) más corto 4) score del hint
     best = None
     if hits:
         # 1) prioriza EXACT; si no hay exact, usa todo (incluye confusion)
@@ -235,11 +264,14 @@ def match_tokens(tokens):
             idx = int(h.get('index', 10**9))
             if c not in first_pos or idx < first_pos[c]:
                 first_pos[c] = idx
-    
-        # 3) más corto (y estable)
+        
+        # 3) score (del hint)
+        score_map = {h['canon']: h['score'] for h in pool}
+        
+        # 4) más corto (y estable)
         best = sorted(
             cnt.items(),
-            key=lambda kv: (-kv[1], first_pos.get(kv[0], 10**9), len(kv[0]), kv[0])
+            key=lambda kv: (-score_map.get(kv[0], 0), -kv[1], first_pos.get(kv[0], 10**9), len(kv[0]), kv[0])
         )[0][0]
     return {
         "tokens_raw": tokens,
@@ -249,7 +281,9 @@ def match_tokens(tokens):
         "catalog_unique_count": len(uniq),
         "best_ref": (preferred.get(best) or pretty_ref(best)) if best else None,
         "best_ref_canon": best,
+        "best_ref_rich_data": rich_ref_db.get(best, {}) # Include rich data for best ref
     }
 
-def match_text(text: str):
-    return match_tokens(extract_tokens(text))
+def match_text(text: str, manufacturer_hint=None):
+    return match_tokens(extract_tokens(text), manufacturer_hint)
+

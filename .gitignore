@@ -87,3 +87,7 @@ credentials.json
 # --- allow env examples (TRACKED) ---
 !.env.example
 !.env.*.example
+
+# python
+__pycache__/
+*.pyc
