@@ -1,7 +1,5 @@
-try:
-    from common import catalog_match
-except Exception:
 from common import catalog_match
+
 def catalog_hint_from_text(text: str):
     """
     Devuelve hint de referencia basado en catálogo.
