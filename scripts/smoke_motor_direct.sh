@@ -10,7 +10,7 @@ ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 MOTOR_URL="$(gcloud run services describe "$SVC" --region "$REGION" --format='value(status.url)')"
 TOKEN="$(gcloud auth print-identity-token \
   --impersonate-service-account="$SA" \
-  --audiences="$MOTOR_URL")"  # docs 2
+  --audiences="$MOTOR_URL")"
 
 echo "MOTOR_URL=$MOTOR_URL"
 echo "token_len=${#TOKEN}"
@@ -25,15 +25,28 @@ BACK="${BACK:-$ROOT/backend/test.png}"
 test -f "$FRONT" || { echo "Missing FRONT: $FRONT"; exit 1; }
 test -f "$BACK"  || { echo "Missing BACK: $BACK"; exit 1; }
 
-echo "== /api/analyze-key (expect should_store_sample=false with STORAGE_PROBABILITY=0) =="
-curl -fsS --max-time 120 \
+echo "== /api/analyze-key =="
+curl -sS --max-time 120 \
+  -D /tmp/motor_h.txt \
+  -o /tmp/motor_b.txt \
+  -w 'HTTP=%{http_code}\n' \
   -H "Authorization: Bearer $TOKEN" \
   -F "front=@$FRONT" \
   -F "back=@$BACK" \
-  "$MOTOR_URL/api/analyze-key" \
-| python3 - <<'PY'
-import sys, json
-d=json.load(sys.stdin)
+  "$MOTOR_URL/api/analyze-key"
+
+echo
+echo "== HEADERS =="; sed -n '1,40p' /tmp/motor_h.txt
+echo
+echo "== BODY (first 600) =="; head -c 600 /tmp/motor_b.txt; echo
+echo
+
+python3 - <<'PY' || true
+import json
+with open("/tmp/motor_b.txt","rb") as f:
+  raw=f.read().decode("utf-8","ignore").strip()
+print("body_len:", len(raw))
+d=json.loads(raw)
 print("storage_probability:", d.get("storage_probability"))
 print("should_store_sample:", d.get("should_store_sample"))
 store=d.get("store") or {}
