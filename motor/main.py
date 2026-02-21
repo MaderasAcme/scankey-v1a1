@@ -650,6 +650,10 @@ def analyze_key(
     low_confidence = top_score < 0.60
 
     storage_probability = float(__import__("os").getenv("STORAGE_PROBABILITY","0.75"))
+    labels_count_local = len(LABELS) if isinstance(LABELS, list) else 0
+    disable_store_single = __import__("os").getenv("DISABLE_STORE_SINGLE_LABEL","1").lower() in ("1","true","yes")
+    can_store = not (disable_store_single and labels_count_local <= 1)
+
     should_store_sample = False
     current_samples_for_candidate = -1
 
@@ -667,7 +671,7 @@ def analyze_key(
 
     if top_label and top_score >= 0.75:
         max_n = int((os.getenv("MAX_SAMPLES_PER_REF_SIDE", "30") or "30").strip() or "30")
-        if current_samples_for_candidate == -1 or current_samples_for_candidate < max_n:
+        if can_store and (current_samples_for_candidate == -1 or current_samples_for_candidate < max_n):
             should_store_sample = (random.random() < storage_probability)
 
     store = {"stored": False, "reason": "policy", "side": "A"}
