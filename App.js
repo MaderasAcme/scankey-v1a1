@@ -1519,21 +1519,21 @@ function CandidateCard({ rank, result, previewUri, previewSize, onPickCorrect, s
           </Row>
 
           <Text style={{ color: COLORS.text, fontWeight: "900", fontSize: 18, marginTop: 8 }}>
-            {titleLine}
+            {(titleLine || "").toUpperCase()}
           </Text>
           {!!subLine ? (
             <Text style={{ color: COLORS.textSoft, marginTop: 2, fontWeight: "800" }}>
-              {subLine}
+              {(subLine || "").toUpperCase()}
             </Text>
           ) : null}
 
           <Row style={{ flexWrap: "wrap", marginTop: 4 }}>
-            {result?.type ? <Tag text={`Tipo: ${result.type}`} tone="accent" /> : null}
-            {result?.orientation ? <Tag text={`Orientación: ${result.orientation}`} /> : null}
-            {result?.head_color ? <Tag text={`Cabezal: ${result.head_color}`} /> : null}
-            {result?.visual_state ? <Tag text={`Estado: ${result.visual_state}`} /> : null}
+            {result?.type ? <Tag text={`TIPO: ${result.type.toUpperCase()}`} tone="accent" /> : null}
+            {result?.orientation ? <Tag text={`ORIENTACIÓN: ${result.orientation.toUpperCase()}`} /> : null}
+            {result?.head_color ? <Tag text={`CABEZAL: ${result.head_color.toUpperCase()}`} /> : null}
+            {result?.visual_state ? <Tag text={`ESTADO: ${result.visual_state.toUpperCase()}`} /> : null}
             {Array.isArray(result?.compatibility_tags)
-              ? result.compatibility_tags.slice(0, 3).map((t) => <Tag key={t} text={t} />)
+              ? result.compatibility_tags.slice(0, 3).map((t) => <Tag key={t} text={t.toUpperCase()} />)
               : null}
           </Row>
 
@@ -1909,11 +1909,11 @@ function ManualCorrectionScreen({ goBack, go, scanDraft }) {
           String(scanDraft?.createdAt || Date.now()),
         chosen_id_model_ref: null,
         source: "app_manual",
-        ocr_text: ocrText ? String(ocrText) : null,
-        correct_brand: brand.trim(),
-        correct_model: model.trim(),
-        correct_type: type ? String(type) : null,
-        correct_orientation: orientation ? String(orientation) : null,
+        ocr_text: ocrText ? String(ocrText).toUpperCase() : null,
+        correct_brand: brand.trim().toUpperCase(),
+        correct_model: model.trim().toUpperCase(),
+        correct_type: type ? String(type).toUpperCase() : null,
+        correct_orientation: orientation ? String(orientation).toUpperCase() : null,
         inscription_norm: inscriptionToSend,
       };
 
@@ -1931,11 +1931,11 @@ function ManualCorrectionScreen({ goBack, go, scanDraft }) {
           String(scanDraft?.createdAt || Date.now()),
         chosen_id_model_ref: null,
         source: "app_manual_queued",
-        ocr_text: ocrText ? String(ocrText) : null,
-        correct_brand: brand.trim(),
-        correct_model: model.trim(),
-        correct_type: type ? String(type) : null,
-        correct_orientation: orientation ? String(orientation) : null,
+        ocr_text: ocrText ? String(ocrText).toUpperCase() : null,
+        correct_brand: brand.trim().toUpperCase(),
+        correct_model: model.trim().toUpperCase(),
+        correct_type: type ? String(type).toUpperCase() : null,
+        correct_orientation: orientation ? String(orientation).toUpperCase() : null,
         inscription_norm: inscriptionToSend,
       });
       safeAlert("Guardado", `Sin red. Corrección en cola.\nPendientes: ${count}`);
@@ -1946,10 +1946,10 @@ function ManualCorrectionScreen({ goBack, go, scanDraft }) {
   };
 
   const pickFromCandidate = (r) => {
-    setBrand((r?.brand || "") + "");
-    setModel((r?.model || "") + "");
-    setType((r?.type || "") + "");
-    setOrientation((r?.orientation || "") + "");
+    setBrand(((r?.brand || "") + "").toUpperCase());
+    setModel(((r?.model || "") + "").toUpperCase());
+    setType(((r?.type || "") + "").toUpperCase());
+    setOrientation(((r?.orientation || "") + "").toUpperCase());
   };
 
   return (
@@ -2222,7 +2222,7 @@ function HistoryScreen({ goBack, go }) {
 
                   <View style={{ flex: 1 }}>
                     <Text style={{ color: COLORS.text, fontWeight: "900" }}>
-                      {it.topTitle || "Escaneo"}
+                      {(it.topTitle || "Escaneo").toUpperCase()}
                     </Text>
                     <Text style={{ color: COLORS.textSoft, marginTop: 4 }}>
                       {new Date(it.createdAt).toLocaleString()}
