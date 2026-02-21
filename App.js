@@ -585,6 +585,8 @@ function normalizeEngineResponse(raw) {
   }
 
   const top = results[0] || null;
+  const top = results;
+
   const topConf = clamp01(top?.confidence || 0);
 
   const high_confidence =
@@ -1643,16 +1645,6 @@ function CandidateCard({ rank, result, previewUri, previewSize, onPickCorrect, s
 }
 
 function ResultsScreen({ goBack, go, scanDraft, onSaveToHistory, onNewScan }) {
-  // --- Catalog enrichment (TOP3) ---
-  const rawResults = (
-    (scanDraft?.api?.results) ||
-    (scanDraft?.apiResponse?.results) ||
-    (scanDraft?.analysis?.results) ||
-    (scanDraft?.resp?.results) ||
-    (scanDraft?.results) ||
-    []
-  );
-  const top = Array.isArray(rawResults) ? rawResults.map(enrichResultFromCatalog) : [];
 
   const analysis = scanDraft?.analysis || null;
   const [sending, setSending] = useState(false);
@@ -1660,12 +1652,13 @@ function ResultsScreen({ goBack, go, scanDraft, onSaveToHistory, onNewScan }) {
 
   const previewSize = useImageNaturalSize(scanDraft?.frontUri || null);
 
+  
   const results = useMemo(() => {
     const r = analysis?.results;
-    return Array.isArray(r) ? r : [];
+    const base = Array.isArray(r) ? r : [];
+    return base.map(enrichResultFromCatalog);
   }, [analysis]);
-
-  const topConf = clamp01(results?.[0]?.confidence || 0);
+const topConf = clamp01(results?.[0]?.confidence || 0);
   const low = !!analysis?.low_confidence;
   const high = !!analysis?.high_confidence;
 
@@ -1707,7 +1700,7 @@ function ResultsScreen({ goBack, go, scanDraft, onSaveToHistory, onNewScan }) {
           scanDraft?.input_id ||
           analysis?.input_id ||
           String(scanDraft?.createdAt || Date.now()),
-        chosen_id_model_ref: candidate?.id_model_ref || null,
+        chosen_id_model_ref: (candidate?.id_model_ref || candidate?._id_model_ref || null),
         source: "app_real",
         ocr_text: null,
         correct_brand: candidate?.brand || null,
@@ -1723,7 +1716,7 @@ function ResultsScreen({ goBack, go, scanDraft, onSaveToHistory, onNewScan }) {
           scanDraft?.input_id ||
           analysis?.input_id ||
           String(scanDraft?.createdAt || Date.now()),
-        chosen_id_model_ref: candidate?.id_model_ref || null,
+        chosen_id_model_ref: (candidate?.id_model_ref || candidate?._id_model_ref || null),
         source: "app_real_queued",
         ocr_text: null,
         correct_brand: candidate?.brand || null,
