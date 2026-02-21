@@ -31,6 +31,72 @@ function safeRequire(id) {
   }
 }
 
+
+// ---- Catalog resolver (robusto: soporta json en varios formatos) ----
+const RAW_CATALOG = (() => {
+  try {
+    return require("./refs/catalog_refs.json");
+  } catch (e) {
+    return null;
+  }
+})();
+
+function buildCatalogIndex(raw) {
+  const empty = { byRef: {}, list: [] };
+  if (!raw) return empty;
+
+  const data =
+    raw.refs ||
+    raw.items ||
+    raw.catalog ||
+    raw.data ||
+    raw;
+
+  let list = [];
+  if (Array.isArray(data)) list = data;
+  else if (Array.isArray(data?.items)) list = data.items;
+  else if (data && typeof data === "object") list = Object.values(data);
+  else list = [];
+
+  const byRef = {};
+  for (const it of list) {
+    const ref = String(it?.ref || it?.model_ref || it?.id_model_ref || it?.label || it?.id || "")
+      .trim()
+      .toUpperCase();
+    if (!ref) continue;
+    byRef[ref] = { ...it, ref };
+  }
+  return { byRef, list };
+}
+
+const CATALOG = buildCatalogIndex(RAW_CATALOG);
+
+function catalogLookup(refOrLabel) {
+  const ref = String(refOrLabel || "").trim().toUpperCase();
+  if (!ref) return null;
+  return CATALOG.byRef[ref] || null;
+}
+
+function enrichResultFromCatalog(r) {
+  const ref = (r?.ref || r?.label || r?.model || "").toString().trim().toUpperCase();
+  const c = catalogLookup(ref);
+  if (!c) return { ...r, ref: ref || null, _catalog_found: false };
+
+  return {
+    ...r,
+    ref: (c.ref || ref || null),
+    brand: (r?.brand ?? c.brand ?? null),
+    model: (r?.model ?? c.model ?? c.ref ?? ref ?? null),
+    type: (r?.type ?? c.type ?? "KEY"),
+    orientation: (r?.orientation ?? c.orientation ?? null),
+    head_color: (r?.head_color ?? c.head_color ?? null),
+    compatibility_tags: (r?.compatibility_tags ?? c.compatibility_tags ?? c.tags ?? []),
+    _catalog_found: true,
+    _id_model_ref: (c.id_model_ref ?? c.ref ?? ref ?? null),
+  };
+}
+
+
 let AsyncStorage = null;
 try {
   const m = safeRequire(MOD_ASYNC);
