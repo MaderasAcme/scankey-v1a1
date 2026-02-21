@@ -10,6 +10,7 @@ from fastapi.middleware.cors import CORSMiddleware
 import google.auth.transport.requests
 from google.oauth2 import id_token
 from google.cloud import storage
+from normalize import normalize_engine_response
 
 APP_VERSION = "0.5.0"
 
@@ -38,6 +39,12 @@ def _proxy_httpx_json(r: httpx.Response, request_id: str):
     if ct == "application/json":
         try:
             payload = r.json()
+            # --- normalize (dual schema, non-breaking) ---
+            try:
+                if isinstance(payload, dict) and payload.get('ok') is True and 'normalized' not in payload:
+                    payload['normalized'] = normalize_engine_response(payload)
+            except Exception:
+                pass
         except Exception:
             payload = {"ok": False, "error": "invalid_json_from_upstream", "status_code": r.status_code}
         _inject_meta(payload, request_id)
