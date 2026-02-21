@@ -1643,6 +1643,17 @@ function CandidateCard({ rank, result, previewUri, previewSize, onPickCorrect, s
 }
 
 function ResultsScreen({ goBack, go, scanDraft, onSaveToHistory, onNewScan }) {
+  // --- Catalog enrichment (TOP3) ---
+  const rawResults = (
+    (scanDraft?.api?.results) ||
+    (scanDraft?.apiResponse?.results) ||
+    (scanDraft?.analysis?.results) ||
+    (scanDraft?.resp?.results) ||
+    (scanDraft?.results) ||
+    []
+  );
+  const top = Array.isArray(rawResults) ? rawResults.map(enrichResultFromCatalog) : [];
+
   const analysis = scanDraft?.analysis || null;
   const [sending, setSending] = useState(false);
   const autoForcedRef = useRef(false);
@@ -1812,7 +1823,7 @@ function ResultsScreen({ goBack, go, scanDraft, onSaveToHistory, onNewScan }) {
           <CandidateCard
             key={`${r.rank || idx}-${r.id_model_ref || "x"}`}
             rank={r.rank || idx + 1}
-            result={r}
+            result={top[2]}
             previewUri={scanDraft?.frontUri || null}
             previewSize={previewSize}
             sending={sending}
