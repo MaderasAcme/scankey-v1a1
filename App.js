@@ -1812,11 +1812,11 @@ const topConf = clamp01(results?.[0]?.confidence || 0);
           </View>
         </Card>
 
-        {results.map((r, idx) => (
+        {results.slice(0, 3).map((r, idx) => (
           <CandidateCard
-            key={`${r.rank || idx}-${r.id_model_ref || "x"}`}
+            key={`${r.rank || idx}-${r.id_model_ref || r._id_model_ref || "x"}`}
             rank={r.rank || idx + 1}
-            result={top[2]}
+            result={r}
             previewUri={scanDraft?.frontUri || null}
             previewSize={previewSize}
             sending={sending}
