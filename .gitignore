@@ -91,3 +91,7 @@ credentials.json
 # python
 __pycache__/
 *.pyc
+
+# UNIGNORE CATALOG (needed for catalog generator)
+!megafactory/catalog/
+!megafactory/catalog/build_catalog_refs.py
