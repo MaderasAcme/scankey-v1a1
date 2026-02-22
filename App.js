@@ -335,7 +335,39 @@ function safeJsonParse(text) {
   }
 }
 
-async function fetchWithTimeout(url, options = {}, timeoutMs = DEFAULT_TIMEOUT_MS) {
+async function fetchAnalyzeWithAbort(url, options = {}
+
+// =====================
+// Analyze hardening: anti-double-tap + abort + stale-guard
+// =====================
+let __ANALYZE_SEQ = 0;
+let __ANALYZE_CTRL = null;
+
+function beginAnalyzeRun() {
+  __ANALYZE_SEQ += 1;
+  try { if (__ANALYZE_CTRL) __ANALYZE_CTRL.abort(); } catch (e) {}
+  __ANALYZE_CTRL = new AbortController();
+  return { seq: __ANALYZE_SEQ, signal: __ANALYZE_CTRL.signal };
+}
+
+function isAnalyzeSeqCurrent(seq) {
+  return seq === __ANALYZE_SEQ;
+}
+
+async function fetchAnalyzeWithAbort(url, options = {}, timeoutMs = DEFAULT_TIMEOUT_MS) {
+  const run = beginAnalyzeRun();
+  const { signal: _ignored, ...rest } = options || {};
+  const res = await fetchWithTimeout(url, { ...rest, signal: run.signal }, timeoutMs);
+  if (!isAnalyzeSeqCurrent(run.seq)) {
+    const err = new Error("stale_analyze");
+    err.code = "STALE_ANALYZE";
+    throw err;
+  }
+  return res;
+}
+
+
+, timeoutMs = DEFAULT_TIMEOUT_MS) {
   const extSignal = options?.signal;
 
   const controller = new AbortController();
