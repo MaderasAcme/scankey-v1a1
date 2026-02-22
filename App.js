@@ -219,6 +219,31 @@ function nowId() {
 function isWeb() {
   return Platform.OS === "web";
 }
+// Web: evita fugas por URL.createObjectURL
+const _webObjectUrls = new Set();
+function webCreateObjectURL(obj) {
+  if (!isWeb() || typeof URL === "undefined") return null;
+  const u = webCreateObjectURL(obj);
+  _webObjectUrls.add(u);
+  return u;
+}
+function webRevokeAllObjectURLs() {
+  if (!isWeb() || typeof URL === "undefined") return;
+  for (const u of _webObjectUrls) {
+    try { URL.revokeObjectURL(u); } catch (e) {}
+  }
+  _webObjectUrls.clear();
+}
+
+function webRevokeOnReset() {
+  try { webRevokeAllObjectURLs(); } catch (e) {}
+}
+
+if (isWeb() && typeof window !== "undefined" && !window.__scankey_objurl_hooked) {
+  window.__scankey_objurl_hooked = true;
+  window.addEventListener("beforeunload", () => { try { webRevokeAllObjectURLs(); } catch (e) {} });
+}
+
 
 function safeAlert(title, msg) {
   try {
@@ -283,17 +308,39 @@ function safeJsonParse(text) {
   }
 }
 
-async function fetchWithTimeout(
-  url,
-  options = {},
-  timeoutMs = DEFAULT_TIMEOUT_MS
-) {
+async function fetchWithTimeout(url, options = {}, timeoutMs = DEFAULT_TIMEOUT_MS) {
+  const extSignal = options?.signal;
+
   const controller = new AbortController();
-  const id = setTimeout(() => controller.abort(), timeoutMs);
+  const onExtAbort = () => {
+    try {
+      controller.abort(extSignal?.reason || new Error("aborted"));
+    } catch (e) {
+      controller.abort();
+    }
+  };
+
+  if (extSignal) {
+    if (extSignal.aborted) onExtAbort();
+    else extSignal.addEventListener("abort", onExtAbort, { once: true });
+  }
+
+  const id = setTimeout(() => {
+    try {
+      controller.abort(new Error("timeout"));
+    } catch (e) {
+      controller.abort();
+    }
+  }, timeoutMs);
+
   try {
-    return await fetch(url, { ...options, signal: controller.signal });
+    const { signal: _ignored, ...rest } = options || {};
+    return await fetch(url, { ...rest, signal: controller.signal });
   } finally {
     clearTimeout(id);
+    if (extSignal) {
+      try { extSignal.removeEventListener("abort", onExtAbort); } catch (e) {}
+    }
   }
 }
 
@@ -390,7 +437,7 @@ async function preprocessWebImage(
     });
 
     if (!outBlob) return { uri, cleanup: [] };
-    const outUrl = URL.createObjectURL(outBlob);
+    const outUrl = webCreateObjectURL(outBlob);
     return { uri: outUrl, cleanup: [outUrl] };
   } catch (e) {
     return { uri, cleanup: [] };
@@ -457,6 +504,21 @@ async function preprocessForUpload(uri) {
 // =====================
 const _normCache = new Map();
 
+const _NORM_CACHE_MAX = 200;
+function _normCacheSet(k, v) {
+  if (!k) return;
+  if (_normCache.size >= _NORM_CACHE_MAX) {
+    const firstKey = _normCache.keys().next().value;
+    if (firstKey !== undefined) _normCache.delete(firstKey);
+  }
+  _normCache.set(k, v);
+}
+function _normCacheEvictIfNeeded() {
+  if (_normCache.size >= _NORM_CACHE_MAX) {
+    const firstKey = _normCache.keys().next().value;
+    if (firstKey !== undefined) _normCache.delete(firstKey);
+  }
+}
 function normalizeEngineResponse(raw) {
   const data = raw && typeof raw === "object" ? raw : {};
   const cacheKey = data.input_id || data.request_id || data.id || null;
@@ -585,8 +647,6 @@ function normalizeEngineResponse(raw) {
   }
 
   const top = results[0] || null;
-  const top = results;
-
   const topConf = clamp01(top?.confidence || 0);
 
   const high_confidence =
@@ -637,7 +697,16 @@ function normalizeEngineResponse(raw) {
     debug,
   };
 
-  if (cacheKey) _normCache.set(cacheKey, normalized);
+  if (cacheKey) {
+
+
+    _normCacheEvictIfNeeded();
+
+
+    _normCacheEvictIfNeeded();
+
+
+    _normCacheSet(cacheKey, normalized);
   return normalized;
 }
 
@@ -1304,7 +1373,7 @@ function ScanScreen({ goBack, go, setScanDraft, onResetScanDraft }) {
       input.onchange = (e) => {
         const file = e.target.files?.[0];
         if (!file) return;
-        const url = URL.createObjectURL(file);
+        const url = webCreateObjectURL(file);
         if (target === "front") setFrontUri(url);
         if (target === "back") setBackUri(url);
       };
@@ -1437,8 +1506,10 @@ function ScanScreen({ goBack, go, setScanDraft, onResetScanDraft }) {
   useEffect(() => {
     if (onResetScanDraft) {
       onResetScanDraft.current = () => {
-        setFrontUri(null);
-        setBackUri(null);
+        webRevokeOnReset();
+    setFrontUri(null);
+        webRevokeOnReset();
+    setBackUri(null);
         setModoTaller(false);
         setLoading(false);
         setLoadingMsg("");
