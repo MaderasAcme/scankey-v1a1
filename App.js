@@ -234,16 +234,13 @@ function isWeb() {
 }
 // Web: evita fugas por URL.createObjectURL
 const _webObjectUrls = new Set();
+
 function webCreateObjectURL(obj) {
   if (!isWeb() || typeof URL === "undefined") return null;
   const u = URL.createObjectURL(obj);
   _webObjectUrls.add(u);
   return u;
 }
-function webRevokeAllObjectURLs() {
-  if (!isWeb() || typeof URL === "undefined") return;
-  for (const u of _webObjectUrls) {
-    try { URL.revokeObjectURL(u); } catch (e) {}
 
 function webRevokeObjectURL(u) {
   if (!isWeb() || typeof URL === "undefined") return;
@@ -252,20 +249,27 @@ function webRevokeObjectURL(u) {
   try { URL.revokeObjectURL(url); } catch (e) {}
   try { _webObjectUrls.delete(url); } catch (e) {}
 }
+
+function webRevokeAllObjectURLs() {
+  if (!isWeb() || typeof URL === "undefined") return;
+  for (const u of _webObjectUrls) {
+    try { URL.revokeObjectURL(u); } catch (e) {}
   }
   _webObjectUrls.clear();
 }
 
-function webRevokeOnReset(u) {
-  // Seguro: no revoca TODO (eso rompe el otro lado A/B). Revoca solo el url pasado.
-  if (u) { try { webRevokeObjectURL(u); } catch (e) {} }
-}
+function webRevokeOnReset(prevUrl) {
+  // Revoca SOLO el url anterior (no revoca todo; no rompe el otro lado A/B)
+  if (prevUrl && String(prevUrl).startsWith("blob:")) webRevokeObjectURL(prevUrl);
 }
 
 if (isWeb() && typeof window !== "undefined" && !window.__scankey_objurl_hooked) {
   window.__scankey_objurl_hooked = true;
   window.addEventListener("beforeunload", () => { try { webRevokeAllObjectURLs(); } catch (e) {} });
 }
+
+
+
 
 
 function safeAlert(title, msg) {
