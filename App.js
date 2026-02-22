@@ -157,6 +157,19 @@ const MOTOR_BASE = (
   "https://scankey-gateway-2apb4vvlhq-no.a.run.app"
 ).replace(/\/+$/, "");
 
+
+// API key opcional (si tu gateway la exige). NO hardcodees secretos: solo ENV / window config.
+const API_KEY = String(
+  ENV.EXPO_PUBLIC_GATEWAY_API_KEY ||
+  ENV.EXPO_PUBLIC_API_KEY ||
+  ((typeof window !== "undefined" && window.__SCN_CONFIG__ && window.__SCN_CONFIG__.API_KEY) ? window.__SCN_CONFIG__.API_KEY : "") ||
+  ""
+).trim();
+
+function withApiKey(headers = {}) {
+  if (!API_KEY) return headers;
+  return { ...headers, "x-api-key": API_KEY };
+}
 const API_ANALYZE = `${MOTOR_BASE}/api/analyze-key`;
 const API_FEEDBACK = `${MOTOR_BASE}/api/feedback`;
 const API_INSCRIPTION_SUGGEST = `${MOTOR_BASE}/api/inscription-suggest`; // New constant
@@ -223,7 +236,7 @@ function isWeb() {
 const _webObjectUrls = new Set();
 function webCreateObjectURL(obj) {
   if (!isWeb() || typeof URL === "undefined") return null;
-  const u = webCreateObjectURL(obj);
+  const u = URL.createObjectURL(obj);
   _webObjectUrls.add(u);
   return u;
 }
@@ -231,12 +244,22 @@ function webRevokeAllObjectURLs() {
   if (!isWeb() || typeof URL === "undefined") return;
   for (const u of _webObjectUrls) {
     try { URL.revokeObjectURL(u); } catch (e) {}
+
+function webRevokeObjectURL(u) {
+  if (!isWeb() || typeof URL === "undefined") return;
+  const url = String(u || "");
+  if (!url) return;
+  try { URL.revokeObjectURL(url); } catch (e) {}
+  try { _webObjectUrls.delete(url); } catch (e) {}
+}
   }
   _webObjectUrls.clear();
 }
 
-function webRevokeOnReset() {
-  try { webRevokeAllObjectURLs(); } catch (e) {}
+function webRevokeOnReset(u) {
+  // Seguro: no revoca TODO (eso rompe el otro lado A/B). Revoca solo el url pasado.
+  if (u) { try { webRevokeObjectURL(u); } catch (e) {} }
+}
 }
 
 if (isWeb() && typeof window !== "undefined" && !window.__scankey_objurl_hooked) {
@@ -728,7 +751,7 @@ async function postAnalyzeOnce(frontUri, backUri, modoTaller, { timeoutMs = 1200
     API_ANALYZE,
     {
       method: "POST",
-      headers: { Accept: "application/json" },
+      headers: withApiKey({ Accept: \"application/json\" }),
       body: fd,
     },
     timeoutMs
@@ -756,7 +779,7 @@ async function postFeedback(payload) {
     API_FEEDBACK,
     {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: withApiKey({ \"Content-Type\": \"application/json\" }),
       body: JSON.stringify(payload),
     },
     DEFAULT_TIMEOUT_MS
@@ -800,7 +823,7 @@ async function fetchInscriptionSuggestions(query, { signal } = {}) {
   if (!query || query.length < 2) return [];
   try {
     const url = `${API_INSCRIPTION_SUGGEST}?q=${encodeURIComponent(query)}`;
-    const res = await fetchWithTimeout(url, { signal });
+    const res = await fetchWithTimeout(url, { signal, headers: withApiKey({ Accept: \"application/json\" }) });
     const data = await res.json();
     if (res.ok && data?.ok) {
       return data.suggestions || [];
@@ -1358,6 +1381,27 @@ function ScanScreen({ goBack, go, setScanDraft, onResetScanDraft }) {
   const [frontUri, setFrontUri] = useState(null);
   const [backUri, setBackUri] = useState(null);
 
+
+  const _prevFrontUriRef = useRef(null);
+  const _prevBackUriRef = useRef(null);
+
+  useEffect(() => {
+    if (!isWeb()) return;
+    const prev = _prevFrontUriRef.current;
+    if (prev && prev !== frontUri && String(prev).startsWith("blob:")) {
+      try { webRevokeObjectURL(prev); } catch (e) {}
+    }
+    _prevFrontUriRef.current = frontUri;
+  }, [frontUri]);
+
+  useEffect(() => {
+    if (!isWeb()) return;
+    const prev = _prevBackUriRef.current;
+    if (prev && prev !== backUri && String(prev).startsWith("blob:")) {
+      try { webRevokeObjectURL(prev); } catch (e) {}
+    }
+    _prevBackUriRef.current = backUri;
+  }, [backUri]);
   const [loading, setLoading] = useState(false);
   const [loadingMsg, setLoadingMsg] = useState("");
 
