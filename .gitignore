@@ -95,3 +95,4 @@ __pycache__/
 # UNIGNORE CATALOG (needed for catalog generator)
 !megafactory/catalog/
 !megafactory/catalog/build_catalog_refs.py
+scripts/dev/*.bak.*
