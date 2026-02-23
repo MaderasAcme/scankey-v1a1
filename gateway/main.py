@@ -25,6 +25,55 @@ def _get_request_id(req: Request) -> str:
     rid = (req.headers.get("x-request-id") or "").strip()
     return rid or uuid.uuid4().hex
 
+
+def _ensure_contract_v2(data: dict) -> dict:
+    d = dict(data or {})
+
+    # 1) manufacturer_hint (required)
+    mh = d.get("manufacturer_hint")
+    if not isinstance(mh, dict):
+        d["manufacturer_hint"] = {"found": False, "name": None, "confidence": 0.0}
+    else:
+        d["manufacturer_hint"].setdefault("found", False)
+        d["manufacturer_hint"].setdefault("name", None)
+        d["manufacturer_hint"].setdefault("confidence", 0.0)
+
+    # 2) results (required, len=3) + compatibility_tags required as array
+    res = d.get("results")
+    if not isinstance(res, list):
+        res = []
+    out = []
+    for i, r in enumerate(res[:3], start=1):
+        rr = dict(r or {})
+        rr.setdefault("rank", i)
+
+        # map legacy -> contract
+        if rr.get("id_model_ref") is None and rr.get("ref") is not None:
+            rr["id_model_ref"] = rr.get("ref")
+
+        rr.setdefault("type", "key")
+        rr.setdefault("brand", None)
+        rr.setdefault("model", rr.get("model") or rr.get("id_model_ref"))
+        rr.setdefault("confidence", 0.0)
+        if not isinstance(rr.get("compatibility_tags"), list):
+            rr["compatibility_tags"] = []
+        out.append(rr)
+
+    while len(out) < 3:
+        out.append({
+            "rank": len(out)+1,
+            "type": "key",
+            "brand": None,
+            "model": None,
+            "id_model_ref": None,
+            "confidence": 0.0,
+            "compatibility_tags": []
+        })
+
+    d["results"] = out
+    return d
+
+
 def _inject_meta(obj, request_id: str):
     if isinstance(obj, dict):
         obj.setdefault("schema_version", SCHEMA_VERSION)
