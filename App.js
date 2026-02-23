@@ -106,14 +106,11 @@ try {
 }
 
 async function getImagePicker() {
-    if (isAnalyzing) return;
-    setIsAnalyzing(true);
     try {
 
   const mod = safeRequire(MOD_PICKER);
   return mod?.default ?? mod ?? null;
     } finally {
-      setIsAnalyzing(false);
     }
 }
 
@@ -174,12 +171,9 @@ const API_KEY = String(
 ).trim();
 
 function withApiKey(headers = {
-    if (isAnalyzing) return;
-    setIsAnalyzing(true);
     try {
 
     } finally {
-      setIsAnalyzing(false);
     }
 }) {
   if (!API_KEY) return headers;
