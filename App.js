@@ -355,12 +355,36 @@ function safeJsonParse(text) {
 let __ANALYZE_SEQ = 0;
 let __ANALYZE_CTRL = null;
 
-async function fetchAnalyzeWithAbort(url, options = {
-  if (isAnalyzing) {
-    const err = new Error("analyze_busy");
-    err.code = "ANALYZE_BUSY";
-    throw err;
+async function fetchAnalyzeWithAbort(url, options = {}, timeoutMs = DEFAULT_TIMEOUT_MS) {
+  const extSignal = options?.signal;
+
+  const run = beginAnalyzeRun();
+  const seq = run?.seq;
+  const controller = run?.controller || __ANALYZE_CTRL;
+
+  const onExtAbort = () => {
+    try { controller.abort(extSignal?.reason || new Error("aborted")); } catch (e) { try { controller.abort(); } catch (e2) {} }
+  };
+
+  if (extSignal) {
+    if (extSignal.aborted) onExtAbort();
+    else extSignal.addEventListener("abort", onExtAbort, { once: true });
   }
+
+  try {
+    const { signal: _ignored, _noAnalyzeGuard: _ng, ...rest } = options || {};
+    const res = await fetchWithTimeout(url, { ...rest, signal: controller.signal, _noAnalyzeGuard: true }, timeoutMs);
+    if (typeof seq === "number" && !isAnalyzeSeqCurrent(seq)) {
+      const err = new Error("stale_analyze");
+      err.code = "STALE_ANALYZE";
+      throw err;
+    }
+    return res;
+  } finally {
+    if (extSignal) { try { extSignal.removeEventListener("abort", onExtAbort); } catch (e) {} }
+  }
+}
+
 }, timeoutMs = DEFAULT_TIMEOUT_MS) {
 }
 
