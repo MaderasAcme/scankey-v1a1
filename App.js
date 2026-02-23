@@ -1720,7 +1720,7 @@ function ScanScreen({ goBack, go, setScanDraft, onResetScanDraft }) {
 
           <PrimaryButton
             title="Analizar (REAL)"
-            icon={<Ionicons name="sparkles-outline" size={18} color="#fff" / disabled={ isAnalyzing }>}
+            icon={<Ionicons name="sparkles-outline" size={18} color="#fff" / disabled={isAnalyzing}>}
             onPress={analyzeReal}
             style={{ marginTop: 12 }}
             disabled={!canAnalyze}
