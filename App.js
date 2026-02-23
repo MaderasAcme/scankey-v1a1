@@ -361,13 +361,6 @@ async function fetchAnalyzeWithAbort(url, options = {
     err.code = "ANALYZE_BUSY";
     throw err;
   }
-  setIsAnalyzing(true);
-  try {
-
-
-  } finally {
-    setIsAnalyzing(false);
-  }
 }, timeoutMs = DEFAULT_TIMEOUT_MS) {
 }
 
@@ -1559,6 +1552,10 @@ function ScanScreen({ goBack, go, setScanDraft, onResetScanDraft }) {
   const canAnalyze = !!frontUri && !!backUri;
 
   const analyzeReal = async () => {
+    if (isAnalyzing) return;
+    setIsAnalyzing(true);
+    try {
+
     if (!canAnalyze || loading) return;
 
     let cleanup = [];
@@ -1611,7 +1608,10 @@ function ScanScreen({ goBack, go, setScanDraft, onResetScanDraft }) {
         });
       }
     }
-  };
+    } finally {
+      setIsAnalyzing(false);
+    }
+};
 
   useEffect(() => {
     if (onResetScanDraft) {
