@@ -280,6 +280,8 @@ async def proxy_analyze_key(
 
     r = await _motor_post("/api/analyze-key", files=files, data=data)
     rid = getattr(req.state, "request_id", _get_request_id(req))
+    data = _ensure_contract_v2(data)
+
     return _proxy_httpx_json(r, rid)
 @APP.post("/api/ingest-key")
 async def ingest_key(
