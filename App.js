@@ -166,7 +166,15 @@ const API_KEY = String(
   ""
 ).trim();
 
-function withApiKey(headers = {}) {
+function withApiKey(headers = {
+    if (isAnalyzing) return;
+    setIsAnalyzing(true);
+    try {
+
+    } finally {
+      setIsAnalyzing(false);
+    }
+}) {
   if (!API_KEY) return headers;
   return { ...headers, "x-api-key": API_KEY };
 }
