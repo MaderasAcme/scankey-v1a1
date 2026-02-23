@@ -340,7 +340,20 @@ function safeJsonParse(text) {
 let __ANALYZE_SEQ = 0;
 let __ANALYZE_CTRL = null;
 
-async function fetchAnalyzeWithAbort(url, options = {}, timeoutMs = DEFAULT_TIMEOUT_MS) {
+async function fetchAnalyzeWithAbort(url, options = {
+  if (isAnalyzing) {
+    const err = new Error("analyze_busy");
+    err.code = "ANALYZE_BUSY";
+    throw err;
+  }
+  setIsAnalyzing(true);
+  try {
+
+
+  } finally {
+    setIsAnalyzing(false);
+  }
+}, timeoutMs = DEFAULT_TIMEOUT_MS) {
 }
 
 function cancelAnalyzeInFlight() {
@@ -1106,6 +1119,7 @@ function ConfidenceMeter({ confidence }) {
 
 function useImageNaturalSize(uri) {
   const [size, setSize] = useState(null);
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
 
   useEffect(() => {
     let alive = true;
