@@ -341,6 +341,16 @@ let __ANALYZE_SEQ = 0;
 let __ANALYZE_CTRL = null;
 
 async function fetchAnalyzeWithAbort(url, options = {}, timeoutMs = DEFAULT_TIMEOUT_MS) {
+}
+
+function cancelAnalyzeInFlight() {
+  // Corta cualquier análisis en curso sin spamear UI
+  try {
+    // beginAnalyzeRun() aborta el controller anterior y sube el seq (stale-guard)
+    if (typeof beginAnalyzeRun === "function") beginAnalyzeRun();
+  } catch (e) {}
+}
+, timeoutMs = DEFAULT_TIMEOUT_MS) {
   const run = beginAnalyzeRun();
   const { signal: _ignored, _noAnalyzeGuard: _ng, ...rest } = options || {};
   const res = await fetchWithTimeout(url, { ...rest, signal: run.signal }, timeoutMs);
@@ -1578,8 +1588,10 @@ function ScanScreen({ goBack, go, setScanDraft, onResetScanDraft }) {
     if (onResetScanDraft) {
       onResetScanDraft.current = () => {
         webRevokeOnReset();
+    cancelAnalyzeInFlight();
     setFrontUri(null);
         webRevokeOnReset();
+    cancelAnalyzeInFlight();
     setBackUri(null);
         setModoTaller(false);
         setLoading(false);
