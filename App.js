@@ -334,29 +334,15 @@ function safeJsonParse(text) {
     return null;
   }
 }
-
-async function fetchAnalyzeWithAbort(url, options = {}
-
 // =====================
 // Analyze hardening: anti-double-tap + abort + stale-guard
 // =====================
 let __ANALYZE_SEQ = 0;
 let __ANALYZE_CTRL = null;
 
-function beginAnalyzeRun() {
-  __ANALYZE_SEQ += 1;
-  try { if (__ANALYZE_CTRL) __ANALYZE_CTRL.abort(); } catch (e) {}
-  __ANALYZE_CTRL = new AbortController();
-  return { seq: __ANALYZE_SEQ, signal: __ANALYZE_CTRL.signal };
-}
-
-function isAnalyzeSeqCurrent(seq) {
-  return seq === __ANALYZE_SEQ;
-}
-
 async function fetchAnalyzeWithAbort(url, options = {}, timeoutMs = DEFAULT_TIMEOUT_MS) {
   const run = beginAnalyzeRun();
-  const { signal: _ignored, ...rest } = options || {};
+  const { signal: _ignored, _noAnalyzeGuard: _ng, ...rest } = options || {};
   const res = await fetchWithTimeout(url, { ...rest, signal: run.signal }, timeoutMs);
   if (!isAnalyzeSeqCurrent(run.seq)) {
     const err = new Error("stale_analyze");
@@ -370,6 +356,11 @@ async function fetchAnalyzeWithAbort(url, options = {}, timeoutMs = DEFAULT_TIME
 , timeoutMs = DEFAULT_TIMEOUT_MS) {
   const extSignal = options?.signal;
 
+  // __SCN_ANALYZE_ROUTE
+  const __u = String(url || "");
+  if (!options?._noAnalyzeGuard && __u.includes("api/analyze-key")) {
+    return await fetchAnalyzeWithAbort(url, { ...(options || {}), _noAnalyzeGuard: true }, timeoutMs);
+  }
   const controller = new AbortController();
   const onExtAbort = () => {
     try {
