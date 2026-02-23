@@ -106,8 +106,15 @@ try {
 }
 
 async function getImagePicker() {
+    if (isAnalyzing) return;
+    setIsAnalyzing(true);
+    try {
+
   const mod = safeRequire(MOD_PICKER);
   return mod?.default ?? mod ?? null;
+    } finally {
+      setIsAnalyzing(false);
+    }
 }
 
 function getImageManipulator() {
@@ -1713,7 +1720,7 @@ function ScanScreen({ goBack, go, setScanDraft, onResetScanDraft }) {
 
           <PrimaryButton
             title="Analizar (REAL)"
-            icon={<Ionicons name="sparkles-outline" size={18} color="#fff" />}
+            icon={<Ionicons name="sparkles-outline" size={18} color="#fff" / disabled={ isAnalyzing }>}
             onPress={analyzeReal}
             style={{ marginTop: 12 }}
             disabled={!canAnalyze}
