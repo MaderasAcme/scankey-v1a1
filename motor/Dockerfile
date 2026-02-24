@@ -9,7 +9,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 COPY requirements.txt /app/requirements.txt
 RUN pip install --no-cache-dir -r /app/requirements.txt
 
-COPY . /app
+COPY . /app/motor
+RUN mkdir -p /app/motor && touch /app/motor/__init__.py
 
 COPY catalog.py /app/catalog.py
 # CMD removed (use /app/start.sh)
