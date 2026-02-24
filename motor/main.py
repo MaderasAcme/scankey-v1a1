@@ -36,6 +36,23 @@ from motor.model_bootstrap import ensure_model
 
 BOOT_TS = time.time()
 
+# SCN_FIX_CONTRACT_TAGS_HELPER
+def _scn_fix_tags(obj):
+    if not isinstance(obj, dict):
+        return obj
+    obj.setdefault('manufacturer_hint', {'found': False, 'name': None, 'confidence': 0.0})
+    for k in ('results','candidates'):
+        lst = obj.get(k)
+        if isinstance(lst, list):
+            for it in lst:
+                if isinstance(it, dict):
+                    ct = it.get('compatibility_tags')
+                    if ct is None: it['compatibility_tags'] = []
+                    elif isinstance(ct, list): pass
+                    elif isinstance(ct, str): it['compatibility_tags'] = [ct]
+                    else: it['compatibility_tags'] = []
+    return obj
+
 # --- Feature Flags (default to 'true' for PASIVO, 'false' for ACTIVO unless specified) ---
 SCN_FEATURE_NORMALIZE_OUTPUT_ENABLED = os.getenv("SCN_FEATURE_NORMALIZE_OUTPUT_ENABLED", "true").lower() == "true"
 SCN_FEATURE_BACKEND_FLAGS_AUTHORITATIVE = os.getenv("SCN_FEATURE_BACKEND_FLAGS_AUTHORITATIVE", "true").lower() == "true"
@@ -802,6 +819,15 @@ def analyze_key(
             "sha256": hashlib.sha256(raw_back).hexdigest(),
         }
         store_back["meta"] = _store_meta_sidecar(meta, store_back["gcs_uri"])
+
+    # SCN_FIX_CONTRACT_TAGS_APPLY
+    try:
+        if 'payload' in locals() and isinstance(locals()['payload'], dict):
+            locals()['payload'] = _scn_fix_tags(locals()['payload'])
+        if 'resp' in locals() and isinstance(locals()['resp'], dict):
+            locals()['resp'] = _scn_fix_tags(locals()['resp'])
+    except Exception:
+        pass
 
     return {
         "ok": True,
