@@ -97,7 +97,11 @@ def _proxy_httpx_json(r: httpx.Response, request_id: str):
         except Exception:
             payload = {"ok": False, "error": "invalid_json_from_upstream", "status_code": r.status_code}
         _inject_meta(payload, request_id)
-        return JSONResponse(content=payload, status_code=r.status_code)
+        # SCN_PATCH_MANUFACTURER_HINT_BEFORE_RETURN
+if isinstance(payload, dict) and 'manufacturer_hint' not in payload:
+    payload['manufacturer_hint'] = {'found': False, 'name': None, 'confidence': 0.0}
+
+return JSONResponse(content=payload, status_code=r.status_code)
     return Response(content=r.content, status_code=r.status_code, media_type=ct)
 
 @APP.middleware("http")
