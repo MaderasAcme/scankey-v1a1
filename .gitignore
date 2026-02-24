@@ -96,3 +96,9 @@ __pycache__/
 !megafactory/catalog/
 !megafactory/catalog/build_catalog_refs.py
 scripts/dev/*.bak.*
+
+# Google API discovery cache / client caches (NO deben entrar en git)
+discovery_cache/
+**/discovery_cache/
+.cache/
+**/.cache/

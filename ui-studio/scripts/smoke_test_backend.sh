@@ -1,48 +1,77 @@
+#!/usr/bin/env bash
+set -Eeuo pipefail
 
-#!/bin/bash
+UI_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+REPO_ROOT="$(cd "$UI_ROOT/.." && pwd)"
 
-# Lead Engineer - Smoke Test Backend
-# Uso: bash scripts/smoke_test_backend.sh [URL_API]
+TARGET="${SCN_SMOKE_URL:-http://localhost:8080}"
 
-API_URL=${1:-"http://localhost:8080"}
-echo "🚀 Iniciando Smoke Test contra: $API_URL"
-
-# 1. Health Check
-echo -n "🔍 Test /health: "
-HEALTH_RES=$(curl -s "$API_URL/health")
-if [[ $HEALTH_RES == *"\"status\":\"ok\""* ]]; then
-  echo "✅ OK"
-else
-  echo "❌ FALLO (Respuesta: $HEALTH_RES)"
-  exit 1
+# API key opcional (para gateway)
+API_KEY="${SCN_SMOKE_API_KEY:-}"
+if [ -z "$API_KEY" ] && [ -f "$HOME/GATEWAY_API_KEY.txt" ]; then
+  API_KEY="$(cat "$HOME/GATEWAY_API_KEY.txt" 2>/dev/null || true)"
 fi
 
-# 2. Feedback Test (Dummy)
-echo -n "🔍 Test /api/feedback: "
-FEEDBACK_STATUS=$(curl -s -o /dev/null -w "%{http_code}" -X POST \
-  -H "Content-Type: application/json" \
-  -d '{"input_id":"smoke_test","selected_id":"yale_24d"}' \
-  "$API_URL/api/feedback")
-
-if [[ $FEEDBACK_STATUS == "200" || $FEEDBACK_STATUS == "202" ]]; then
-  echo "✅ OK (Status: $FEEDBACK_STATUS)"
-else
-  echo "❌ FALLO (Status: $FEEDBACK_STATUS)"
-  exit 1
+HDRS=()
+if [ -n "${API_KEY:-}" ]; then
+  HDRS=(-H "x-api-key: $API_KEY")
 fi
 
-# 3. Analyze Test (Estructura/No 404)
-# Enviamos una petición vacía para verificar que el endpoint existe y responde 400/422 (validación) no 404/500
-echo -n "🔍 Test /api/analyze-key (Route Exists): "
-ANALYZE_STATUS=$(curl -s -o /dev/null -w "%{http_code}" -X POST "$API_URL/api/analyze-key")
-if [[ $ANALYZE_STATUS == "400" || $ANALYZE_STATUS == "422" ]]; then
-  echo "✅ OK (Ruta detectada, validación activa)"
-elif [[ $ANALYZE_STATUS == "404" ]]; then
-  echo "❌ FALLO (Ruta no encontrada: 404)"
-  exit 1
-else
-  echo "⚠️ AVISO (Status inesperado: $ANALYZE_STATUS)"
-fi
+echo "🚀 Iniciando Smoke Test contra: $TARGET"
 
-echo "🎉 Smoke test finalizado con éxito."
-exit 0
+health() {
+  curl -fsS --max-time 10 "${HDRS[@]}" "$1/health" >/dev/null
+}
+
+# 1) prueba health donde toca
+if ! health "$TARGET"; then
+  echo "🔍 Test /health: ❌ FALLO (Respuesta vacía o servicio caído)"
+  # 2) fallback automático a Cloud Run si no se fijó SCN_SMOKE_URL
+  if [ -z "${SCN_SMOKE_URL:-}" ] && command -v gcloud >/dev/null 2>&1; then
+    REGION="${SCN_SMOKE_REGION:-europe-southwest1}"
+    SVC="${SCN_SMOKE_SVC:-scankey-gateway}"
+    GW_URL="$(gcloud run services describe "$SVC" --region "$REGION" --format='value(status.url)' 2>/dev/null || true)"
+    if [ -n "$GW_URL" ]; then
+      TARGET="$GW_URL"
+      echo "↪️  Fallback a Cloud Run: $TARGET"
+      if ! health "$TARGET"; then
+        echo "❌ FALLO también en Cloud Run. Revisa gateway/motor."
+        exit 1
+      fi
+    else
+      echo "❌ No pude autodetectar Cloud Run. Si querías local, arranca backend en 0.0.0.0:8080."
+      exit 1
+    fi
+  else
+    echo "❌ Si querías local, arranca backend en 0.0.0.0:8080."
+    exit 1
+  fi
+fi
+echo "🔍 Test /health: ✅ OK"
+
+# analyze con imágenes de test del repo
+FRONT="${SCN_SMOKE_FRONT:-$REPO_ROOT/backend/test.png}"
+BACK="${SCN_SMOKE_BACK:-$REPO_ROOT/backend/test.png}"
+
+TMP_JSON="$(mktemp)"
+curl -fsS --max-time 30 "${HDRS[@]}" \
+  -F "front=@${FRONT}" \
+  -F "back=@${BACK}" \
+  -F "image_front=@${FRONT}" \
+  -F "image_back=@${BACK}" \
+  "$TARGET/api/analyze-key" > "$TMP_JSON"
+
+echo "🧪 Test /api/analyze-key: ✅ OK"
+
+# contrato sobre respuesta real
+node "$UI_ROOT/scripts/contract_check.js" "$TMP_JSON" >/dev/null
+echo "📜 Contract (live): ✅ OK"
+
+# feedback mínimo
+curl -fsS --max-time 20 "${HDRS[@]}" -H "Content-Type: application/json" \
+  -d '{"input_id":"smoke-shell","timestamp":"'"$(date -Is)"'","choice":{"rank":1,"id_model_ref":"JIS2I"},"note":"smoke"}' \
+  "$TARGET/api/feedback" >/dev/null
+echo "🧾 Test /api/feedback: ✅ OK"
+
+rm -f "$TMP_JSON"
+echo "✅ Smoke Test COMPLETO OK contra: $TARGET"

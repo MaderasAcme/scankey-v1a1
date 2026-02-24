@@ -36,6 +36,43 @@ from motor.model_bootstrap import ensure_model
 
 BOOT_TS = time.time()
 
+# --- Feature Flags (default to 'true' for PASIVO, 'false' for ACTIVO unless specified) ---
+SCN_FEATURE_NORMALIZE_OUTPUT_ENABLED = os.getenv("SCN_FEATURE_NORMALIZE_OUTPUT_ENABLED", "true").lower() == "true"
+SCN_FEATURE_BACKEND_FLAGS_AUTHORITATIVE = os.getenv("SCN_FEATURE_BACKEND_FLAGS_AUTHORITATIVE", "true").lower() == "true"
+SCN_FEATURE_MARGIN_SCORE_ENABLED = os.getenv("SCN_FEATURE_MARGIN_SCORE_ENABLED", "true").lower() == "true"
+SCN_FEATURE_QUALITY_ROI_SCORING_ENABLED = os.getenv("SCN_FEATURE_QUALITY_ROI_SCORING_ENABLED", "true").lower() == "true"
+SCN_FEATURE_RISK_SCORE_ENABLED = os.getenv("SCN_FEATURE_RISK_SCORE_ENABLED", "true").lower() == "true"
+SCN_FEATURE_AB_CONSISTENCY_ENABLED = os.getenv("SCN_FEATURE_AB_CONSISTENCY_ENABLED", "true").lower() == "true"
+SCN_FEATURE_OPENSET_DETECT_ENABLED = os.getenv("SCN_FEATURE_OPENSET_DETECT_ENABLED", "true").lower() == "true"
+SCN_FEATURE_DEDUPE_ENABLED = os.getenv("SCN_FEATURE_DEDUPE_ENABLED", "true").lower() == "true"
+SCN_FEATURE_MANUFACTURER_RERANK_ENABLED = os.getenv("SCN_FEATURE_MANUFACTURER_RERANK_ENABLED", "false").lower() == "true"
+SCN_FEATURE_OCR_ON_DEMAND_ENABLED = os.getenv("SCN_FEATURE_OCR_ON_DEMAND_ENABLED", "false").lower() == "true"
+SCN_FEATURE_OCR_ALWAYS_ENABLED = os.getenv("SCN_FEATURE_OCR_ALWAYS_ENABLED", "false").lower() == "true" # Forbidden except for diagnostics
+SCN_FEATURE_AB_FUSION_ENABLED = os.getenv("SCN_FEATURE_AB_FUSION_ENABLED", "false").lower() == "true"
+SCN_FEATURE_AUTOSTORE_CLEAN_GATES_ENABLED = os.getenv("SCN_FEATURE_AUTOSTORE_CLEAN_GATES_ENABLED", "false").lower() == "true"
+SCN_FEATURE_DEDUPE_HARD_BLOCK_ENABLED = os.getenv("SCN_FEATURE_DEDUPE_HARD_BLOCK_ENABLED", "false").lower() == "true"
+SCN_FEATURE_OPENSET_CLUSTER_ENABLED = os.getenv("SCN_FEATURE_OPENSET_CLUSTER_ENABLED", "false").lower() == "true"
+SCN_FEATURE_OBSERVABILITY_ENABLED = os.getenv("SCN_FEATURE_OBSERVABILITY_ENABLED", "true").lower() == "true"
+SCN_DEBUG_LOG_PAYLOADS = os.getenv("SCN_DEBUG_LOG_PAYLOADS", "false").lower() == "true"
+SCN_DEBUG_INCLUDE_TIMINGS = os.getenv("SCN_DEBUG_INCLUDE_TIMINGS", "true").lower() == "true"
+
+# --- Official Thresholds ---
+THRESHOLD_HIGH_CONFIDENCE = float(os.getenv("THRESHOLD_HIGH_CONFIDENCE", "0.95"))
+THRESHOLD_LOW_CONFIDENCE = float(os.getenv("THRESHOLD_LOW_CONFIDENCE", "0.60"))
+THRESHOLD_QUALITY_SCORE = float(os.getenv("THRESHOLD_QUALITY_SCORE", "0.70"))
+THRESHOLD_ROI_SCORE = float(os.getenv("THRESHOLD_ROI_SCORE", "0.60"))
+THRESHOLD_OPENSET_BEST_SIM_UNKNOWN = float(os.getenv("THRESHOLD_OPENSET_BEST_SIM_UNKNOWN", "0.60"))
+THRESHOLD_OPENSET_MARGIN_UNKNOWN = float(os.getenv("THRESHOLD_OPENSET_MARGIN_UNKNOWN", "0.03"))
+THRESHOLD_OPENSET_BEST_SIM_MARGIN_COMBO = float(os.getenv("THRESHOLD_OPENSET_BEST_SIM_MARGIN_COMBO", "0.70"))
+THRESHOLD_AUTOSTORE_TOP1 = float(os.getenv("THRESHOLD_AUTOSTORE_TOP1", "0.75"))
+THRESHOLD_AUTOSTORE_PROB = float(os.getenv("THRESHOLD_AUTOSTORE_PROB", "0.75"))
+MAX_AUTOSTORE_CAP = int(os.getenv("MAX_AUTOSTORE_CAP", "30"))
+THRESHOLD_MANUFACTURER_RERANK_CONFIDENCE = float(os.getenv("THRESHOLD_MANUFACTURER_RERANK_CONFIDENCE", "0.85"))
+MAX_MANUFACTURER_RERANK_CAP = float(os.getenv("MAX_MANUFACTURER_RERANK_CAP", "0.05")) # +/- 5%
+
+# OCR_URL for on-demand OCR
+OCR_URL = os.getenv("OCR_URL", "").rstrip("/")
+
 STATE: Dict[str, Any] = {
     "model_ready": False,
     "model_loading": False,
@@ -575,31 +612,44 @@ def _predict(img: PILImage.Image) -> Tuple[List[Dict[str, Any]], Dict[str, Any]]
 @app.post("/api/analyze-key")
 def analyze_key(
     request: Request,
-    front: UploadFile = File(...),
+    front: UploadFile = File(None),
     back: UploadFile = File(None),
+    image_front: UploadFile = File(None),
+    image_back: UploadFile = File(None),
+    front_up: UploadFile = File(None),
+    back_up: UploadFile = File(None),
     modo: Optional[str] = Form(None),
-    ref_hint: Optional[str] = None, # Renamed from ref_hint to manufacturer_hint in frontend
+    ref_hint: Optional[str] = Form(None),
+    manufacturer_hint: Optional[str] = Form(None),
 ):
-    if front is None:
-        raise HTTPException(status_code=400, detail="front requerido")
+    front_file = front or front_up or image_front
+    back_file = back or back_up or image_back
+
+    if front_file is None:
+        raise HTTPException(
+            status_code=422,
+            detail="Front image is required. Please provide it as 'front', 'front_up', or 'image_front' in multipart/form-data.",
+        )
+
+    manufacturer_hint_to_use = manufacturer_hint if manufacturer_hint is not None else ref_hint
 
     modo2 = (modo or "").strip().lower()
     if modo2 not in ("taller", "cliente"):
         modo2 = "cliente"
 
     try:
-        front_up.file.seek(0)
+        front_file.file.seek(0)
     except Exception:
         pass
-    data = front_up.file.read()
+    data = front_file.file.read()
 
     raw_back = b""
-    if back_up is not None:
+    if back_file is not None:
         try:
-            back_up.file.seek(0)
+            back_file.file.seek(0)
         except Exception:
             pass
-        raw_back = back_up.file.read() or b""
+        raw_back = back_file.file.read() or b""
 
     if not data:
         raise HTTPException(400, "archivo vacío")
@@ -622,9 +672,9 @@ def analyze_key(
 
     # Manufacturer hint processing
     manufacturer_hint_obj = {"found": False, "name": None, "confidence": 0.0}
-    if ref_hint:
+    if manufacturer_hint_to_use:
         manufacturer_hint_obj["found"] = True
-        manufacturer_hint_obj["name"] = ref_hint
+        manufacturer_hint_obj["name"] = manufacturer_hint_to_use
         manufacturer_hint_obj["confidence"] = 0.50  # weak hint by default
 
     # Catalog match enrichment
@@ -681,21 +731,21 @@ def analyze_key(
     ts_utc = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
 
     if should_store_sample:
-        store = _maybe_store_sample_to_gcs(data, getattr(front_up, "filename", "") or "front.jpg", modo2, side="A")
+        store = _maybe_store_sample_to_gcs(data, getattr(front_file, "filename", "") or "front.jpg", modo2, side="A")
         if store.get("stored"):
             store.update(_store_copy_to_keys_date(
                 raw_bytes=data,
-                filename_hint=(getattr(front_up, "filename", "") or "front.jpg"),
+                filename_hint=(getattr(front_file, "filename", "") or "front.jpg"),
                 input_id=input_id,
                 side="A",
                 sample_gcs_uri=store.get("gcs_uri"),
             ))
         if raw_back and len(raw_back) > 1000:
-            store_back = _maybe_store_sample_to_gcs(raw_back, getattr(back_up, "filename", "") or "back.jpg", modo2, side="B")
+            store_back = _maybe_store_sample_to_gcs(raw_back, getattr(back_file, "filename", "") or "back.jpg", modo2, side="B")
             if store_back.get("stored"):
                 store_back.update(_store_copy_to_keys_date(
                     raw_bytes=raw_back,
-                    filename_hint=(getattr(back_up, "filename", "") or "back.jpg"),
+                    filename_hint=(getattr(back_file, "filename", "") or "back.jpg"),
                     input_id=input_id,
                     side="B",
                     sample_gcs_uri=store_back.get("gcs_uri"),
@@ -737,7 +787,7 @@ def analyze_key(
         meta = dict(base_meta)
         meta["img"] = {
             "side": "A",
-            "filename": (getattr(front_up, "filename", "") or "front.jpg"),
+            "filename": (getattr(front_file, "filename", "") or "front.jpg"),
             "bytes": len(data),
             "sha256": hashlib.sha256(data).hexdigest(),
         }
@@ -747,7 +797,7 @@ def analyze_key(
         meta = dict(base_meta)
         meta["img"] = {
             "side": "B",
-            "filename": (getattr(back_up, "filename", "") or "back.jpg"),
+            "filename": (getattr(back_file, "filename", "") or "back.jpg"),
             "bytes": len(raw_back),
             "sha256": hashlib.sha256(raw_back).hexdigest(),
         }

@@ -16,6 +16,10 @@ APP_VERSION = "0.5.0"
 SCHEMA_VERSION = "2026-02-17"
 POLICY_VERSION = "none"
 
+_cached_id_token = None
+_cached_id_token_expiry = 0
+_TOKEN_REFRESH_MARGIN_SECONDS = 60 # Refresh 60 seconds before expiration
+
 # IMPORTANTE: Dockerfile usa uvicorn main:APP
 APP = FastAPI(title="ScanKey Gateway", version=APP_VERSION, redirect_slashes=False)
 
@@ -87,6 +91,9 @@ def _proxy_httpx_json(r: httpx.Response, request_id: str):
     if ct == "application/json":
         try:
             payload = r.json()
+            # SCN_PATCH_MANUFACTURER_HINT_DEFAULT
+            if isinstance(payload, dict) and "manufacturer_hint" not in payload:
+                payload["manufacturer_hint"] = {"found": False, "name": None, "confidence": 0.0}
         except Exception:
             payload = {"ok": False, "error": "invalid_json_from_upstream", "status_code": r.status_code}
         _inject_meta(payload, request_id)
@@ -111,6 +118,10 @@ MOTOR_URL = (os.getenv("MOTOR_URL") or "").rstrip("/")
 API_KEYS_RAW = os.getenv("API_KEYS", "")
 ALLOWED_ORIGINS_RAW = os.getenv("ALLOWED_ORIGINS", "*")
 TIMEOUT = float(os.getenv("TIMEOUT", "15"))
+
+# New Config for ID Token Proxy
+SCN_FEATURE_GATEWAY_IDTOKEN_PROXY_ENABLED = os.getenv("SCN_FEATURE_GATEWAY_IDTOKEN_PROXY_ENABLED", "true").lower() == "true"
+MOTOR_AUTH_HEADER = os.getenv("MOTOR_AUTH_HEADER", "Authorization")
 
 KEY_BUCKET = os.getenv("KEY_BUCKET", "scankey-dc007-keys")
 KEY_PREFIX = os.getenv("KEY_PREFIX", "ingest").strip("/")
@@ -154,9 +165,41 @@ def require_apikey(req: Request):
         raise HTTPException(status_code=401, detail="API key inválida")
     return True
 
-def fetch_id_token(audience: str) -> str:
-    r = google.auth.transport.requests.Request()
-    return id_token.fetch_id_token(r, audience)
+
+
+def fetch_id_token_cached(audience: str) -> str:
+    global _cached_id_token, _cached_id_token_expiry
+
+    now = time.time()
+    # Check if the cached token is still valid with a refresh margin
+    if _cached_id_token and _cached_id_token_expiry > now + _TOKEN_REFRESH_MARGIN_SECONDS:
+        return _cached_id_token
+
+    # Fetch a new token
+    request_object = google.auth.transport.requests.Request()
+    new_token = id_token.fetch_id_token(request_object, audience)
+
+    # Extract expiry from the newly fetched token
+    try:
+        # id_token.verify_oauth2_token returns the claims (a dict)
+        claims = id_token.verify_oauth2_token(new_token, request_object, audience=audience)
+        _cached_id_token_expiry = claims.get('exp', 0)
+    except Exception as e:
+        # Fallback if expiry extraction fails, assume 1 hour validity for caching
+        print(f"Warning: Could not extract expiry from ID token: {e}. Assuming 1 hour validity.")
+        _cached_id_token_expiry = now + 3600 # 1 hour from now
+
+    _cached_id_token = new_token
+    return _cached_id_token
+
+def _get_auth_headers() -> Dict[str, str]:
+    headers = {}
+    if SCN_FEATURE_GATEWAY_IDTOKEN_PROXY_ENABLED:
+        if not MOTOR_URL:
+            raise HTTPException(500, "MOTOR_URL no configurado para ID Token Proxy")
+        token = fetch_id_token_cached(MOTOR_URL)
+        headers[MOTOR_AUTH_HEADER] = f"Bearer {token}"
+    return headers
 
 def _sha256(b: bytes) -> str:
     return hashlib.sha256(b).hexdigest()
@@ -204,8 +247,7 @@ def _find_job_path(job_id: str, lookback_days: int = 14) -> str:
 async def _motor_post(path: str, files=None, data=None) -> httpx.Response:
     if not MOTOR_URL:
         raise HTTPException(500, "MOTOR_URL no configurado")
-    token = fetch_id_token(MOTOR_URL)
-    headers = {"Authorization": f"Bearer {token}"}
+    headers = _get_auth_headers()
 
     last_exc = None
     for attempt in (1, 2):
@@ -221,8 +263,7 @@ async def _motor_post(path: str, files=None, data=None) -> httpx.Response:
 async def _motor_get(path: str):
     if not MOTOR_URL:
         raise HTTPException(500, "MOTOR_URL no configurado")
-    token = fetch_id_token(MOTOR_URL)
-    headers = {"Authorization": f"Bearer {token}"}
+    headers = _get_auth_headers()
 
     last_exc = None
     for attempt in (1, 2):
