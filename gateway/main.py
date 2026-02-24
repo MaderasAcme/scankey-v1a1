@@ -91,44 +91,31 @@ def _proxy_httpx_json(r: httpx.Response, request_id: str):
     if ct == "application/json":
         try:
             payload = r.json()
-            # SCN_PATCH_NORMALIZE_RESULTS_AND_CANDIDATES
-            def _fix_tags(lst):
-                if not isinstance(lst, list):
-                    return
-                for it in lst:
-                    if isinstance(it, dict):
-                        ct = it.get('compatibility_tags')
-                        if ct is None:
-                            it['compatibility_tags'] = []
-                        elif isinstance(ct, str):
-                            it['compatibility_tags'] = [ct]
-                        elif not isinstance(ct, list):
-                            it['compatibility_tags'] = []
+            # SCN_PATCH_FIX_COMPAT_TAGS
             if isinstance(payload, dict):
                 payload.setdefault('manufacturer_hint', {'found': False, 'name': None, 'confidence': 0.0})
-                _fix_tags(payload.get('results'))
-                _fix_tags(payload.get('candidates'))
-            # SCN_PATCH_NORMALIZE_RESULTS_TYPES
-            if isinstance(payload, dict):
-                payload.setdefault('manufacturer_hint', {'found': False, 'name': None, 'confidence': 0.0})
-                res = payload.get('results')
-                if isinstance(res, list):
-                    for it in res:
-                        if isinstance(it, dict):
-                            ct = it.get('compatibility_tags')
-                            if ct is None:
-                                it['compatibility_tags'] = []
-                            elif isinstance(ct, str):
-                                it['compatibility_tags'] = [ct]
-                            elif not isinstance(ct, list):
-                                it['compatibility_tags'] = []
+                for _k in ('results','candidates'):
+                    _lst = payload.get(_k)
+                    if isinstance(_lst, list):
+                        for _it in _lst:
+                            if isinstance(_it, dict):
+                                _ct = _it.get('compatibility_tags')
+                                if _ct is None:
+                                    _it['compatibility_tags'] = []
+                                elif isinstance(_ct, list):
+                                    pass
+                                elif isinstance(_ct, str):
+                                    _it['compatibility_tags'] = [_ct]
+                                else:
+                                    _it['compatibility_tags'] = []
+
             # SCN_PATCH_MANUFACTURER_HINT_DEFAULT
             if isinstance(payload, dict) and "manufacturer_hint" not in payload:
                 payload["manufacturer_hint"] = {"found": False, "name": None, "confidence": 0.0}
         except Exception:
             payload = {"ok": False, "error": "invalid_json_from_upstream", "status_code": r.status_code}
         _inject_meta(payload, request_id)
-return JSONResponse(content=payload, status_code=r.status_code)
+        return JSONResponse(content=payload, status_code=r.status_code)
     return Response(content=r.content, status_code=r.status_code, media_type=ct)
 
 @APP.middleware("http")
