@@ -1,0 +1,281 @@
+{
+  "generated_at": "2026-02-21T12:15:11Z",
+  "refs": {
+    "AB8I": {
+      "brand": null,
+      "extra": {},
+      "family": "AB",
+      "model": "AB8I",
+      "notes": "Seed AB8I.",
+      "priority": 75,
+      "ref": "AB8I",
+      "tags": [
+        "SEED"
+      ],
+      "type": "KEY"
+    },
+    "AGA11": {
+      "brand": null,
+      "extra": {},
+      "family": "AGA",
+      "model": "AGA11",
+      "notes": "Seed AGA11.",
+      "priority": 75,
+      "ref": "AGA11",
+      "tags": [
+        "SEED"
+      ],
+      "type": "KEY"
+    },
+    "CIDL": {
+      "brand": null,
+      "extra": {},
+      "family": "CI",
+      "model": "CIDL",
+      "notes": "Seed CIDL.",
+      "priority": 75,
+      "ref": "CIDL",
+      "tags": [
+        "SEED"
+      ],
+      "type": "KEY"
+    },
+    "JIS1D": {
+      "brand": null,
+      "extra": {},
+      "family": "JIS",
+      "model": "JIS1D",
+      "notes": "Semilla para ampliar JIS.",
+      "priority": 90,
+      "ref": "JIS1D",
+      "tags": [
+        "COMUN"
+      ],
+      "type": "KEY"
+    },
+    "JIS2I": {
+      "brand": null,
+      "extra": {},
+      "family": "JIS",
+      "model": "JIS2I",
+      "notes": "Clase v1 actual (single-label). Mantener como anchor.",
+      "priority": 100,
+      "ref": "JIS2I",
+      "tags": [
+        "BASE",
+        "COMUN"
+      ],
+      "type": "KEY"
+    },
+    "JMA9D": {
+      "brand": "JMA",
+      "extra": {},
+      "family": "JMA",
+      "model": "JMA9D",
+      "notes": "Ref genérica JMA9D (seed).",
+      "priority": 70,
+      "ref": "JMA9D",
+      "tags": [
+        "JMA"
+      ],
+      "type": "KEY"
+    },
+    "MCM18": {
+      "brand": "JMA",
+      "extra": {},
+      "family": "MCM",
+      "model": "MCM18",
+      "notes": "MCM 18.",
+      "priority": 80,
+      "ref": "MCM18",
+      "tags": [
+        "JMA"
+      ],
+      "type": "KEY"
+    },
+    "MCM4D": {
+      "brand": "JMA",
+      "extra": {},
+      "family": "MCM",
+      "model": "MCM4D",
+      "notes": "MCM 4D.",
+      "priority": 90,
+      "ref": "MCM4D",
+      "tags": [
+        "COMUN",
+        "JMA"
+      ],
+      "type": "KEY"
+    },
+    "MCM4I": {
+      "brand": "JMA",
+      "extra": {},
+      "family": "MCM",
+      "model": "MCM4I",
+      "notes": "MCM 4I.",
+      "priority": 90,
+      "ref": "MCM4I",
+      "tags": [
+        "COMUN",
+        "JMA"
+      ],
+      "type": "KEY"
+    },
+    "MCM5D": {
+      "brand": "JMA",
+      "extra": {},
+      "family": "MCM",
+      "model": "MCM5D",
+      "notes": "MCM 5D.",
+      "priority": 88,
+      "ref": "MCM5D",
+      "tags": [
+        "COMUN",
+        "JMA"
+      ],
+      "type": "KEY"
+    },
+    "MCM5I": {
+      "brand": "JMA",
+      "extra": {},
+      "family": "MCM",
+      "model": "MCM5I",
+      "notes": "MCM 5I.",
+      "priority": 88,
+      "ref": "MCM5I",
+      "tags": [
+        "COMUN",
+        "JMA"
+      ],
+      "type": "KEY"
+    },
+    "TE28": {
+      "brand": "JMA",
+      "extra": {},
+      "family": "TE",
+      "model": "TE28",
+      "notes": "Referencia TE-28 / TE28.",
+      "priority": 88,
+      "ref": "TE28",
+      "tags": [
+        "COMUN",
+        "JMA"
+      ],
+      "type": "KEY"
+    },
+    "TE5": {
+      "brand": "JMA",
+      "extra": {},
+      "family": "TE",
+      "model": "TE5",
+      "notes": "TE5 (si la vas a incluir como clase v2).",
+      "priority": 78,
+      "ref": "TE5",
+      "tags": [
+        "COMUN",
+        "JMA"
+      ],
+      "type": "KEY"
+    },
+    "TE6": {
+      "brand": "JMA",
+      "extra": {},
+      "family": "TE",
+      "model": "TE6",
+      "notes": "TE6 (si la vas a incluir como clase v2).",
+      "priority": 75,
+      "ref": "TE6",
+      "tags": [
+        "COMUN",
+        "JMA"
+      ],
+      "type": "KEY"
+    },
+    "TE8D": {
+      "brand": "JMA",
+      "extra": {},
+      "family": "TE",
+      "model": "TE8D",
+      "notes": "Variante TE8D (si existirá en v2).",
+      "priority": 92,
+      "ref": "TE8D",
+      "tags": [
+        "COMUN",
+        "JMA"
+      ],
+      "type": "KEY"
+    },
+    "TE8I": {
+      "brand": "JMA",
+      "extra": {},
+      "family": "TE",
+      "model": "TE8I",
+      "notes": "Referencia muy común en catálogo TE.",
+      "priority": 95,
+      "ref": "TE8I",
+      "tags": [
+        "COMUN",
+        "JMA"
+      ],
+      "type": "KEY"
+    },
+    "TEC2": {
+      "brand": "JMA",
+      "extra": {},
+      "family": "TE",
+      "model": "TEC2",
+      "notes": "Referencia TEC2.",
+      "priority": 85,
+      "ref": "TEC2",
+      "tags": [
+        "COMUN",
+        "JMA"
+      ],
+      "type": "KEY"
+    },
+    "U5D": {
+      "brand": null,
+      "extra": {},
+      "family": "U",
+      "model": "U5D",
+      "notes": "Seed U5D.",
+      "priority": 60,
+      "ref": "U5D",
+      "tags": [
+        "SEED"
+      ],
+      "type": "KEY"
+    },
+    "YA22D": {
+      "brand": "JMA",
+      "extra": {},
+      "family": "YA",
+      "model": "YA22D",
+      "notes": "YA 22D.",
+      "priority": 85,
+      "ref": "YA22D",
+      "tags": [
+        "COMUN",
+        "JMA"
+      ],
+      "type": "KEY"
+    },
+    "YA300D": {
+      "brand": "JMA",
+      "extra": {},
+      "family": "YA",
+      "model": "YA300D",
+      "notes": "YA 300D.",
+      "priority": 82,
+      "ref": "YA300D",
+      "tags": [
+        "COMUN",
+        "JMA"
+      ],
+      "type": "KEY"
+    }
+  },
+  "refs_count": 20,
+  "schema": "scankey.catalog_refs.v1",
+  "seed": "catalog_seed_common.csv"
+}

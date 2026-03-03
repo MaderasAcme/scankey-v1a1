@@ -1,0 +1,26 @@
+{
+  "expo": {
+    "name": "ScanKey",
+    "slug": "scankey-v1a1",
+    "scheme": "scankey",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/images/icon.png",
+    "userInterfaceStyle": "dark",
+    "splash": {
+      "image": "./assets/images/splash-icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#1C1C1E"
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/images/icon.png",
+        "backgroundColor": "#1C1C1E"
+      },
+      "package": "com.maderasacme.scankey"
+    },
+    "web": {
+      "bundler": "webpack"
+    }
+  }
+}

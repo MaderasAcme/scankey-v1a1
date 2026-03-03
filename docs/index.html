@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta name="theme-color" content="#050509" />
+  <title>ScanKey</title>
+  <style>
+    :root{--bg:#050509;--card:#11121A;--text:#F5F5F7;--muted:#A1A1AA;--line:#232433;--accent:#4C6FFF;}
+    *{box-sizing:border-box}
+    body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial;
+      background:radial-gradient(1200px 700px at 20% 0%, rgba(76,111,255,.18), transparent 60%),
+                 radial-gradient(900px 600px at 80% 20%, rgba(76,111,255,.10), transparent 55%),
+                 var(--bg); color:var(--text);}
+    a{color:inherit;text-decoration:none}
+    .wrap{max-width:1100px;margin:0 auto;padding:26px 16px 60px}
+    .nav{display:flex;align-items:center;justify-content:space-between;gap:12px}
+    .brand{display:flex;align-items:center;gap:10px}
+    .logo{width:34px;height:34px;border-radius:10px;background:linear-gradient(145deg, rgba(76,111,255,.95), rgba(76,111,255,.35));
+      box-shadow:0 10px 30px rgba(76,111,255,.18);}
+    .pill{display:inline-flex;align-items:center;gap:8px;padding:8px 12px;border:1px solid var(--line);
+      border-radius:999px;background:rgba(17,18,26,.55);color:var(--muted);font-size:13px}
+    .grid{display:grid;grid-template-columns:1.2fr .8fr;gap:16px;margin-top:18px}
+    @media (max-width: 920px){.grid{grid-template-columns:1fr}}
+    .hero{padding:22px;border:1px solid var(--line);border-radius:18px;background:linear-gradient(180deg, rgba(17,18,26,.75), rgba(17,18,26,.45))}
+    h1{margin:10px 0 10px;font-size:44px;line-height:1.05}
+    .sub{color:var(--muted);font-size:16px;line-height:1.55;max-width:62ch}
+    .cta{display:flex;flex-wrap:wrap;gap:10px;margin-top:16px}
+    .btn{padding:12px 14px;border-radius:14px;border:1px solid var(--line);background:rgba(24,25,38,.75);font-weight:700;display:inline-flex;gap:10px;align-items:center}
+    .btn.primary{background:rgba(76,111,255,.95);border-color:rgba(76,111,255,.95)}
+    .cards{display:grid;gap:12px}
+    .card{padding:16px;border-radius:18px;border:1px solid var(--line);background:linear-gradient(180deg, rgba(17,18,26,.70), rgba(17,18,26,.45))}
+    .card h3{margin:0 0 6px;font-size:16px}
+    .card p{margin:0;color:var(--muted);font-size:14px;line-height:1.5}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="nav">
+      <div class="brand"><div class="logo"></div><b>ScanKey</b></div>
+      <div class="pill">Estado API: <span id="status">checking…</span></div>
+    </div>
+
+    <div class="grid">
+      <div class="hero">
+        <div class="pill">Identificación de llaves + flujo seguro (cliente / taller)</div>
+        <h1>Escanea. Identifica. Actúa.</h1>
+        <p class="sub">
+          ScanKey reconoce tu llave y te guía al siguiente paso: referencia general para cliente,
+          detalle protegido para taller autorizado, y mejora continua con corrección manual.
+        </p>
+        <div class="cta">
+
+          <a class="btn" href="https://scankey-motor-2apb4vvlhq-no.a.run.app/health" target="_blank" rel="noreferrer">Ver /health</a>
+          <a class="btn" href="https://github.com/MaderasAcme/scankey-v1a1" target="_blank" rel="noreferrer">GitHub</a>
+        </div>
+      </div>
+
+      <div class="cards">
+        <div class="card"><h3>Qué es hoy</h3><p>Base real: motor en Cloud Run, endpoints estables, y web oficial.</p></div>
+        <div class="card"><h3>Qué falta</h3><p>Dataset robusto por referencia (A/B) + reentrenamiento v2 para ampliar labels.</p></div>
+        <div class="card"><h3>Próximo objetivo</h3><p>Capturar fotos reales y medir confusiones cuando haya varias labels.</p></div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const el = document.getElementById("status");
+    const url = "https://scankey-motor-2apb4vvlhq-no.a.run.app/health";
+    const t = setTimeout(() => { el.textContent = "no accesible"; }, 3500);
+
+    fetch(url, { cache: "no-store" })
+      .then(r => r.ok ? r.json() : Promise.reject())
+      .then(j => {
+        clearTimeout(t);
+        el.textContent = (j && j.ok && j.model_ready) ? "OK / modelo listo" : "OK / cargando";
+      })
+      .catch(() => {
+        clearTimeout(t);
+        el.textContent = "no accesible";
+      });
+  </script>
+</body>
+</html>

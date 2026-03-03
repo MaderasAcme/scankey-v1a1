@@ -1,0 +1,39 @@
+
+{
+  "input_id": "sk_low_test_002",
+  "timestamp": "2025-05-20T10:05:00Z",
+  "manufacturer_hint": {
+    "found": false,
+    "name": null,
+    "confidence": 0.12
+  },
+  "results": [
+    {
+      "rank": 1,
+      "type": "Desconocido",
+      "confidence": 0.35,
+      "explain_text": "No se puede determinar el perfil con exactitud.",
+      "compatibility_tags": []
+    },
+    {
+      "rank": 2,
+      "type": "Desconocido",
+      "confidence": 0.20,
+      "explain_text": "Baja visibilidad de estrías.",
+      "compatibility_tags": []
+    },
+    {
+      "rank": 3,
+      "type": "Desconocido",
+      "confidence": 0.10,
+      "explain_text": "No se detectan patrones.",
+      "compatibility_tags": []
+    }
+  ],
+  "high_confidence": false,
+  "low_confidence": true,
+  "should_store_sample": false,
+  "current_samples_for_candidate": 0,
+  "manual_correction_hint": { "fields": ["marca", "modelo", "tipo", "ocr_text"] },
+  "debug": { "processing_time_ms": 450, "model_version": "scankey-v2-prod" }
+}

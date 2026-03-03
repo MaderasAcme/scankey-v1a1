@@ -1,0 +1,47 @@
+
+{
+  "input_id": "sk_high_test_001",
+  "timestamp": "2025-05-20T10:00:00Z",
+  "manufacturer_hint": {
+    "found": true,
+    "name": "Yale",
+    "confidence": 0.98
+  },
+  "results": [
+    {
+      "rank": 1,
+      "id_model_ref": "yale_24d",
+      "type": "Serreta",
+      "brand": "Yale",
+      "model": "24D",
+      "confidence": 0.97,
+      "explain_text": "Coincidencia perfecta con perfil estándar Yale.",
+      "compatibility_tags": ["standard", "yale-compatible"],
+      "crop_bbox": { "x": 10.5, "y": 20.0, "w": 100.0, "h": 250.0 }
+    },
+    {
+      "rank": 2,
+      "id_model_ref": "tessa_te5",
+      "type": "Serreta",
+      "brand": "Tessa",
+      "model": "TE5",
+      "confidence": 0.75,
+      "explain_text": "Variación similar pero con estría invertida.",
+      "compatibility_tags": ["tessa-generic"]
+    },
+    {
+      "rank": 3,
+      "id_model_ref": null,
+      "type": "Genérica",
+      "confidence": 0.45,
+      "explain_text": "Perfil genérico compatible.",
+      "compatibility_tags": []
+    }
+  ],
+  "high_confidence": true,
+  "low_confidence": false,
+  "should_store_sample": true,
+  "current_samples_for_candidate": 15,
+  "manual_correction_hint": { "fields": ["marca", "modelo", "tipo"] },
+  "debug": { "processing_time_ms": 120, "model_version": "scankey-v2-prod" }
+}

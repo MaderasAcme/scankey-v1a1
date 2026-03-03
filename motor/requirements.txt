@@ -1,0 +1,9 @@
+fastapi
+uvicorn[standard]
+gunicorn
+python-multipart
+pillow
+numpy
+onnxruntime
+google-cloud-storage
+opencv-python-headless

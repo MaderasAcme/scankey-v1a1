@@ -1,0 +1,104 @@
+# --- OS / Editor ---
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# --- Node / Expo ---
+node_modules/
+.expo/
+.expo-shared/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# --- Python ---
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.pytest_cache/
+.venv/
+venv/
+
+# --- SECURITY: NEVER COMMIT ---
+github-recovery-codes*.txt
+credentials.json
+*.pem
+*.p12
+*.key
+.env
+.env.*
+*.env
+
+# --- LOCAL DUMPS / PACKS ---
+*DUMP*.txt
+*dump*.txt
+*_dump*.txt
+scankey_dump*.txt
+SCN_*_DUMP_*.txt
+SCN_MOTOR_SHELL_DUMP_*.txt
+SCN_MOTOR_EXPORT_*.txt
+*.log
+*.zip
+motor/*.bak_*
+out/
+
+# --- Catalog sources (NO subir PDFs / fuentes crudas) ---
+backend/resources/catalog/_src/
+backend/resources/catalog/_extract_report.txt
+backend/resources/catalog/jma_catalog_refs_canon.json
+motor/catalog_runtime.json
+megafactory/catalog/
+
+# --- Reports / generated outputs ---
+megafactory/reports/
+
+# --- Base44 exports (si aparecen) ---
+backup-base44/
+*.base44.app/
+_git_mistakes/
+dist/
+
+# --- ScanKey: seguridad / basura ---
+github-recovery-codes.txt
+credentials.json
+*.pem
+*.p12
+.env
+.env.*
+__pycache__/
+.venv/
+node_modules/
+.expo/
+dist/
+App.js.bak.*
+
+# local trash
+_SANDBOX_TRASH/
+
+# secrets
+.env.local
+.env.*
+GATEWAY_API_KEY.txt
+*recovery-codes*
+credentials.json
+
+# --- allow env examples (TRACKED) ---
+!.env.example
+!.env.*.example
+
+# python
+__pycache__/
+*.pyc
+
+# UNIGNORE CATALOG (needed for catalog generator)
+!megafactory/catalog/
+!megafactory/catalog/build_catalog_refs.py
+scripts/dev/*.bak.*
+
+# Google API discovery cache / client caches (NO deben entrar en git)
+discovery_cache/
+**/discovery_cache/
+.cache/
+**/.cache/

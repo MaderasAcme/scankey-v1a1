@@ -1,0 +1,50 @@
+name: Motor Smoke Test
+
+on:
+  pull_request:
+    paths:
+      - "motor/**"
+      - "scripts/**"
+      - ".github/workflows/smoke-test.yml"
+  workflow_dispatch:
+
+jobs:
+  smoke-motor:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: "projects/578907855193/locations/global/workloadIdentityPools/github-pool/providers/github-provider"
+          service_account: "github-ci-scankey@scankey-dc007.iam.gserviceaccount.com"
+
+      - uses: google-github-actions/setup-gcloud@v2
+        with:
+          project_id: "scankey-dc007"
+
+      - name: Fetch model v1
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+s*MODEL_DIR="/.cache/scankey_model_v1"
+          MODEL_DIR="$HOME/.cache/scankey_model_v1"
+          mkdir -p "$MODEL_DIR"
+          BUCKET="gs://scankey-models-scankey-dc007-95b419/scankey/models/v1"
+          gcloud storage cp "$BUCKET/modelo_llaves.onnx" "$MODEL_DIR/"
+          gcloud storage cp "$BUCKET/modelo_llaves.onnx.data" "$MODEL_DIR/"
+          gcloud storage cp "$BUCKET/labels.json" "$MODEL_DIR/"
+          echo "MODEL_DIR=$MODEL_DIR" >> "$GITHUB_ENV"
+          ls -la "$MODEL_DIR"
+      - name: Smoke test (mount)
+        shell: bash
+        env:
+          HOST_PORT: "8082"
+          PORT: "8080"
+        run: |
+          set -Eeuo pipefail
+          ./scripts/smoke_test_motor.sh mount
