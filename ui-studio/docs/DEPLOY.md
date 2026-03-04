@@ -24,7 +24,7 @@ El despliegue es automático al hacer push a la rama `main` si hay cambios en la
 2. Ejecuta: `gcloud run deploy scankey-api --source . --region europe-west1 --allow-unauthenticated`.
 
 ## 3. Despliegue del Frontend (Web)
-El despliegue se realiza a GitHub Pages automáticamente mediante el workflow `web-gh-pages.yml`.
+El despliegue se realiza a GitHub Pages automáticamente mediante el workflow `.github/workflows/deploy-pages.yml`. Ver `docs/PAGES_SOURCE.md` para detalles del origen.
 
 **Configuración de CORS:**
 Es vital que el backend tenga configurado el `CORS_ORIGINS` apuntando a tu URL de GitHub Pages, de lo contrario el navegador bloqueará las peticiones de análisis.

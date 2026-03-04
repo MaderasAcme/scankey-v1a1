@@ -1,4 +1,4 @@
-name: Deploy Pages (gh-pages)
+name: Deploy Pages
 
 on:
   push:
@@ -8,7 +8,13 @@ on:
       - '.github/workflows/deploy-pages.yml'
 
 permissions:
-  contents: write
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: "pages"
+  cancel-in-progress: false
 
 jobs:
   build:
@@ -41,12 +47,49 @@ jobs:
           echo "DEPLOY_PING=$(date -u +'%Y-%m-%d %H:%M:%S UTC')" > dist/deploy-ping.txt
           echo "GATEWAY=${EXPO_PUBLIC_API_BASE_URL}" >> dist/deploy-ping.txt
 
-      - name: Deploy gh-pages
-        uses: peaceiris/actions-gh-pages@v4
+      - name: Assert dist contents
+        working-directory: ui-studio
+        run: |
+          echo "== dist/ listing =="
+          ls -la dist | head -50
+          echo "== required files =="
+          test -f dist/deploy-ping.txt || (echo "ERROR: dist/deploy-ping.txt missing" && exit 1)
+          test -f dist/index.html || (echo "ERROR: dist/index.html missing" && exit 1)
+          echo "deploy-ping.txt contents:"
+          cat dist/deploy-ping.txt
+
+      - name: Add CNAME for custom domain
+        working-directory: ui-studio
+        run: |
+          echo "scankeyapp.com" > dist/CNAME
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
         with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_branch: gh-pages
-          publish_dir: ui-studio/dist
-          force_orphan: true
-          enable_jekyll: false
-          cname: scankeyapp.com
+          path: ui-studio/dist
+
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
+
+  verify:
+    runs-on: ubuntu-latest
+    needs: deploy
+    steps:
+      - name: Verify deploy-ping.txt (headers only)
+        run: |
+          echo "== maderasacme.github.io =="
+          curl -sI "https://maderasacme.github.io/scankey-v1a1/deploy-ping.txt" || true
+          echo ""
+          echo "== scankeyapp.com =="
+          curl -sI "https://scankeyapp.com/deploy-ping.txt" || true
+          echo ""
+          echo "== www.scankeyapp.com =="
+          curl -sI "https://www.scankeyapp.com/deploy-ping.txt" || true

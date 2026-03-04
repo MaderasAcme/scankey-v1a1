@@ -12,3 +12,6 @@ cd scankey-v1a1
 npm i
 npx expo start
 ```
+
+## Deploy / Pages
+El sitio web se publica en GitHub Pages (Source: **GitHub Actions**). Ver `docs/PAGES_SOURCE.md` para configuración de Pages y dominio.
