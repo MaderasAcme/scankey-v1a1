@@ -385,3 +385,48 @@ export function getQueueOpsStats(settings) {
     retryStopToday: stats.retryStopToday ?? 0,
   };
 }
+
+/** P1.1: QualityGate stats — quality_blocks_today, quality_overrides_today, quality_warnings_today */
+const QUALITY_STATS_KEY = 'qualityStatsDate';
+
+function _ensureQualityStatsDate(stats) {
+  const today = new Date().toISOString().slice(0, 10);
+  if (stats[QUALITY_STATS_KEY] !== today) {
+    stats[QUALITY_STATS_KEY] = today;
+    stats.quality_blocks_today = 0;
+    stats.quality_overrides_today = 0;
+    stats.quality_warnings_today = 0;
+  }
+  return stats;
+}
+
+/**
+ * Incrementa un contador de QualityGate (block, override, warning).
+ * @param {'block'|'override'|'warning'} kind
+ */
+export function incrementQualityGateStat(kind) {
+  const s = loadJSON(SETTINGS_KEY, {});
+  const stats = _ensureQualityStatsDate(s.stats || {});
+  if (kind === 'block') stats.quality_blocks_today = (stats.quality_blocks_today ?? 0) + 1;
+  if (kind === 'override') stats.quality_overrides_today = (stats.quality_overrides_today ?? 0) + 1;
+  if (kind === 'warning') stats.quality_warnings_today = (stats.quality_warnings_today ?? 0) + 1;
+  saveJSON(SETTINGS_KEY, { ...s, stats });
+}
+
+/**
+ * @param {Object} settings - Objeto scn_settings
+ * @returns {{ quality_blocks_today: number, quality_overrides_today: number, quality_warnings_today: number }}
+ */
+export function getQualityGateStats(settings) {
+  const s = settings || {};
+  const stats = s.stats || {};
+  const today = new Date().toISOString().slice(0, 10);
+  if (stats[QUALITY_STATS_KEY] !== today) {
+    return { quality_blocks_today: 0, quality_overrides_today: 0, quality_warnings_today: 0 };
+  }
+  return {
+    quality_blocks_today: stats.quality_blocks_today ?? 0,
+    quality_overrides_today: stats.quality_overrides_today ?? 0,
+    quality_warnings_today: stats.quality_warnings_today ?? 0,
+  };
+}

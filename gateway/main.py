@@ -1,8 +1,14 @@
-import os, json, time, uuid, hashlib
+import io
+import os, json, time, uuid, hashlib, logging
 from datetime import datetime, timezone, timedelta
 from typing import Optional, Dict, Any, Set
 
 import httpx
+from PIL import Image
+
+_log = logging.getLogger(__name__)
+from normalize import normalize_contract
+from quality_gate_active import check_quality_gate
 from fastapi import FastAPI, UploadFile, File, Form, HTTPException, Depends, Request
 from fastapi.responses import Response, JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
@@ -86,6 +92,24 @@ def _inject_meta(obj, request_id: str):
         obj.setdefault("gateway_version", APP_VERSION)
     return obj
 
+
+def _log_analyze(request_id: str, processing_time_ms: int, payload: Dict[str, Any]):
+    """Log mínimo: request_id, processing_time_ms, model_version, resultado flags. Sin imágenes ni form-data."""
+    if not isinstance(payload, dict):
+        return
+    debug = payload.get("debug") or {}
+    model_version = debug.get("model_version") or payload.get("model_version") or ""
+    _log.info(
+        "analyze_key",
+        extra={
+            "request_id": request_id,
+            "processing_time_ms": processing_time_ms,
+            "model_version": model_version,
+            "high_confidence": payload.get("high_confidence"),
+            "low_confidence": payload.get("low_confidence"),
+        },
+    )
+
 def _proxy_httpx_json(r: httpx.Response, request_id: str):
     ct = (r.headers.get("content-type") or "application/json").split(";")[0]
     if ct == "application/json":
@@ -146,6 +170,15 @@ KEY_PREFIX = os.getenv("KEY_PREFIX", "ingest").strip("/")
 JOB_PREFIX = os.getenv("JOB_PREFIX", "jobs").strip("/")
 FEEDBACK_PREFIX = os.getenv("FEEDBACK_PREFIX", "feedback").strip("/")
 
+# P1.1: QualityGate (soft-block)
+SCN_FEATURE_QUALITY_GATE_ACTIVE = os.getenv("SCN_FEATURE_QUALITY_GATE_ACTIVE", "false").lower() in ("1", "true", "yes")
+
+# P0.5: Input validation
+MAX_PAYLOAD_MB = float(os.getenv("SCN_MAX_PAYLOAD_MB", "10"))
+MAX_PAYLOAD_BYTES = int(MAX_PAYLOAD_MB * 1024 * 1024)
+ALLOWED_IMAGE_TYPES = {"image/jpeg", "image/jpg", "image/png", "image/webp"}
+MAX_IMAGE_DIM = int(os.getenv("SCN_MAX_IMAGE_DIM", "8192"))
+
 # CORS
 allowed = [o.strip() for o in (ALLOWED_ORIGINS_RAW or "").split(",") if o.strip()]
 APP.add_middleware(
@@ -156,8 +189,14 @@ APP.add_middleware(
     allow_headers=["*"],
 )
 
-# GCS client (usa el Service Account del servicio)
-_gcs = storage.Client()
+# GCS client (lazy cuando SCN_LOCAL_DEV=1)
+SCN_LOCAL_DEV = os.getenv("SCN_LOCAL_DEV", "").lower() in ("1", "true", "yes")
+_gcs = None
+if not SCN_LOCAL_DEV:
+    try:
+        _gcs = storage.Client()
+    except Exception as e:
+        _log.warning("GCS client init failed (local dev?): %s", e)
 
 # -----------------------------
 # Helpers
@@ -225,7 +264,12 @@ def _sha256(b: bytes) -> str:
 def _date_prefix(dt: datetime) -> str:
     return f"{dt.year:04d}/{dt.month:02d}/{dt.day:02d}"
 
+def _gcs_ok() -> bool:
+    return _gcs is not None
+
 def _gcs_put_json(bucket: str, path: str, obj: Dict[str, Any]):
+    if not _gcs:
+        raise RuntimeError("GCS no disponible (modo local)")
     b = _gcs.bucket(bucket)
     blob = b.blob(path)
     blob.upload_from_string(
@@ -234,6 +278,8 @@ def _gcs_put_json(bucket: str, path: str, obj: Dict[str, Any]):
     )
 
 def _gcs_get_json(bucket: str, path: str) -> Dict[str, Any]:
+    if not _gcs:
+        raise FileNotFoundError("GCS no disponible (modo local)")
     b = _gcs.bucket(bucket)
     blob = b.blob(path)
     if not blob.exists():
@@ -241,11 +287,15 @@ def _gcs_get_json(bucket: str, path: str) -> Dict[str, Any]:
     return json.loads(blob.download_as_bytes().decode("utf-8"))
 
 def _gcs_put_bytes(bucket: str, path: str, data: bytes, content_type: str = "image/jpeg"):
+    if not _gcs:
+        raise RuntimeError("GCS no disponible (modo local)")
     b = _gcs.bucket(bucket)
     blob = b.blob(path)
     blob.upload_from_string(data, content_type=content_type)
 
 def _gcs_get_bytes(bucket: str, path: str) -> bytes:
+    if not _gcs:
+        raise FileNotFoundError("GCS no disponible (modo local)")
     b = _gcs.bucket(bucket)
     blob = b.blob(path)
     if not blob.exists():
@@ -253,6 +303,8 @@ def _gcs_get_bytes(bucket: str, path: str) -> bytes:
     return blob.download_as_bytes()
 
 def _find_job_path(job_id: str, lookback_days: int = 14) -> str:
+    if not _gcs:
+        raise FileNotFoundError("GCS no disponible (modo local)")
     now = datetime.now(timezone.utc)
     b = _gcs.bucket(KEY_BUCKET)
     for i in range(lookback_days + 1):
@@ -262,36 +314,58 @@ def _find_job_path(job_id: str, lookback_days: int = 14) -> str:
             return p
     raise FileNotFoundError(job_id)
 
-async def _motor_post(path: str, files=None, data=None) -> httpx.Response:
+async def _motor_post(
+    path: str,
+    files=None,
+    data=None,
+    request_id: Optional[str] = None,
+    req: Optional[Request] = None,
+) -> httpx.Response:
     if not MOTOR_URL:
         raise HTTPException(500, "MOTOR_URL no configurado")
-    headers = _get_auth_headers()
+    headers = dict(_get_auth_headers())
+    if request_id:
+        headers["X-Request-ID"] = request_id
+    if req is not None:
+        workshop_token = (req.headers.get("X-Workshop-Token") or "").strip()
+        if workshop_token:
+            headers["X-Workshop-Token"] = workshop_token
 
     last_exc = None
     for attempt in (1, 2):
         try:
-            async with httpx.AsyncClient(timeout=TIMEOUT) as client:
+            async with httpx.AsyncClient(timeout=httpx.Timeout(TIMEOUT)) as client:
                 return await client.post(f"{MOTOR_URL}{path}", headers=headers, files=files, data=data)
+        except httpx.TimeoutException as e:
+            last_exc = e
+            if attempt == 2:
+                raise HTTPException(504, f"motor timeout: {type(last_exc).__name__}")
         except Exception as e:
             last_exc = e
             if attempt == 2:
-                raise HTTPException(504, f"motor timeout/error: {type(last_exc).__name__}")
+                raise HTTPException(504, f"motor error: {type(last_exc).__name__}")
 
 
-async def _motor_get(path: str):
+async def _motor_get(path: str, request_id: Optional[str] = None):
     if not MOTOR_URL:
         raise HTTPException(500, "MOTOR_URL no configurado")
-    headers = _get_auth_headers()
+    headers = dict(_get_auth_headers())
+    if request_id:
+        headers["X-Request-ID"] = request_id
 
     last_exc = None
     for attempt in (1, 2):
         try:
-            async with httpx.AsyncClient(timeout=TIMEOUT) as client:
+            async with httpx.AsyncClient(timeout=httpx.Timeout(TIMEOUT)) as client:
                 return await client.get(f"{MOTOR_URL}{path}", headers=headers)
+        except httpx.TimeoutException as e:
+            last_exc = e
+            if attempt == 2:
+                raise HTTPException(504, f"motor timeout: {type(last_exc).__name__}")
         except Exception as e:
             last_exc = e
             if attempt == 2:
-                raise HTTPException(504, f"motor timeout/error: {type(last_exc).__name__}")
+                raise HTTPException(504, f"motor error: {type(last_exc).__name__}")
 
 # -----------------------------
 # Routes
@@ -303,9 +377,43 @@ def health():
 @APP.api_route("/motor/health", methods=["GET","POST"])
 @APP.api_route("/motor/health/", methods=["GET","POST"], include_in_schema=False)
 async def motor_health(req: Request, _: bool = Depends(require_apikey)):
-    r = await _motor_get("/health")
+    rid = getattr(req.state, "request_id", _get_request_id(req))
+    r = await _motor_get("/health", request_id=rid)
     rid = getattr(req.state, "request_id", _get_request_id(req))
     return _proxy_httpx_json(r, rid)
+
+def _validate_image_payload(f_bytes: bytes, content_type: Optional[str], field: str) -> None:
+    """P0.5: Validación dura. 413/415/400."""
+    if len(f_bytes) > MAX_PAYLOAD_BYTES:
+        raise HTTPException(
+            413,
+            f"Payload demasiado grande: {field} > {MAX_PAYLOAD_MB}MB",
+        )
+    ct = (content_type or "").split(";")[0].strip().lower()
+    if ct and ct not in ALLOWED_IMAGE_TYPES:
+        raise HTTPException(
+            415,
+            f"Content-Type no soportado: {ct}. Usa image/jpeg, image/png o image/webp.",
+        )
+    try:
+        img = Image.open(io.BytesIO(f_bytes))
+        img.verify()
+    except Exception as e:
+        raise HTTPException(400, f"Imagen inválida: {field} ({type(e).__name__})")
+    # Verificar dimensiones tras reopen (verify() cierra el stream)
+    try:
+        img2 = Image.open(io.BytesIO(f_bytes))
+        w, h = img2.size
+        if w > MAX_IMAGE_DIM or h > MAX_IMAGE_DIM:
+            raise HTTPException(
+                400,
+                f"Imagen demasiado grande: {w}x{h} (máx {MAX_IMAGE_DIM})",
+            )
+    except HTTPException:
+        raise
+    except Exception:
+        pass
+
 
 @APP.post("/api/analyze-key")
 async def proxy_analyze_key(
@@ -318,6 +426,7 @@ async def proxy_analyze_key(
     modo_taller: Optional[str] = Form(None),
     _: bool = Depends(require_apikey),
 ):
+    # Logs sin imágenes: no loggear cuerpos ni bytes de archivos
     f = front or image_front
     b = back or image_back
     if f is None:
@@ -325,6 +434,10 @@ async def proxy_analyze_key(
 
     f_bytes = await f.read()
     b_bytes = await b.read() if b is not None else b""
+
+    _validate_image_payload(f_bytes, f.content_type, "front")
+    if b_bytes and len(b_bytes) > 500:
+        _validate_image_payload(b_bytes, b.content_type if b else None, "back")
 
     files = {"front": ("front.jpg", f_bytes, f.content_type or "image/jpeg")}
     if b_bytes:
@@ -337,10 +450,33 @@ async def proxy_analyze_key(
     elif mt in ("1", "true", "yes", "y"):
         data["modo"] = "taller"
 
-    r = await _motor_post("/api/analyze-key", files=files, data=data)
     rid = getattr(req.state, "request_id", _get_request_id(req))
-    data = _ensure_contract_v2(data)
+    t0 = time.time()
+    r = await _motor_post("/api/analyze-key", files=files, data=data, request_id=rid, req=req)
 
+    if r.status_code == 200:
+        ct = (r.headers.get("content-type") or "").split(";")[0]
+        if ct == "application/json":
+            try:
+                payload = r.json()
+                payload = normalize_contract(payload)
+                _inject_meta(payload, rid)
+                proc_ms = int((time.time() - t0) * 1000)
+                _log_analyze(rid, proc_ms, payload)
+
+                # P1.1: QualityGate (soft-block)
+                if SCN_FEATURE_QUALITY_GATE_ACTIVE:
+                    override = (req.headers.get("X-Quality-Override") or "").strip() == "1"
+                    block_resp, modified = check_quality_gate(payload, override)
+                    if block_resp is not None:
+                        _inject_meta(block_resp, rid)
+                        return JSONResponse(content=block_resp, status_code=422)
+                    if modified is not None:
+                        payload = modified
+
+                return JSONResponse(content=payload, status_code=200)
+            except Exception:
+                pass
     return _proxy_httpx_json(r, rid)
 @APP.post("/api/ingest-key")
 async def ingest_key(
@@ -350,6 +486,18 @@ async def ingest_key(
     image_front: UploadFile = File(None),
     image_back: UploadFile = File(None),
     _: bool = Depends(require_apikey),
+):
+    if not _gcs_ok():
+        raise HTTPException(status_code=501, detail="Ingest no disponible en modo local. Usa /api/analyze-key.")
+    return await _ingest_key_impl(req, front, back, image_front, image_back)
+
+
+async def _ingest_key_impl(
+    req: Request,
+    front: UploadFile,
+    back: Optional[UploadFile],
+    image_front: Optional[UploadFile],
+    image_back: Optional[UploadFile],
 ):
     f = front or image_front
     b = back or image_back
@@ -387,11 +535,18 @@ async def ingest_key(
     return {"ok": True, "job_id": job_id, "status": "queued", "job_object": job_path}
 
 @APP.get("/api/job/{job_id}")
-async def job_status(req: Request, 
+async def job_status(
+    req: Request,
     job_id: str,
     process: str = "1",
     _: bool = Depends(require_apikey),
 ):
+    if not _gcs_ok():
+        raise HTTPException(status_code=501, detail="Job status no disponible en modo local.")
+    return await _job_status_impl(req, job_id, process)
+
+
+async def _job_status_impl(req: Request, job_id: str, process: str = "1"):
     try:
         job_path = _find_job_path(job_id)
     except FileNotFoundError:
@@ -422,8 +577,9 @@ async def job_status(req: Request,
 
         # web “aprende” en modo taller
         data = {"modo": "taller"}
+        rid = getattr(req.state, "request_id", _get_request_id(req))
 
-        r = await _motor_post("/api/analyze-key", files=files, data=data)
+        r = await _motor_post("/api/analyze-key", files=files, data=data, request_id=rid)
 
         if r.status_code >= 400:
             job["status"] = "error"
@@ -449,6 +605,9 @@ async def feedback(req: Request, _: bool = Depends(require_apikey)):
         payload = await req.json()
     except Exception:
         raise HTTPException(400, "JSON inválido")
+
+    if not _gcs_ok():
+        return {"ok": True, "stored": "local"}
 
     dp = _date_prefix(datetime.now(timezone.utc))
     ts = int(time.time())

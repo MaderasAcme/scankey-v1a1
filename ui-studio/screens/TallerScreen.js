@@ -18,6 +18,7 @@ import {
   getLatencyStatsFromSettings,
   getQueueOpsStats,
   getQueueStats,
+  getQualityGateStats,
   updateHealthStats,
   sanitizeStoredObject,
 } from '../utils/storage';
@@ -136,6 +137,7 @@ export function TallerScreen({
 
   const todayKey = new Date().toISOString().slice(0, 10);
   const todayStats = getDailyStats(history, todayKey);
+  const qualityGateStats = getQualityGateStats(settings);
   const riskStats = getRiskStats(history, todayKey);
   const topModels = getModelFrequency(history, todayKey, 10);
   const latencyStats = getLatencyStatsFromSettings(settings);
@@ -353,6 +355,25 @@ export function TallerScreen({
                 <span>Correcciones</span>
                 <span>{todayStats.corrected_count}</span>
               </div>
+              {(qualityGateStats.quality_blocks_today > 0 ||
+                qualityGateStats.quality_overrides_today > 0 ||
+                qualityGateStats.quality_warnings_today > 0) && (
+                <div className="pt-1 border-t border-[var(--border)] space-y-0.5 text-[10px]">
+                  <span className="opacity-80">QualityGate hoy:</span>
+                  <div className="flex justify-between">
+                    <span>Bloqueos</span>
+                    <span>{qualityGateStats.quality_blocks_today}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>Overrides</span>
+                    <span>{qualityGateStats.quality_overrides_today}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>Warnings</span>
+                    <span>{qualityGateStats.quality_warnings_today}</span>
+                  </div>
+                </div>
+              )}
               {(todayStats.avg_confidence != null || todayStats.median_confidence != null) && (
                 <div className="flex justify-between">
                   <span>Confianza media / p50</span>

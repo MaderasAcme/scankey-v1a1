@@ -238,10 +238,11 @@ const ANALYZE_TIMEOUT_MS = 30000;
  * @param {Object} photos - { A: { optimizedDataUrl, originalDataUrl }, B?: { optimizedDataUrl, originalDataUrl } }
  * @param {Object} [opts]
  * @param {string} [opts.modo] - 'taller' | 'cliente' | ''
+ * @param {boolean} [opts.qualityOverride] - envía X-Quality-Override: 1 (P1.1 taller)
  * @param {function(number, number): void} [opts.onAttempt] - (attempt, total)
  * @returns {Promise<Object>} respuesta normalizada (TOP3, contrato)
  */
-export async function analyzeKey(photos, { modo, onAttempt } = {}) {
+export async function analyzeKey(photos, { modo, qualityOverride, onAttempt } = {}) {
   const { base, hasBase } = getApiConfig();
   if (!hasBase) {
     throw new Error('API no configurada. Indica VITE_GATEWAY_BASE_URL o configura en Perfil.');
@@ -277,6 +278,7 @@ export async function analyzeKey(photos, { modo, onAttempt } = {}) {
     const form = buildFormData(useOriginal);
     const headers = { 'X-Request-ID': requestId };
     if (apiKey) headers['X-API-Key'] = apiKey;
+    if (qualityOverride) headers['X-Quality-Override'] = '1';
     const ac = new AbortController();
     const t = setTimeout(() => ac.abort(), ANALYZE_TIMEOUT_MS);
     return fetch(url, { method: 'POST', headers, body: form, signal: ac.signal })
@@ -292,7 +294,18 @@ export async function analyzeKey(photos, { modo, onAttempt } = {}) {
       res = await doRequest(true);
     }
     if (!res.ok) {
-      const text = await res.text();
+      const text = await res.text().catch(() => '');
+      let body = null;
+      try {
+        if (text) body = JSON.parse(text);
+      } catch (_) {}
+      if (res.status === 422 && body && body.error === 'QUALITY_GATE') {
+        const err = new Error(body.message || 'Calidad insuficiente');
+        err.code = 'QUALITY_GATE';
+        err.reasons = body.reasons || [];
+        err.debug = body.debug || {};
+        throw err;
+      }
       throw new Error(`analyze-key ${res.status}: ${text || res.statusText}`);
     }
     return res.json();

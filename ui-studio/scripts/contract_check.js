@@ -121,6 +121,16 @@ function validateContract(data, filePath) {
       errors.push(`[${basename}] debug.quality_signals debe ser objeto.`);
     }
   }
+  if (dbg.quality_warning != null) {
+    if (typeof dbg.quality_warning !== 'boolean') {
+      errors.push(`[${basename}] debug.quality_warning debe ser boolean.`);
+    }
+  }
+  if (dbg.override_used != null) {
+    if (typeof dbg.override_used !== 'boolean') {
+      errors.push(`[${basename}] debug.override_used debe ser boolean.`);
+    }
+  }
   // P0.3: risk_* opcional (PASIVO); si está, validar tipos
   if (dbg.risk_score != null) {
     if (typeof dbg.risk_score !== 'number' || dbg.risk_score < 0 || dbg.risk_score > 100) {

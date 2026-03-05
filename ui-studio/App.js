@@ -17,7 +17,9 @@ import {
   getFeedbackQueue,
   flushFeedbackQueue,
 } from './services/api';
-import { safePushLimited, updateHistoryByInputId } from './utils/storage';
+import { safePushLimited, updateHistoryByInputId, loadJSON, incrementQualityGateStat } from './utils/storage';
+
+const SETTINGS_KEY = 'scn_settings';
 
 const SCREENS = {
   home: HomeScreen,
@@ -53,13 +55,18 @@ export default function App() {
     if (target !== 'Scan') setAnalyzeError(null);
   }, [result]);
 
-  const handleAnalyze = useCallback(async (photos) => {
+  const handleAnalyze = useCallback(async (photos, opts = {}) => {
+    const { qualityOverride } = opts;
     setCapturedPhotos(photos);
     setIsAnalyzing(true);
     setAttemptCount(1);
     setAnalyzeError(null);
+    const settings = loadJSON(SETTINGS_KEY, {});
+    const modo = settings.modo || 'cliente';
     try {
       const payload = await analyzeKey(photos, {
+        modo: modo === 'taller' ? 'taller' : undefined,
+        qualityOverride: Boolean(qualityOverride),
         onAttempt: (attempt, total) => setAttemptCount(attempt),
       });
       setResult(payload);
@@ -85,8 +92,20 @@ export default function App() {
         results: payload?.results?.slice(0, 3),
       };
       safePushLimited('scn_history', historyItem, 100);
+      if (payload?.debug?.override_used) incrementQualityGateStat('override');
+      if (payload?.debug?.quality_warning) incrementQualityGateStat('warning');
     } catch (e) {
-      setAnalyzeError(e.message || 'Error al analizar');
+      if (e.code === 'QUALITY_GATE') {
+        incrementQualityGateStat('block');
+        setAnalyzeError({
+          type: 'QUALITY_GATE',
+          message: e.message || 'Calidad insuficiente',
+          reasons: e.reasons || [],
+          debug: e.debug || {},
+        });
+      } else {
+        setAnalyzeError(e.message || 'Error al analizar');
+      }
     } finally {
       setIsAnalyzing(false);
       setAttemptCount(1);
@@ -154,7 +173,13 @@ export default function App() {
           <ScanFlowScreen
             onBack={() => setScreen('Home')}
             onAnalyze={handleAnalyze}
+            onRetryWithOverride={
+              capturedPhotos
+                ? () => handleAnalyze(capturedPhotos, { qualityOverride: true })
+                : undefined
+            }
             analyzeError={analyzeError}
+            capturedPhotos={capturedPhotos}
           />
         )}
         {screen === 'Results' && (

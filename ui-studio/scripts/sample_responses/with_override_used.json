@@ -1,0 +1,24 @@
+{
+  "input_id": "sk_override_001",
+  "timestamp": "2025-05-20T10:25:00Z",
+  "manufacturer_hint": { "found": false, "name": null, "confidence": 0.0 },
+  "results": [
+    { "rank": 1, "brand": "Yale", "model": "24D", "type": "Serreta", "confidence": 0.75, "explain_text": "", "compatibility_tags": [], "crop_bbox": { "x": 0, "y": 0, "w": 1, "h": 1 } },
+    { "rank": 2, "brand": "Lince", "model": "C5", "type": "Serreta", "confidence": 0.35, "explain_text": "", "compatibility_tags": [], "crop_bbox": { "x": 0, "y": 0, "w": 1, "h": 1 } },
+    { "rank": 3, "type": "No identificado", "confidence": 0.0, "explain_text": "Sin más candidatos.", "compatibility_tags": [], "crop_bbox": { "x": 0, "y": 0, "w": 1, "h": 1 } }
+  ],
+  "high_confidence": false,
+  "low_confidence": false,
+  "should_store_sample": false,
+  "storage_probability": 0.75,
+  "current_samples_for_candidate": 0,
+  "manual_correction_hint": { "fields": ["marca", "modelo", "tipo"] },
+  "debug": {
+    "processing_time_ms": 140,
+    "model_version": "scankey-v2-prod",
+    "roi_source": "fallback",
+    "quality_score": 0.30,
+    "roi_score": 0.40,
+    "override_used": true
+  }
+}
