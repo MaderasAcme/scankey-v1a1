@@ -7,6 +7,10 @@ REPO_ROOT="$(cd "$UI_ROOT/.." && pwd)"
 # RUN_SMOKE=1: forzar local (stack Docker levantado)
 if [ -n "${RUN_SMOKE:-}" ]; then
   : "${SCN_SMOKE_URL:=http://localhost:8080}"
+  if [ -z "${SCN_SMOKE_API_KEY:-}" ] && [ -f "$UI_ROOT/.env.local" ]; then
+    _key=$(grep -E '^VITE_API_KEY=' "$UI_ROOT/.env.local" 2>/dev/null | cut -d= -f2- | tr -d '"' | tr -d "'") || true
+    [ -n "$_key" ] && export SCN_SMOKE_API_KEY="$_key"
+  fi
   : "${SCN_SMOKE_API_KEY:=local-dev-key}"
 fi
 
@@ -60,16 +64,19 @@ if ! health "$TARGET"; then
 fi
 echo "🔍 Test /health: ✅ OK"
 
-# analyze con imágenes de test (fixture local o backend)
-FRONT="${SCN_SMOKE_FRONT:-${REPO_ROOT}/backend/test.png}"
-BACK="${SCN_SMOKE_BACK:-${REPO_ROOT}/backend/test.png}"
-if [ ! -f "$FRONT" ] || [ ! -f "$BACK" ]; then
-  FIXTURE="$UI_ROOT/scripts/fixtures/test.png"
-  if [ -f "$FIXTURE" ]; then
-    FRONT="$FIXTURE"
-    BACK="$FIXTURE"
+# analyze con imágenes de test (fixtures o backend)
+FIXTURE="$UI_ROOT/scripts/fixtures/test.png"
+if [ -n "${RUN_SMOKE:-}" ] && [ -f "$FIXTURE" ]; then
+  FRONT="${SCN_SMOKE_FRONT:-$FIXTURE}"
+  BACK="${SCN_SMOKE_BACK:-$FIXTURE}"
+else
+  FRONT="${SCN_SMOKE_FRONT:-${REPO_ROOT}/backend/test.png}"
+  BACK="${SCN_SMOKE_BACK:-${REPO_ROOT}/backend/test.png}"
+  if [ ! -f "$FRONT" ] || [ ! -f "$BACK" ]; then
+    [ -f "$FIXTURE" ] && FRONT="$FIXTURE" && BACK="$FIXTURE"
   fi
 fi
+[ ! -f "$FRONT" ] && { echo "❌ Imagen de test no encontrada: $FRONT"; exit 1; }
 
 TMP_JSON="$(mktemp)"
 curl -fsS --max-time 30 "${HDRS[@]}" \

@@ -10,10 +10,19 @@ El desarrollo diario se hace 100% en local (Windows/WSL). Cloud Shell solo para 
 
 ## Opción A: Docker Compose (recomendada)
 
+### Configurar UI (local)
+
+Crea `ui-studio/.env.local` (no commitear):
+
+```
+VITE_GATEWAY_BASE_URL=http://localhost:8080
+VITE_API_KEY=local-dev-key
+```
+
 ### Levantar
 ```bash
-docker compose up -d --build
-# o desde raíz: npm run stack:up
+npm run stack:up
+# o: docker compose -f docker-compose.local.yml up -d --build
 ```
 
 O usar scripts:
@@ -24,7 +33,7 @@ O usar scripts:
 
 ### Apagar
 ```bash
-docker compose down
+docker compose -f docker-compose.local.yml down
 # o: npm run stack:down  /  ./scripts/dev_down.sh  /  ./scripts/dev_down.ps1
 ```
 
@@ -39,6 +48,8 @@ curl http://localhost:8081/health   # Motor
 ```bash
 cd ui-studio && npm i && npm run dev
 ```
+
+La UI (Vite) corre en http://localhost:5173 y habla con el gateway en http://localhost:8080.
 
 ## Opción B: Sin Docker
 
@@ -79,7 +90,7 @@ cd ui-studio && npm i && npm run dev
 # Suite completa (contract, secrets, smoke SKIP si backend off, pages, no-ts)
 npm -C ui-studio run qa:all
 
-# Smoke (requiere stack levantado) — usa RUN_SMOKE=1 para forzar
+# Smoke contra local (requiere stack levantado)
 RUN_SMOKE=1 npm -C ui-studio run qa:smoke
 ```
 
@@ -92,6 +103,15 @@ RUN_SMOKE=1 npm -C ui-studio run qa:smoke
 - Ver logs: `gcloud run services logs tail scankey-gateway`
 - Operaciones con buckets (GCS)
 - **Sin credenciales en repo**: nunca commitear tokens, keys ni `credentials.json`
+
+## Flags de desarrollo (solo en docker-compose.local.yml)
+
+Las variables `SCN_LOCAL_DEV`, `SCN_MOCK_ENGINE`, `API_KEYS=local-dev-key` están **solo** en `docker-compose.local.yml`. No se usan como defaults en:
+- `docker-compose.yml` (base/prod)
+- Dockerfiles
+- Código de producción
+
+Para desarrollo local, usa siempre `docker compose -f docker-compose.local.yml up`.
 
 ## Seguridad
 
