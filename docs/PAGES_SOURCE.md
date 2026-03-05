@@ -1,5 +1,10 @@
 # GitHub Pages — Origen del deploy
 
+## Source of truth
+**ui-studio/dist** — scankeyapp.com sirve SOLO el build de ui-studio.
+
+Si ves inputs de Base URL / API Key o botón "Probar conexión", estás en **UI vieja** → revisa redirect de www o cache del navegador.
+
 ## Resumen
 El sitio web se publica con **GitHub Actions** como fuente (no con rama `gh-pages`).
 
