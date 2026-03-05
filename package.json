@@ -3,6 +3,10 @@
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
+    "stack:up": "docker compose up -d --build",
+    "stack:down": "docker compose down",
+    "qa:all": "npm -C ui-studio run qa:all",
+    "qa:smoke": "npm -C ui-studio run qa:smoke",
     "start": "expo start",
     "android": "expo start --android",
     "ios": "expo start --ios",
