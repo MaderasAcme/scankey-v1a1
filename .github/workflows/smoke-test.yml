@@ -2,49 +2,67 @@ name: Motor Smoke Test
 
 on:
   pull_request:
-    paths:
-      - "motor/**"
-      - "scripts/**"
-      - ".github/workflows/smoke-test.yml"
-  workflow_dispatch:
+    branches: [main]
+  push:
+    branches: [feat/ui-studio-official]
 
 jobs:
   smoke-motor:
     runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      id-token: write
 
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout
+        uses: actions/checkout@v4
 
-      - uses: google-github-actions/auth@v2
+      - name: Setup Node
+        uses: actions/setup-node@v4
         with:
-          workload_identity_provider: "projects/578907855193/locations/global/workloadIdentityPools/github-pool/providers/github-provider"
-          service_account: "github-ci-scankey@scankey-dc007.iam.gserviceaccount.com"
+          node-version: "20"
+          cache: "npm"
+          cache-dependency-path: ui-studio/package-lock.json
 
-      - uses: google-github-actions/setup-gcloud@v2
-        with:
-          project_id: "scankey-dc007"
+      - name: Install UI deps
+        run: npm ci
+        working-directory: ui-studio
 
-      - name: Fetch model v1
+      - name: Build + guardrails
+        run: npm run build
+        working-directory: ui-studio
+
+      - name: QA no-ts
+        run: npm run qa:no-ts
+        working-directory: ui-studio
+
+      - name: QA contract
+        run: npm run qa:contract
+        working-directory: ui-studio
+
+      - name: Levantar stack (gateway+motor)
         shell: bash
         run: |
-          set -Eeuo pipefail
-s*MODEL_DIR="/.cache/scankey_model_v1"
-          MODEL_DIR="$HOME/.cache/scankey_model_v1"
-          mkdir -p "$MODEL_DIR"
-          BUCKET="gs://scankey-models-scankey-dc007-95b419/scankey/models/v1"
-          gcloud storage cp "$BUCKET/modelo_llaves.onnx" "$MODEL_DIR/"
-          gcloud storage cp "$BUCKET/modelo_llaves.onnx.data" "$MODEL_DIR/"
-          gcloud storage cp "$BUCKET/labels.json" "$MODEL_DIR/"
-          echo "MODEL_DIR=$MODEL_DIR" >> "$GITHUB_ENV"
-          ls -la "$MODEL_DIR"
-      - name: Smoke test (mount)
+          set -euxo pipefail
+          docker compose -f docker-compose.local.yml up -d --build
+          docker ps
+          for i in {1..60}; do
+            curl -fsS http://localhost:8080/health && break || true
+            sleep 2
+          done
+          curl -fsS http://localhost:8080/health
+          for i in {1..60}; do
+            curl -fsS http://localhost:8081/health && break || true
+            sleep 2
+          done
+          curl -fsS http://localhost:8081/health
+
+      - name: Smoke REAL
         shell: bash
+        run: |
+          set -euxo pipefail
+          RUN_SMOKE=1 npm -C ui-studio run qa:smoke
         env:
-          HOST_PORT: "8082"
-          PORT: "8080"
-        run: |
-          set -Eeuo pipefail
-          ./scripts/smoke_test_motor.sh mount
+          SCN_SMOKE_URL: http://localhost:8080
+          SCN_SMOKE_API_KEY: local-dev-key
+
+      - name: Tear down
+        if: always()
+        run: docker compose -f docker-compose.local.yml down --remove-orphans
