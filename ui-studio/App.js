@@ -114,9 +114,12 @@ export default function App() {
     setFeedbackPendingCount(getFeedbackQueue().length);
   }, []);
 
-  const handleFlushQueue = useCallback(async () => {
+  const handleFlushQueue = useCallback(async (opts = {}) => {
     const res = await flushFeedbackQueue({
-      onProgress: () => setFeedbackPendingCount(getFeedbackQueue().length),
+      onProgress: (sent, remaining) => {
+        setFeedbackPendingCount(getFeedbackQueue().length);
+        opts.onProgress?.(sent, remaining);
+      },
       onSent: (p) => updateHistoryByInputId(p.input_id, { selected_rank: p.selected_rank, correction_used: Boolean(p.correction) }),
     });
     setFeedbackPendingCount(getFeedbackQueue().length);
@@ -177,6 +180,7 @@ export default function App() {
         {screen === 'Taller' && (
           <TallerScreen
             onBack={() => setScreen('Home')}
+            onNavigateToHistory={() => setScreen('History')}
             onFlushQueue={handleFlushQueue}
             feedbackPendingCount={feedbackPendingCount}
             onRefreshFeedbackCount={refreshFeedbackCount}
