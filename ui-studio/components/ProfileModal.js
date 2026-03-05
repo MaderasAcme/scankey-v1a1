@@ -1,18 +1,26 @@
 import React, { memo, useState, useEffect } from 'react';
-import { LogOut, ShieldCheck, X, Cpu, Key, Globe, Activity, Loader2, CheckCircle2, AlertCircle, Eye, EyeOff } from 'lucide-react';
+import { LogOut, ShieldCheck, X, Cpu, Key, Globe, Activity, Loader2, CheckCircle2, AlertCircle, Eye, EyeOff, Trash2 } from 'lucide-react';
 import { copy } from '../utils/copy';
 import { getApiBase, setApiBase, getApiKey, setApiKey, getHealth } from '../services/api';
+import { loadJSON, saveJSON, clearKey } from '../utils/storage';
+
+const SETTINGS_KEY = 'scn_settings';
+const HISTORY_KEY = 'scn_history';
+const QUEUE_KEY = 'scn_feedback_queue';
 
 /**
  * Lead Engineer - ProfileModal
- * Implementa auto-guardado inmediato y sincronización reactiva al abrir el modal.
+ * Preferencias locales (modo, debug, reset). No guarda fotos.
  */
-export const ProfileModal = memo(({ isOpen, onClose, onLogout }) => {
+export const ProfileModal = memo(({ isOpen, onClose, onLogout, onResetData }) => {
   const [apiKey, setApiKeyLocal] = useState(getApiKey());
   const [apiBase, setApiBaseLocal] = useState(getApiBase());
   const [showApiKey, setShowApiKey] = useState(false);
   const [healthStatus, setHealthStatus] = useState('idle');
   const [healthError, setHealthError] = useState('');
+  const [modo, setModo] = useState('cliente');
+  const [mostrarDebug, setMostrarDebug] = useState(false);
+  const [showResetConfirm, setShowResetConfirm] = useState(false);
 
   useEffect(() => {
     if (isOpen) {
@@ -20,8 +28,16 @@ export const ProfileModal = memo(({ isOpen, onClose, onLogout }) => {
       setApiBaseLocal(getApiBase());
       setHealthStatus('idle');
       setHealthError('');
+      const s = loadJSON(SETTINGS_KEY, {});
+      setModo(s.modo || 'cliente');
+      setMostrarDebug(Boolean(s.mostrar_debug));
     }
   }, [isOpen]);
+
+  const saveSettings = (updates) => {
+    const s = { ...loadJSON(SETTINGS_KEY, {}), ...updates };
+    saveJSON(SETTINGS_KEY, s);
+  };
 
   const handleApiKeyChange = (val) => {
     setApiKeyLocal(val);
@@ -155,6 +171,74 @@ export const ProfileModal = memo(({ isOpen, onClose, onLogout }) => {
           )}
         </div>
 
+        <div className="bg-zinc-900/20 border border-zinc-800 rounded-3xl p-6 mb-6 space-y-4">
+          <h4 className="text-[11px] font-black text-zinc-500 uppercase tracking-widest">Preferencias</h4>
+          <div className="flex justify-between items-center">
+            <span className="text-sm text-zinc-400">Modo</span>
+            <select
+              value={modo}
+              onChange={(e) => {
+                const v = e.target.value;
+                setModo(v);
+                saveSettings({ modo: v });
+              }}
+              className="bg-zinc-950 border border-zinc-800 rounded-lg px-3 py-2 text-sm text-white"
+            >
+              <option value="cliente">Cliente</option>
+              <option value="taller">Taller</option>
+            </select>
+          </div>
+          <div className="flex justify-between items-center">
+            <span className="text-sm text-zinc-400">Mostrar debug</span>
+            <input
+              type="checkbox"
+              checked={mostrarDebug}
+              onChange={(e) => {
+                const v = e.target.checked;
+                setMostrarDebug(v);
+                saveSettings({ mostrar_debug: v });
+              }}
+              className="rounded"
+            />
+          </div>
+        </div>
+
+        <div className="space-y-3 mb-6">
+          {showResetConfirm ? (
+            <div className="bg-red-500/10 border border-red-500/30 rounded-2xl p-4">
+              <p className="text-sm text-red-400 mb-2">¿Borrar historial, cola de feedback y preferencias?</p>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => {
+                    clearKey(HISTORY_KEY);
+                    clearKey(QUEUE_KEY);
+                    clearKey(SETTINGS_KEY);
+                    setShowResetConfirm(false);
+                    onResetData?.();
+                  }}
+                  className="flex-1 py-2 rounded-xl bg-red-500/30 text-red-400 text-sm font-bold"
+                >
+                  Sí, borrar
+                </button>
+                <button
+                  onClick={() => setShowResetConfirm(false)}
+                  className="flex-1 py-2 rounded-xl bg-zinc-800 text-zinc-400 text-sm"
+                >
+                  Cancelar
+                </button>
+              </div>
+            </div>
+          ) : (
+            <button
+              onClick={() => setShowResetConfirm(true)}
+              className="w-full flex items-center justify-center gap-2 py-3 border border-zinc-700 rounded-2xl text-zinc-400 hover:text-white transition-colors"
+            >
+              <Trash2 size={18} />
+              <span className="text-sm font-bold uppercase tracking-wider">Borrar datos locales</span>
+            </button>
+          )}
+        </div>
+
         <div className="mt-auto space-y-4 pb-4">
           <button
             onClick={onLogout}
@@ -163,6 +247,8 @@ export const ProfileModal = memo(({ isOpen, onClose, onLogout }) => {
             <LogOut size={22} strokeWidth={2.5} />
             <span className="font-black text-lg uppercase tracking-widest">{copy.profile.logout}</span>
           </button>
+
+          <p className="text-[9px] text-zinc-600 text-center">No se guardan fotos. Solo metadatos.</p>
 
           <div className="flex items-center justify-center gap-2 opacity-20">
             <ShieldCheck size={12} className="text-white" />
