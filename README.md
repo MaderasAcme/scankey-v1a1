@@ -14,9 +14,9 @@ Desarrollo 100% en local (Windows/WSL). Cloud Shell solo para GCP.
 ### 3 one-liners
 
 ```bash
-npm run stack:up              # Levantar stack (gateway + motor)
-cd ui-studio && npm i && npm run dev   # UI dev
-npm -C ui-studio run qa:all   # QA (smoke SKIP si backend apagado)
+npm run stack:up                          # Levantar stack (gateway:8080, motor:8081)
+cd ui-studio && npm i && npm run dev      # UI dev
+npm -C ui-studio run qa:all               # QA (smoke SKIP si backend apagado)
 ```
 
 ---
@@ -30,7 +30,7 @@ npx expo start
 ```
 
 ## Deploy / Pages
-El sitio web se publica en GitHub Pages (Source: **GitHub Actions**). Ver `docs/PAGES_SOURCE.md` para configuración de Pages y dominio.
+El sitio web se publica en GitHub Pages (Source: **GitHub Actions**). Ver `docs/PAGES_SOURCE.md` para configuración de Pages, dominio y **variables de producción** (`VITE_GATEWAY_BASE_URL`, `VITE_API_KEY`).
 
 ## QA
 

@@ -35,17 +35,20 @@ jobs:
       - name: Build (ui-studio)
         working-directory: ui-studio
         env:
-          EXPO_PUBLIC_API_BASE_URL: ${{ secrets.EXPO_PUBLIC_API_BASE_URL }}
+          VITE_GATEWAY_BASE_URL: ${{ vars.VITE_GATEWAY_BASE_URL }}
+          VITE_API_KEY: ${{ vars.VITE_API_KEY }}
         run: |
+          echo "VITE_GATEWAY_BASE_URL=$VITE_GATEWAY_BASE_URL"
+          test -n "$VITE_GATEWAY_BASE_URL" || { echo "ERROR: VITE_GATEWAY_BASE_URL must be set (Settings → Variables)" && exit 1; }
           npm run build:web || npm run build
 
       - name: Deploy ping
         working-directory: ui-studio
         env:
-          EXPO_PUBLIC_API_BASE_URL: ${{ secrets.EXPO_PUBLIC_API_BASE_URL }}
+          VITE_GATEWAY_BASE_URL: ${{ vars.VITE_GATEWAY_BASE_URL }}
         run: |
           echo "DEPLOY_PING=$(date -u +'%Y-%m-%d %H:%M:%S UTC')" > dist/deploy-ping.txt
-          echo "GATEWAY=${EXPO_PUBLIC_API_BASE_URL}" >> dist/deploy-ping.txt
+          echo "GATEWAY=$VITE_GATEWAY_BASE_URL" >> dist/deploy-ping.txt
 
       - name: Assert dist contents
         working-directory: ui-studio
@@ -57,6 +60,7 @@ jobs:
           test -f dist/index.html || (echo "ERROR: dist/index.html missing" && exit 1)
           echo "deploy-ping.txt contents:"
           cat dist/deploy-ping.txt
+          grep -q '^GATEWAY=.' dist/deploy-ping.txt || (echo "ERROR: GATEWAY empty in deploy-ping.txt" && exit 1)
 
       - name: Add CNAME for custom domain
         working-directory: ui-studio

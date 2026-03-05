@@ -113,6 +113,10 @@ Las variables `SCN_LOCAL_DEV`, `SCN_MOCK_ENGINE`, `API_KEYS=local-dev-key` está
 
 Para desarrollo local, usa siempre `docker compose -f docker-compose.local.yml up`.
 
+## Producción (Pages)
+
+Para scankeyapp.com: configura **Repository variables** en GitHub (Settings → Secrets and variables → Actions → Variables): `VITE_GATEWAY_BASE_URL` (obligatorio) y `VITE_API_KEY` (opcional). Ver `PAGES_SOURCE.md`. Las variables de Vite son build-time; Pages no lee `.env.local`.
+
 ## Seguridad
 
 - **`.env.local`** está en `.gitignore` — úsalo para variables locales.

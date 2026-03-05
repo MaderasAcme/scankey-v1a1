@@ -3,6 +3,18 @@
 ## Resumen
 El sitio web se publica con **GitHub Actions** como fuente (no con rama `gh-pages`).
 
+## Variables de producción (obligatorias)
+
+Para que scankeyapp.com use el gateway real (Cloud Run), configura las **Repository variables** en GitHub:
+
+1. Repo → Settings → Secrets and variables → Actions
+2. Pestaña **Variables** → New repository variable
+3. Añade:
+   - **VITE_GATEWAY_BASE_URL** (obligatorio): URL del gateway en Cloud Run, ej. `https://scankey-gateway-xxxxx.run.app`
+   - **VITE_API_KEY** (opcional): API key si el gateway la requiere
+
+El build de Pages **fallará** si `VITE_GATEWAY_BASE_URL` está vacío. Las variables de Vite se inyectan en **build-time**; GitHub Pages no puede leer `.env.local` en runtime.
+
 ## Settings → Pages (comprobar manualmente)
 1. Repo → Settings → Pages
 2. **Build and deployment → Source:** debe ser **GitHub Actions** (no "Deploy from a branch")
