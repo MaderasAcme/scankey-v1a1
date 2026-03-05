@@ -347,6 +347,30 @@ export const ProfileModal = memo(({ isOpen, onClose, onLogout, onResetData, onFl
                 )}
               </div>
             )}
+            {modo === 'taller' && history?.[0]?.debug?.risk_score != null && (
+              <div className="pt-1 border-t border-zinc-800 mt-1 text-[10px] space-y-0.5">
+                <div className="font-black text-zinc-500 uppercase tracking-wider">Riesgo último análisis</div>
+                <div className="flex items-center gap-2 flex-wrap">
+                  <span
+                    className={
+                      history[0].debug.risk_level === 'HIGH'
+                        ? 'px-2 py-0.5 rounded bg-red-500/20 text-red-400 text-[10px] font-bold'
+                        : history[0].debug.risk_level === 'MEDIUM'
+                          ? 'px-2 py-0.5 rounded bg-amber-500/20 text-amber-400 text-[10px] font-bold'
+                          : 'px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-400 text-[10px] font-bold'
+                    }
+                  >
+                    {history[0].debug.risk_level}
+                  </span>
+                  <span className="text-zinc-500">{history[0].debug.risk_score}/100</span>
+                </div>
+                {mostrarDebug && Array.isArray(history[0].debug.risk_reasons) && history[0].debug.risk_reasons.length > 0 && (
+                  <div className="text-zinc-500">
+                    {history[0].debug.risk_reasons.slice(0, 2).join(', ')}
+                  </div>
+                )}
+              </div>
+            )}
           </div>
         </Card>
 

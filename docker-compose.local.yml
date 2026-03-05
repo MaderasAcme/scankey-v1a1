@@ -28,8 +28,8 @@ services:
 
   gateway:
     build:
-      context: ./gateway
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: gateway/Dockerfile
     ports:
       - "8080:8080"
     env_file:
@@ -41,7 +41,7 @@ services:
       API_KEYS: local-dev-key
       SCN_FEATURE_GATEWAY_IDTOKEN_PROXY_ENABLED: "false"
       SCN_LOCAL_DEV: "1"
-      ALLOWED_ORIGINS: "http://localhost:5173,http://127.0.0.1:5173,https://scankeyapp.com,https://www.scankeyapp.com"
+      ALLOWED_ORIGINS: "http://localhost:5173,http://127.0.0.1:5173,https://scankeyapp.com,https://www.scankeyapp.com,https://maderasacme.github.io"
     depends_on:
       motor:
         condition: service_healthy

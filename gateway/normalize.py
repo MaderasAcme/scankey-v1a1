@@ -4,11 +4,16 @@ Acepta variantes (candidates/results, conf/confidence, bbox/crop_bbox)
 y produce SIEMPRE la forma final del contrato.
 ROI/crop_bbox: fallback seguro a {0,0,1,1} cuando no hay detección fiable.
 """
+import os
 from datetime import datetime, timezone
 from typing import Dict, Any, List, Optional
 
 from roi_bbox import ensure_valid_crop_bbox, apply_fallback_penalty, clamp_confidence, FULL_FRAME
 from size_class import extract_size_class_debug_only
+
+SCN_FEATURE_RISK_ENGINE_PASSIVE = (
+    os.getenv("SCN_FEATURE_RISK_ENGINE_PASSIVE", "true").lower() == "true"
+)
 
 # Umbrales del contrato
 THRESHOLD_HIGH = 0.95
@@ -161,6 +166,26 @@ def normalize_contract(raw: Dict[str, Any]) -> Dict[str, Any]:
     debug.setdefault("model_version", d.get("model_version") or "scankey-v2-prod")
     debug["size_class"] = ref_size_class
     debug["size_class_applied"] = size_class_applied
+
+    # P0.3: risk engine pasivo — margin, risk_score, risk_level, risk_reasons
+    if SCN_FEATURE_RISK_ENGINE_PASSIVE:
+        try:
+            from common.risk_engine import compute_risk
+            _out_pre = {
+                "results": results,
+                "low_confidence": low_confidence,
+                "high_confidence": high_confidence,
+                "manufacturer_hint": mh,
+                "ocr_detail": d.get("ocr_detail"),
+                "ocr_hint": d.get("ocr_hint"),
+            }
+            risk_data = compute_risk(debug, _out_pre)
+            debug["margin"] = risk_data["margin"]
+            debug["risk_score"] = risk_data["risk_score"]
+            debug["risk_level"] = risk_data["risk_level"]
+            debug["risk_reasons"] = risk_data["risk_reasons"]
+        except Exception:
+            pass
 
     out = {
         "input_id": d.get("input_id") or "",

@@ -26,6 +26,7 @@
     "qa:size-class-tests": "cd .. && python -m pytest gateway/tests/test_size_class.py -v",
     "qa:governance-tests": "cd .. && python -m pytest gateway/tests/test_dataset_governance.py -v",
     "qa:quality-gate-tests": "cd .. && python -m pytest gateway/tests/test_quality_gate.py -v",
+    "qa:risk-engine-tests": "cd .. && python -m pytest gateway/tests/test_risk_engine.py -v",
     "qa:no-ts": "node scripts/verify_no_ts.js",
     "qa:all": "npm run qa:contract && npm run qa:secrets && npm run qa:smoke && npm run qa:pages && npm run qa:no-ts",
     "stack:up": "docker compose -f ../docker-compose.local.yml up -d --build",

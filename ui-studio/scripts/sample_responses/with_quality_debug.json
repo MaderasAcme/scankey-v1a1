@@ -20,6 +20,10 @@
     "quality_score": 0.85,
     "quality_reasons": ["borrosa"],
     "quality_signals": { "A": {}, "B": null, "merged": { "quality_score": 0.85, "reasons": ["borrosa"] } },
-    "roi_score": 0.5
+    "roi_score": 0.5,
+    "margin": 0.47,
+    "risk_score": 45,
+    "risk_level": "MEDIUM",
+    "risk_reasons": ["roi_low"]
   }
 }

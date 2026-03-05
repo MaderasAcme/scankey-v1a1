@@ -121,6 +121,27 @@ function validateContract(data, filePath) {
       errors.push(`[${basename}] debug.quality_signals debe ser objeto.`);
     }
   }
+  // P0.3: risk_* opcional (PASIVO); si está, validar tipos
+  if (dbg.risk_score != null) {
+    if (typeof dbg.risk_score !== 'number' || dbg.risk_score < 0 || dbg.risk_score > 100) {
+      errors.push(`[${basename}] debug.risk_score debe ser número 0..100.`);
+    }
+  }
+  if (dbg.risk_level != null) {
+    if (!['LOW', 'MEDIUM', 'HIGH'].includes(dbg.risk_level)) {
+      errors.push(`[${basename}] debug.risk_level debe ser LOW, MEDIUM o HIGH.`);
+    }
+  }
+  if (dbg.risk_reasons != null) {
+    if (!Array.isArray(dbg.risk_reasons) || dbg.risk_reasons.some((r) => typeof r !== 'string')) {
+      errors.push(`[${basename}] debug.risk_reasons debe ser array de strings.`);
+    }
+  }
+  if (dbg.margin != null) {
+    if (typeof dbg.margin !== 'number' || dbg.margin < 0 || dbg.margin > 1) {
+      errors.push(`[${basename}] debug.margin debe ser número 0..1.`);
+    }
+  }
 
   return { ok: errors.length === 0, errors };
 }
