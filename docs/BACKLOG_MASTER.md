@@ -25,7 +25,7 @@
 
 - [ ] **P0.4** Doc anti-cache Cloudflare (1 interfaz)
   - `docs/CLOUDFLARE_CACHE.md` con 2 reglas (bypass html + ping) + redirect www→apex
-  - **DoD:** doc existe y está linkado desde README.
+  - **DoD:** reglas documentadas; checklist reproducible; solución de "veo la vieja" sin tocar código; doc linkado desde README.
   - **FLAG:** `CLOUDFLARE_CACHE_DOC` — PASIVO ON
 
 - [ ] **P0.5** Taller PRO panel (stats operativas)
