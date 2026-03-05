@@ -32,7 +32,7 @@ npx expo start
 ## Deploy / Pages
 El sitio web se publica en GitHub Pages (Source: **GitHub Actions**). Ver `docs/PAGES_SOURCE.md` para configuración de Pages, dominio y **variables de producción** (`VITE_GATEWAY_BASE_URL`, `VITE_API_KEY`).
 
-**Troubleshooting caché:** Si ves versión antigua tras deploy, ver [docs/CLOUDFLARE_CACHE.md](docs/CLOUDFLARE_CACHE.md) para reglas anti-cache y checklist.
+**Troubleshooting caché:** Si ves versión antigua tras deploy, ver [docs/CLOUDFLARE_CACHE.md](docs/CLOUDFLARE_CACHE.md) para reglas anti-cache y checklist. Verificación automática: `npm run verify:cache` (bash) o `powershell -File scripts/verify_cloudflare_cache.ps1` (Windows).
 
 ## QA
 

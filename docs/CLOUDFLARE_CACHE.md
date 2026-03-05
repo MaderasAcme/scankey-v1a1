@@ -83,4 +83,65 @@ Resultado: `www.scankeyapp.com/foo` → `https://scankeyapp.com/foo`
 - [ ] Verificar Perfil Técnico muestra Build ID y Deploy correctos
 - [ ] Si persiste "vieja": Development Mode 10 min y comprobar
 
+---
+
+## Si sigues viendo la vieja
+
+### 1. Verifica dominio
+
+- Entras por **apex** (`scankeyapp.com`) o **www** (`www.scankeyapp.com`)?
+- Aplica las reglas a **ambos hostnames**. Si usas www, debe redirigir a apex.
+
+### 2. Quita Page Rules antiguas
+
+- Si tienes **Page Rules** con "Cache Everything", **elimínalas** o excluye `/` y `/index.html`.
+- Las Page Rules tienen prioridad y pueden invalidar Cache Rules.
+
+### 3. Cache Rules correctas
+
+| Regla | Hostname | Path | Action |
+|-------|----------|------|--------|
+| Bypass HTML | `in {scankeyapp.com, www.scankeyapp.com}` | `is "/" OR "/index.html"` | **Bypass cache** |
+| Bypass deploy-ping | `in {scankeyapp.com, www.scankeyapp.com}` | `equals "/deploy-ping.txt"` | **Bypass cache** |
+
+### 4. Redirect Rule (www → apex)
+
+| When | Then |
+|------|------|
+| Hostname equals `www.scankeyapp.com` | 301 Permanent Redirect to `https://scankeyapp.com/$1` |
+
+### 5. Purge + Development Mode
+
+1. **Development Mode** → ON (duración: 10 min). Así Cloudflare no cachea nada.
+2. **Purge Everything** → Borra todo el caché.
+3. Prueba de nuevo. Si funciona con Dev Mode ON, el problema era caché.
+
+### 6. Verificación automática
+
+Ejecuta desde el repo:
+
+```bash
+npm run verify:cache
+```
+
+O manualmente:
+
+```bash
+bash scripts/verify_cloudflare_cache.sh
+```
+
+Si ves `cf-cache-status: HIT` en `/` o `/index.html` → **FAIL** (el HTML no debe cachearse).
+
+### 7. Checklist final (con capturas)
+
+- [ ] Cache Rules aplicadas a apex y www
+- [ ] Page Rules sin "Cache Everything" global
+- [ ] Redirect www → apex configurado
+- [ ] Development Mode 10 min + Purge Everything
+- [ ] `npm run verify:cache` pasa (BYPASS o MISS en HTML)
+- [ ] Captura de `/deploy-ping.txt` mostrando COMMIT y DEPLOY_PING
+- [ ] Captura de Perfil Técnico con Build ID correcto
+
+---
+
 **DoD P0.4:** Reglas documentadas, checklist reproducible, solución de "veo la vieja" sin tocar código.

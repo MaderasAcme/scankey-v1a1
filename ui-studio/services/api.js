@@ -51,6 +51,41 @@ export function setApiKey(val) {
 const DEFAULT_HEALTH_TIMEOUT_MS = 5000;
 
 /**
+ * Obtiene deploy-ping.txt (sin cache) para mostrar Build ID y timestamp.
+ * @returns {Promise<{ commit: string, deployPing: string }|null>}
+ */
+export async function getDeployPing() {
+  if (typeof window === 'undefined') return null;
+  const url = new URL('deploy-ping.txt', window.location.href).href;
+  try {
+    const res = await fetch(url, { cache: 'no-store' });
+    if (!res.ok) return null;
+    const text = await res.text();
+    const commit = (text.match(/^COMMIT=(.+)$/m) || [])[1]?.trim() || '';
+    const deployPing = (text.match(/^DEPLOY_PING=(.+)$/m) || [])[1]?.trim() || '';
+    return { commit, deployPing };
+  } catch (_) {
+    return null;
+  }
+}
+
+/**
+ * Info de build para verificación anti-cache.
+ * @returns {Promise<{ commit_from_ping: string|null, deploy_time: string|null, origin: string }|null>}
+ */
+export async function getBuildInfo() {
+  if (typeof window === 'undefined') return null;
+  const origin = window.location?.origin || '';
+  const ping = await getDeployPing();
+  if (!ping) return { commit_from_ping: null, deploy_time: null, origin };
+  return {
+    commit_from_ping: ping.commit || null,
+    deploy_time: ping.deployPing || null,
+    origin,
+  };
+}
+
+/**
  * Health check del gateway. No lanza errores.
  * Incluye cause para diagnóstico: SIN_RED, CORS_OR_DNS, GATEWAY_DOWN
  * @param {{ timeoutMs?: number }} [opts]

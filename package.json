@@ -3,8 +3,8 @@
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
-    "stack:up": "docker compose up -d --build",
-    "stack:down": "docker compose down",
+    "stack:up": "docker compose -f docker-compose.local.yml up -d --build",
+    "stack:down": "docker compose -f docker-compose.local.yml down",
     "qa:all": "npm -C ui-studio run qa:all",
     "qa:smoke": "npm -C ui-studio run qa:smoke",
     "start": "expo start",
@@ -12,7 +12,8 @@
     "ios": "expo start --ios",
     "web": "expo start --web",
     "build": "npx expo export --platform web --output-dir dist",
-    "postbuild": "node scripts/patch_dist_config.js"
+    "postbuild": "node scripts/patch_dist_config.js",
+    "verify:cache": "bash scripts/verify_cloudflare_cache.sh"
   },
   "dependencies": {
     "@react-native-async-storage/async-storage": "2.2.0",
