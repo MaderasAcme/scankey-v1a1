@@ -333,6 +333,20 @@ export const ProfileModal = memo(({ isOpen, onClose, onLogout, onResetData, onFl
                 {histStats.lastScanAt ? formatTimeAgo(histStats.lastScanAt) : ''}
               </div>
             )}
+            {history?.[0]?.debug?.quality_score != null && (
+              <div className="pt-1 border-t border-zinc-800 mt-1 text-[10px] space-y-0.5">
+                <div className="font-black text-zinc-500 uppercase tracking-wider">Calidad última captura</div>
+                <div className="flex justify-between">
+                  <span>Score</span>
+                  <span>{(history[0].debug.quality_score * 100).toFixed(0)}%</span>
+                </div>
+                {Array.isArray(history[0].debug.quality_reasons) && history[0].debug.quality_reasons.length > 0 && (
+                  <div className="text-zinc-500">
+                    {history[0].debug.quality_reasons.slice(0, 2).join(', ')}
+                  </div>
+                )}
+              </div>
+            )}
           </div>
         </Card>
 

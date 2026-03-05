@@ -1,6 +1,9 @@
 import hashlib
+import logging
 import re
 import os
+
+_log = logging.getLogger(__name__)
 # catalog es opcional: el motor NO debe caerse si falta
 try:
     from . import catalog as _catalog  # /app/catalog.py
@@ -65,11 +68,12 @@ SCN_FEATURE_DEDUPE_ENABLED = os.getenv("SCN_FEATURE_DEDUPE_ENABLED", "true").low
 SCN_FEATURE_MANUFACTURER_RERANK_ENABLED = os.getenv("SCN_FEATURE_MANUFACTURER_RERANK_ENABLED", "false").lower() == "true"
 SCN_FEATURE_OCR_ON_DEMAND_ENABLED = os.getenv("SCN_FEATURE_OCR_ON_DEMAND_ENABLED", "false").lower() == "true"
 SCN_FEATURE_OCR_ALWAYS_ENABLED = os.getenv("SCN_FEATURE_OCR_ALWAYS_ENABLED", "false").lower() == "true" # Forbidden except for diagnostics
-SCN_FEATURE_AB_FUSION_ENABLED = os.getenv("SCN_FEATURE_AB_FUSION_ENABLED", "false").lower() == "true"
+SCN_FEATURE_AB_FUSION_ENABLED = os.getenv("SCN_FEATURE_AB_FUSION_ENABLED", "true").lower() == "true"
 SCN_FEATURE_AUTOSTORE_CLEAN_GATES_ENABLED = os.getenv("SCN_FEATURE_AUTOSTORE_CLEAN_GATES_ENABLED", "false").lower() == "true"
 SCN_FEATURE_DEDUPE_HARD_BLOCK_ENABLED = os.getenv("SCN_FEATURE_DEDUPE_HARD_BLOCK_ENABLED", "false").lower() == "true"
 SCN_FEATURE_OPENSET_CLUSTER_ENABLED = os.getenv("SCN_FEATURE_OPENSET_CLUSTER_ENABLED", "false").lower() == "true"
 SCN_FEATURE_OBSERVABILITY_ENABLED = os.getenv("SCN_FEATURE_OBSERVABILITY_ENABLED", "true").lower() == "true"
+SCN_FEATURE_QUALITY_GATE_PASSIVE = os.getenv("SCN_FEATURE_QUALITY_GATE_PASSIVE", "true").lower() == "true"
 SCN_DEBUG_LOG_PAYLOADS = os.getenv("SCN_DEBUG_LOG_PAYLOADS", "false").lower() == "true"
 SCN_DEBUG_INCLUDE_TIMINGS = os.getenv("SCN_DEBUG_INCLUDE_TIMINGS", "true").lower() == "true"
 
@@ -89,6 +93,19 @@ MAX_MANUFACTURER_RERANK_CAP = float(os.getenv("MAX_MANUFACTURER_RERANK_CAP", "0.
 
 # OCR_URL for on-demand OCR
 OCR_URL = os.getenv("OCR_URL", "").rstrip("/")
+
+# P0.1: WORKSHOP_TOKEN — ocr_detail solo si X-Workshop-Token coincide
+def _is_workshop_authorized(request) -> bool:
+    """True solo si X-Workshop-Token coincide con WORKSHOP_TOKEN. modo=taller NO habilita."""
+    expected = (os.getenv("WORKSHOP_TOKEN") or "").strip()
+    if not expected:
+        return False
+    hdrs = getattr(request, "headers", None)
+    token = (hdrs.get("X-Workshop-Token") if hdrs else None) or ""
+    return bool(str(token).strip() and str(token).strip() == expected)
+
+# Mock engine cuando no hay modelo (local dev)
+SCN_MOCK_ENGINE = os.getenv("SCN_MOCK_ENGINE", "").lower() in ("1", "true", "yes")
 
 STATE: Dict[str, Any] = {
     "model_ready": False,
@@ -174,10 +191,12 @@ def _scankey_bootstrap_event():
         raise
 
 
-# Add Request ID middleware
+# Add Request ID middleware: propagar desde gateway (X-Request-ID) o generar
 @app.middleware("http")
 async def add_request_id_middleware(request, call_next):
-    request_id = str(uuid.uuid4())
+    request_id = (request.headers.get("X-Request-ID") or request.headers.get("x-request-id") or "").strip()
+    if not request_id:
+        request_id = str(uuid.uuid4())
     request.state.request_id = request_id
     response = await call_next(request)
     response.headers["X-Request-ID"] = request_id
@@ -244,9 +263,35 @@ def _list_count_images(bucket_name: str, prefix: str, limit: int = 9999) -> int:
     return cnt
 
 
-def _maybe_store_sample_to_gcs(raw_bytes: bytes, filename_hint: str, modo: str, side: str = "A") -> Dict[str, Any]:
+def _content_hash_and_window(raw_bytes: bytes) -> tuple:
+    """Hash de imagen y ventana de tiempo (YYYY-MM-DD) para dedup."""
+    h = hashlib.sha256(raw_bytes).hexdigest()[:16]
+    window = datetime.datetime.utcnow().strftime("%Y-%m-%d")
+    return h, window
+
+
+def _dedup_check(bucket_name: str, prefix: str, content_hash: str) -> bool:
+    """True si ya existe un objeto con este content_hash en el prefix (evitar duplicados)."""
+    try:
+        client = storage.Client()
+        for blob in client.list_blobs(bucket_name, prefix=prefix):
+            if content_hash in (blob.name or ""):
+                return True
+    except Exception:
+        pass
+    return False
+
+
+def _maybe_store_sample_to_gcs(
+    raw_bytes: bytes,
+    filename_hint: str,
+    modo: str,
+    side: str = "A",
+    ref_canon: Optional[str] = None,
+) -> Dict[str, Any]:
     """
     Guarda muestra "raw" bajo samples/<A|B>/... (best-effort).
+    Dedup simple: hash(imagen) + ref (modelo) + ventana (fecha); no guardar duplicado.
     Nunca debe romper inferencia.
     """
     bucket_name = (os.getenv("GCS_BUCKET", "") or "").strip()
@@ -257,11 +302,19 @@ def _maybe_store_sample_to_gcs(raw_bytes: bytes, filename_hint: str, modo: str, 
     if only_if_taller and (modo or "").strip().lower() != "taller":
         return {"stored": False, "reason": "STORE_ONLY_IF_MODO_TALLER=1 y modo!=taller"}
 
-    prefix = (os.getenv("GCS_SAMPLES_PREFIX", "samples") or "samples").strip().strip("/")
+    content_hash, time_window = _content_hash_and_window(raw_bytes)
+    prefix_base = (os.getenv("GCS_SAMPLES_PREFIX", "samples") or "samples").strip().strip("/")
+    side2 = "B" if (side or "").strip().upper().startswith("B") else "A"
     safe = _safe_name(filename_hint or "image.jpg")
     ts = int(time.time())
-    side2 = "B" if (side or "").strip().upper().startswith("B") else "A"
-    obj = f"{prefix}/{side2}/{ts}_{safe}"
+
+    # Dedup: si tenemos ref, comprobar (imagen + modelo + ventana)
+    if ref_canon:
+        dedup_prefix = f"{prefix_base}/{side2}/{ref_canon}/{time_window}/"
+        if _dedup_check(bucket_name, dedup_prefix, content_hash):
+            return {"stored": False, "reason": "dedup", "side": side2}
+
+    obj = f"{prefix_base}/{side2}/{ref_canon}/{time_window}/{content_hash}_{ts}_{safe}" if ref_canon else f"{prefix_base}/{side2}/{ts}_{safe}"
     gcs_uri = f"gs://{bucket_name}/{obj}"
 
     try:
@@ -674,18 +727,58 @@ def analyze_key(
     try:
         img = PILImage.open(io.BytesIO(data)).convert("RGB")
     except Exception as e:
+        # Logs sin imágenes: no incluir bytes ni hashes de imagen en errores
         raise HTTPException(
             400,
             f"imagen inválida ({type(e).__name__}: {e}) len={len(data) if data else 0} "
-            f"first16={(data[:16].hex() if data else None)} ct={getattr(front_up, 'content_type', None)} fn={getattr(front_up, 'filename', None)}",
+            f"ct={getattr(front_file, 'content_type', None)} fn={getattr(front_file, 'filename', None)}",
         )
 
+    # Mock mode cuando no hay modelo cargado (local dev sin GCS)
+    if not STATE["model_ready"] and SCN_MOCK_ENGINE:
+        input_id = uuid.uuid4().hex
+        ts_utc = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
+        mock_cands = [
+            {"label": "JIS2I", "score": 0.92, "brand": "JIS", "model": "JIS2I", "type": "Serreta", "compatibility_tags": [], "crop_bbox": {"x": 0, "y": 0, "w": 1, "h": 1}},
+            {"label": "OTHER", "score": 0.05, "brand": None, "model": None, "type": "Serreta", "compatibility_tags": [], "crop_bbox": {"x": 0, "y": 0, "w": 1, "h": 1}},
+            {"label": None, "score": 0.03, "brand": None, "model": None, "type": "No identificado", "compatibility_tags": [], "crop_bbox": {"x": 0, "y": 0, "w": 1, "h": 1}},
+        ]
+        return {
+            "ok": True,
+            "request_id": request.state.request_id,
+            "input_id": input_id,
+            "timestamp": ts_utc,
+            "candidates": mock_cands,
+            "manufacturer_hint": {"found": False, "name": None, "confidence": 0.0},
+            "high_confidence": True,
+            "low_confidence": False,
+            "should_store_sample": False,
+            "storage_probability": 0.75,
+            "current_samples_for_candidate": -1,
+            "store": {"stored": False, "reason": "mock", "side": "A"},
+            "store_back": {"stored": False, "reason": "no_back", "side": "B"},
+            "manual_correction_hint": {"fields": ["marca", "modelo", "tipo"]},
+            "debug": {"model_version": "scankey-mock-local", "processing_time_ms": 0},
+        }
+
     t0 = time.time()
-    cands, hint_from_predict = _predict(img) # _predict does not take ref_hint as input
+    cands_a, hint_from_predict = _predict(img)
     dt_ms = int((time.time() - t0) * 1000)
 
-    top_label = (cands[0]["label"] if cands else None)
-    top_score = float(cands[0]["score"]) if cands else 0.0
+    cands_b: List[Dict[str, Any]] = []
+    img_back = None
+    if raw_back and len(raw_back) > 500:
+        try:
+            img_back = PILImage.open(io.BytesIO(raw_back)).convert("RGB")
+        except Exception:
+            pass
+    if img_back is not None and SCN_FEATURE_AB_FUSION_ENABLED:
+        t1 = time.time()
+        cands_b, _ = _predict(img_back)
+        dt_ms += int((time.time() - t1) * 1000)
+
+    top_label = (cands_a[0]["label"] if cands_a else None)
+    top_score = float(cands_a[0]["score"]) if cands_a else 0.0
 
     # Manufacturer hint processing
     manufacturer_hint_obj = {"found": False, "name": None, "confidence": 0.0}
@@ -694,30 +787,41 @@ def analyze_key(
         manufacturer_hint_obj["name"] = manufacturer_hint_to_use
         manufacturer_hint_obj["confidence"] = 0.50  # weak hint by default
 
-    # Catalog match enrichment
+    # Catalog match enrichment (A y B)
     catalog_match_result = catalog_match.match_text(top_label or "", manufacturer_hint=manufacturer_hint_obj)
 
-    # Enrich candidates with rich data from catalog_match
-    enriched_cands = []
-    for cand in cands:
-        enriched_cand = cand.copy()
-        # Find if this cand's label matches any canon in catalog_match_result
-        matching_hits = [
-            h for h in catalog_match_result["catalog_hits"]
-            if h["canon"] == catalog_match.canon(cand["label"])
-        ]
-        if matching_hits:
-            # Take the rich_data from the first matching hit
-            rich_data = matching_hits[0]["rich_data"]
-            enriched_cand.update(rich_data) # Merge rich data into candidate
-        enriched_cands.append(enriched_cand)
+    def _enrich_cands(cands_list: List[Dict[str, Any]], cat_result: Any) -> List[Dict[str, Any]]:
+        out = []
+        for cand in cands_list:
+            ec = cand.copy()
+            hits = [h for h in (cat_result.get("catalog_hits") or []) if h.get("canon") == catalog_match.canon(cand.get("label"))]
+            if hits and hits[0].get("rich_data"):
+                ec.update(hits[0]["rich_data"])
+            out.append(ec)
+        return out
+
+    enrich_a = _enrich_cands(cands_a, catalog_match_result)
+    cat_b = catalog_match.match_text(
+        " ".join(str(c.get("label") or "") for c in cands_b),
+        manufacturer_hint=manufacturer_hint_obj,
+    ) if cands_b else {"catalog_hits": []}
+    enrich_b = _enrich_cands(cands_b, cat_b) if cands_b else []
+
+    # Fusión A/B si tenemos ambos
+    if cands_b and SCN_FEATURE_AB_FUSION_ENABLED:
+        from ab_fusion import fuse_ab_candidates
+        enriched_cands, _explain_suffix, _mh_merged = fuse_ab_candidates(cands_a, cands_b, enrich_a, enrich_b)
+        top_label = (enriched_cands[0].get("label") or enriched_cands[0].get("model")) if enriched_cands else top_label
+        top_score = float(enriched_cands[0].get("score", enriched_cands[0].get("confidence", 0))) if enriched_cands else top_score
+    else:
+        enriched_cands = enrich_a
 
 
     high_confidence = top_score >= 0.95
     low_confidence = top_score < 0.60
 
     storage_probability = float(__import__("os").getenv("STORAGE_PROBABILITY","0.75"))
-    labels_count_local = len(LABELS) if isinstance(LABELS, list) else 0
+    labels_count_local = len(_LABELS) if isinstance(_LABELS, list) else 0
     disable_store_single = __import__("os").getenv("DISABLE_STORE_SINGLE_LABEL","1").lower() in ("1","true","yes")
     can_store = not (disable_store_single and labels_count_local <= 1)
 
@@ -747,8 +851,9 @@ def analyze_key(
     input_id = uuid.uuid4().hex
     ts_utc = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
 
+    ref_canon_store = _canon(top_label) if top_label else None
     if should_store_sample:
-        store = _maybe_store_sample_to_gcs(data, getattr(front_file, "filename", "") or "front.jpg", modo2, side="A")
+        store = _maybe_store_sample_to_gcs(data, getattr(front_file, "filename", "") or "front.jpg", modo2, side="A", ref_canon=ref_canon_store)
         if store.get("stored"):
             store.update(_store_copy_to_keys_date(
                 raw_bytes=data,
@@ -758,7 +863,7 @@ def analyze_key(
                 sample_gcs_uri=store.get("gcs_uri"),
             ))
         if raw_back and len(raw_back) > 1000:
-            store_back = _maybe_store_sample_to_gcs(raw_back, getattr(back_file, "filename", "") or "back.jpg", modo2, side="B")
+            store_back = _maybe_store_sample_to_gcs(raw_back, getattr(back_file, "filename", "") or "back.jpg", modo2, side="B", ref_canon=ref_canon_store)
             if store_back.get("stored"):
                 store_back.update(_store_copy_to_keys_date(
                     raw_bytes=raw_back,
@@ -829,13 +934,14 @@ def analyze_key(
     except Exception:
         pass
 
-    return {
+    model_version = os.getenv("MODEL_VERSION", "scankey-v2-prod")
+    resp_payload = {
         "ok": True,
         "request_id": request.state.request_id,
         "input_id": input_id,
         "timestamp": ts_utc,
-        "candidates": enriched_cands, # Return enriched candidates
-        "manufacturer_hint": manufacturer_hint_obj, # Return manufacturer hint object
+        "candidates": enriched_cands,
+        "manufacturer_hint": manufacturer_hint_obj,
         "high_confidence": high_confidence,
         "low_confidence": low_confidence,
         "should_store_sample": should_store_sample,
@@ -843,7 +949,54 @@ def analyze_key(
         "current_samples_for_candidate": current_samples_for_candidate,
         "store": store,
         "store_back": store_back,
+        "manual_correction_hint": {"fields": ["marca", "modelo", "tipo"]},
+        "debug": {"model_version": model_version, "processing_time_ms": dt_ms},
     }
+
+    # P0.2 QualityGate PASIVO: métricas en debug sin bloquear flujo
+    if SCN_FEATURE_QUALITY_GATE_PASSIVE and img is not None:
+        try:
+            from common.quality_gate import compute_quality_ab, compute_roi_score_from_bbox
+            quality_ab = compute_quality_ab(img, img_back)
+            merged = quality_ab.get("merged") or {}
+            resp_payload["debug"]["quality_score"] = merged.get("quality_score", 0.5)
+            resp_payload["debug"]["quality_reasons"] = merged.get("reasons", [])
+            resp_payload["debug"]["quality_signals"] = quality_ab
+            top_cand = enriched_cands[0] if enriched_cands else {}
+            crop_bbox = top_cand.get("crop_bbox") or top_cand.get("bbox")
+            roi_score = compute_roi_score_from_bbox(crop_bbox)
+            resp_payload["debug"]["roi_score"] = roi_score
+        except Exception as qe:
+            _log.warning("quality_gate_compute_failed", extra={"error": str(qe)})
+
+    # Log mínimo: request_id, processing_time_ms, model_version, flags. Sin imágenes ni form-data.
+    _log.info(
+        "analyze_key",
+        extra={
+            "request_id": request.state.request_id,
+            "processing_time_ms": dt_ms,
+            "model_version": model_version,
+            "high_confidence": high_confidence,
+            "low_confidence": low_confidence,
+        },
+    )
+
+    # OCR gated: solo si low_confidence, brand/model faltan, o manual_correction pide ocr_text
+    if SCN_FEATURE_OCR_ON_DEMAND_ENABLED and OCR_URL:
+        try:
+            from common.ocr_gate import should_run_ocr, apply_ocr_to_response
+            from ocr_on_demand import fetch_ocr_if_needed
+            top_res = enriched_cands[0] if enriched_cands else None
+            mch = resp_payload.get("manual_correction_hint")
+            if should_run_ocr(low_confidence, top_res, mch):
+                ocr_text = fetch_ocr_if_needed(data, low_confidence, top_res, mch)
+                # P0.1: ocr_detail solo si X-Workshop-Token coincide; modo=taller NO habilita
+                is_workshop = _is_workshop_authorized(request)
+                resp_payload = apply_ocr_to_response(resp_payload, ocr_text, is_workshop, ocr_ran=True)
+        except Exception:
+            pass
+
+    return resp_payload
 
 
 @app.post("/api/feedback")
