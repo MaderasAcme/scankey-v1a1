@@ -3,7 +3,7 @@ import { ScreenHeader } from '../components/ui/ScreenHeader';
 import { Card } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
 import { AlertBanner } from '../components/ui/AlertBanner';
-import { getHealth, getMotorHealth, getApiConfig, getApiKey, getFeedbackQueue } from '../services/api';
+import { getHealth, getMotorHealth, getApiConfig, getFeedbackQueue } from '../services/api';
 
 const ENV_EXAMPLE = `# ui-studio/.env.local
 VITE_GATEWAY_BASE_URL=http://localhost:8080
@@ -24,7 +24,6 @@ export function TallerScreen({
   const [flushProgress, setFlushProgress] = useState({ sent: 0, remaining: 0 });
 
   const config = getApiConfig();
-  const apiKey = getApiKey();
   const queueLen = feedbackPendingCount > 0 ? feedbackPendingCount : getFeedbackQueue().length;
 
   useEffect(() => {
@@ -33,22 +32,17 @@ export function TallerScreen({
 
   const testGatewayHealth = async () => {
     setGatewayHealth('loading');
-    try {
-      await getHealth();
-      setGatewayHealth('ok');
-    } catch (e) {
-      setGatewayHealth(e.message || 'Error');
-    }
+    const res = await getHealth({ timeoutMs: 5000 });
+    if (res?.ok) setGatewayHealth('ok');
+    else setGatewayHealth(res?.error || `HTTP ${res?.status || ''}`);
   };
 
   const testMotorHealth = async () => {
     setMotorHealth('loading');
-    try {
-      await getMotorHealth();
-      setMotorHealth('ok');
-    } catch (e) {
-      setMotorHealth(e.message || 'Error');
-    }
+    const res = await getMotorHealth({ timeoutMs: 5000 });
+    if (res?.ok) setMotorHealth('ok');
+    else if (res == null) setMotorHealth('No disponible');
+    else setMotorHealth(res?.error || `HTTP ${res?.status || ''}`);
   };
 
   const handleFlush = async () => {
@@ -155,7 +149,7 @@ export function TallerScreen({
         <Card>
           <h4 className="text-sm font-bold text-[var(--text)] mb-3">Seguridad</h4>
           <p className="text-xs text-[var(--text-secondary)]">
-            Token taller: {apiKey ? 'presente' : 'ausente'} {apiKey ? '(no se muestra el valor)' : ''}
+            Conexión segura (HTTPS). No se muestran credenciales.
           </p>
         </Card>
       </div>

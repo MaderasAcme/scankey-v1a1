@@ -113,3 +113,86 @@ export function updateHistoryByInputId(inputId, updates) {
   arr[idx] = merged;
   storage.set('scn_history', JSON.stringify(arr));
 }
+
+/**
+ * Métricas del historial (sin fotos).
+ * @param {Array} history - Array de items del historial
+ * @returns {{ total: number, todayCount: number, highCount: number, lowCount: number, avgConfidence: number|null, lastScanAt: string|null }}
+ */
+export function getHistoryStats(history) {
+  const arr = Array.isArray(history) ? history : [];
+  const now = new Date();
+  const today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+  let todayCount = 0;
+  let highCount = 0;
+  let lowCount = 0;
+  let sumConf = 0;
+  let confCount = 0;
+  let lastScanAt = null;
+  for (const it of arr) {
+    const ts = it.timestamp || it.created_at;
+    if (ts) {
+      const d = String(ts).slice(0, 10);
+      if (d === today) todayCount++;
+      if (!lastScanAt || ts > lastScanAt) lastScanAt = ts;
+    }
+    if (it.high_confidence) highCount++;
+    if (it.low_confidence) lowCount++;
+    const conf = it.top1?.confidence ?? it.confidence;
+    if (typeof conf === 'number') {
+      sumConf += conf;
+      confCount++;
+    }
+  }
+  const avgConfidence = confCount > 0 ? Math.round((sumConf / confCount) * 100) / 100 : null;
+  return {
+    total: arr.length,
+    todayCount,
+    highCount,
+    lowCount,
+    avgConfidence,
+    lastScanAt,
+  };
+}
+
+/**
+ * Métricas de la cola de feedback.
+ * @param {Array} queue - Cola de feedback
+ * @returns {{ pending: number, oldestPendingAt: string|null }}
+ */
+export function getQueueStats(queue) {
+  const arr = Array.isArray(queue) ? queue : [];
+  let oldestPendingAt = null;
+  for (const it of arr) {
+    const at = it.created_at || it.timestamp;
+    if (at && (!oldestPendingAt || at < oldestPendingAt)) oldestPendingAt = at;
+  }
+  return {
+    pending: arr.length,
+    oldestPendingAt,
+  };
+}
+
+const SETTINGS_KEY = 'scn_settings';
+
+/**
+ * Actualiza timestamps de salud en scn_settings (solo metadatos).
+ * @param {boolean} ok - true si health OK, false si falló
+ */
+export function updateHealthStats(ok) {
+  const s = loadJSON(SETTINGS_KEY, {});
+  const stats = s.stats || {};
+  const now = new Date().toISOString();
+  if (ok) stats.lastHealthOkAt = now;
+  else stats.lastHealthFailAt = now;
+  saveJSON(SETTINGS_KEY, { ...s, stats });
+}
+
+/**
+ * Lee stats de salud desde scn_settings.
+ * @returns {{ lastHealthOkAt?: string, lastHealthFailAt?: string }}
+ */
+export function getHealthStats() {
+  const s = loadJSON(SETTINGS_KEY, {});
+  return s.stats || {};
+}

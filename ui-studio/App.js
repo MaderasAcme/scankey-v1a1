@@ -135,7 +135,7 @@ export default function App() {
       {!apiConfig.hasBase && (
         <div className="m-4">
           <AlertBanner variant="warn">
-            API no configurada. Configura VITE_GATEWAY_BASE_URL o entra en Perfil para indicar la URL del gateway.
+            API no configurada. Configura VITE_GATEWAY_BASE_URL en .env para conectar al gateway.
           </AlertBanner>
         </div>
       )}
@@ -185,6 +185,7 @@ export default function App() {
         onClose={() => setProfileOpen(false)}
         onLogout={handleLogout}
         onResetData={refreshFeedbackCount}
+        onFlushQueue={handleFlushQueue}
       />
     </div>
   );

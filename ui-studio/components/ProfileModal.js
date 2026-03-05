@@ -1,79 +1,129 @@
-import React, { memo, useState, useEffect } from 'react';
-import { LogOut, ShieldCheck, X, Cpu, Key, Globe, Activity, Loader2, CheckCircle2, AlertCircle, Eye, EyeOff, Trash2 } from 'lucide-react';
+import React, { memo, useState, useEffect, useCallback } from 'react';
+import {
+  LogOut,
+  ShieldCheck,
+  X,
+  Cpu,
+  Activity,
+  Loader2,
+  CheckCircle2,
+  AlertCircle,
+  Trash2,
+  RefreshCw,
+} from 'lucide-react';
 import { copy } from '../utils/copy';
-import { getApiBase, setApiBase, getApiKey, setApiKey, getHealth } from '../services/api';
-import { loadJSON, saveJSON, clearKey } from '../utils/storage';
+import { getHealth, getMotorHealth } from '../services/api';
+import {
+  loadJSON,
+  saveJSON,
+  clearKey,
+  getHistoryStats,
+  getQueueStats,
+  updateHealthStats,
+  getHealthStats,
+} from '../utils/storage';
+import { Card } from './ui/Card';
+import { Pill } from './ui/Pill';
+import { AlertBanner } from './ui/AlertBanner';
 
 const SETTINGS_KEY = 'scn_settings';
 const HISTORY_KEY = 'scn_history';
 const QUEUE_KEY = 'scn_feedback_queue';
+const AUTO_REFRESH_MS = 30000;
+
+function formatTimeAgo(iso) {
+  if (!iso) return '—';
+  const d = new Date(iso);
+  const now = new Date();
+  const diff = Math.floor((now - d) / 1000);
+  if (diff < 60) return 'hace un momento';
+  if (diff < 3600) return `hace ${Math.floor(diff / 60)} min`;
+  if (diff < 86400) return `hace ${Math.floor(diff / 3600)} h`;
+  return d.toLocaleDateString();
+}
 
 /**
  * Lead Engineer - ProfileModal
- * Preferencias locales (modo, debug, reset). No guarda fotos.
+ * Panel automático de estado + estadísticas. Sin configuración manual.
  */
-export const ProfileModal = memo(({ isOpen, onClose, onLogout, onResetData }) => {
-  const [apiKey, setApiKeyLocal] = useState(getApiKey());
-  const [apiBase, setApiBaseLocal] = useState(getApiBase());
-  const [showApiKey, setShowApiKey] = useState(false);
-  const [healthStatus, setHealthStatus] = useState('idle');
-  const [healthError, setHealthError] = useState('');
+export const ProfileModal = memo(({ isOpen, onClose, onLogout, onResetData, onFlushQueue }) => {
+  const [gatewayHealth, setGatewayHealth] = useState(null);
+  const [motorHealth, setMotorHealth] = useState(null);
   const [modo, setModo] = useState('cliente');
   const [mostrarDebug, setMostrarDebug] = useState(false);
   const [showResetConfirm, setShowResetConfirm] = useState(false);
+  const [flushStatus, setFlushStatus] = useState(null);
+  const [flushResult, setFlushResult] = useState(null);
+
+  const runHealthChecks = useCallback(async () => {
+    const [gw, mot] = await Promise.all([
+      getHealth({ timeoutMs: 5000 }),
+      getMotorHealth({ timeoutMs: 5000 }),
+    ]);
+    setGatewayHealth(gw);
+    setMotorHealth(mot);
+    if (gw?.ok) updateHealthStats(true);
+    else if (gw && !gw.ok) updateHealthStats(false);
+  }, []);
 
   useEffect(() => {
     if (isOpen) {
-      setApiKeyLocal(getApiKey());
-      setApiBaseLocal(getApiBase());
-      setHealthStatus('idle');
-      setHealthError('');
+      setFlushStatus(null);
+      setFlushResult(null);
+      runHealthChecks();
       const s = loadJSON(SETTINGS_KEY, {});
       setModo(s.modo || 'cliente');
       setMostrarDebug(Boolean(s.mostrar_debug));
     }
-  }, [isOpen]);
+  }, [isOpen, runHealthChecks]);
+
+  useEffect(() => {
+    if (!isOpen) return;
+    const id = setInterval(runHealthChecks, AUTO_REFRESH_MS);
+    return () => clearInterval(id);
+  }, [isOpen, runHealthChecks]);
 
   const saveSettings = (updates) => {
     const s = { ...loadJSON(SETTINGS_KEY, {}), ...updates };
     saveJSON(SETTINGS_KEY, s);
   };
 
-  const handleApiKeyChange = (val) => {
-    setApiKeyLocal(val);
-    setApiKey(val);
-  };
+  const history = loadJSON(HISTORY_KEY, []);
+  const queue = loadJSON(QUEUE_KEY, []);
+  const histStats = getHistoryStats(history);
+  const queueStats = getQueueStats(queue);
+  const healthStats = getHealthStats();
 
-  const handleApiBaseChange = (val) => {
-    setApiBaseLocal(val);
-    setApiBase(val);
-  };
+  const isOnline =
+    gatewayHealth?.ok || (motorHealth != null && motorHealth.ok);
+  const lastOk = healthStats.lastHealthOkAt;
 
-  const testHealth = async () => {
-    setHealthStatus('loading');
-    setHealthError('');
+  const handleSync = async () => {
+    if (!onFlushQueue) return;
+    setFlushStatus('loading');
+    setFlushResult(null);
     try {
-      await getHealth();
-      setHealthStatus('ok');
+      const res = await onFlushQueue();
+      setFlushResult(res);
+      setFlushStatus('done');
+      onResetData?.();
     } catch (e) {
-      setHealthStatus('error');
-      setHealthError(e.message || 'Fallo de conexión');
+      setFlushResult({ sent: 0, remaining: queue.length, failed: 1 });
+      setFlushStatus('error');
     }
   };
-
-  const maskedKey = apiKey ? `${'*'.repeat(Math.max(0, apiKey.length - 4))}${apiKey.slice(-4)}` : '';
 
   if (!isOpen) return null;
 
   return (
     <div className="fixed inset-0 bg-black/90 backdrop-blur-2xl z-[100] flex items-end animate-in fade-in duration-300">
       <div
-        className="w-full bg-[#0a0a0a] rounded-t-[3rem] border-t border-zinc-800 p-8 pt-10 flex flex-col max-h-[95vh] shadow-[0_-20px_50px_rgba(0,0,0,1)] overflow-hidden"
+        className="w-full bg-[#0a0a0a] rounded-t-[3rem] border-t border-zinc-800 p-8 pt-10 flex flex-col max-h-[95vh] shadow-[0_-20px_50px_rgba(0,0,0,1)] overflow-auto"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="w-12 h-1 bg-zinc-800 rounded-full mx-auto mb-8 opacity-50" />
 
-        <div className="flex justify-between items-center mb-10">
+        <div className="flex justify-between items-center mb-8">
           <div className="flex flex-col">
             <h3 className="text-3xl font-black text-white uppercase tracking-tighter leading-none">
               {copy.profile.title}
@@ -83,15 +133,24 @@ export const ProfileModal = memo(({ isOpen, onClose, onLogout, onResetData }) =>
               SISTEMA OPERATIVO
             </span>
           </div>
-          <button
-            onClick={onClose}
-            className="p-3 bg-zinc-900/50 rounded-full border border-zinc-800 text-zinc-500 active:scale-90 active:bg-zinc-800 transition-all"
-          >
-            <X size={20} />
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={runHealthChecks}
+              className="p-2 bg-zinc-900/50 rounded-full border border-zinc-800 text-zinc-500 hover:text-white active:scale-90 transition-all"
+              title="Actualizar"
+            >
+              <RefreshCw size={18} />
+            </button>
+            <button
+              onClick={onClose}
+              className="p-3 bg-zinc-900/50 rounded-full border border-zinc-800 text-zinc-500 active:scale-90 active:bg-zinc-800 transition-all"
+            >
+              <X size={20} />
+            </button>
+          </div>
         </div>
 
-        <div className="flex items-center space-x-6 mb-8 p-6 bg-zinc-900/30 rounded-[2rem] border border-zinc-800/50">
+        <div className="flex items-center space-x-6 mb-6 p-6 bg-zinc-900/30 rounded-[2rem] border border-zinc-800/50">
           <div className="w-20 h-20 bg-white rounded-3xl flex items-center justify-center shadow-[0_0_30px_rgba(255,255,255,0.15)] rotate-3">
             <span className="text-black text-3xl font-black -rotate-3">SK</span>
           </div>
@@ -104,74 +163,168 @@ export const ProfileModal = memo(({ isOpen, onClose, onLogout, onResetData }) =>
           </div>
         </div>
 
-        <div className="bg-zinc-900/20 border border-zinc-800 rounded-3xl p-6 mb-8 space-y-6">
-          <div className="flex items-center space-x-3">
-            <ShieldCheck size={18} className="text-zinc-500" />
-            <h4 className="text-[11px] font-black text-zinc-500 uppercase tracking-widest">Configuración Técnica</h4>
+        {/* Card Estado */}
+        <Card className="mb-4">
+          <div className="flex items-center justify-between mb-3">
+            <h4 className="text-xs font-black text-zinc-500 uppercase tracking-widest">Estado</h4>
+            <Pill
+              className={
+                gatewayHealth?.ok
+                  ? 'bg-emerald-500/20 border-emerald-500/50 text-emerald-400'
+                  : 'bg-red-500/20 border-red-500/50 text-red-400'
+              }
+            >
+              {gatewayHealth === null ? (
+                <Loader2 size={12} className="animate-spin" />
+              ) : gatewayHealth?.ok ? (
+                'ONLINE'
+              ) : (
+                'OFFLINE'
+              )}
+            </Pill>
           </div>
-
-          <div className="space-y-2">
-            <label className="text-[9px] font-black text-zinc-600 uppercase tracking-[0.2em] ml-1 flex items-center gap-2">
-              <Globe size={10} /> BASE URL
-            </label>
-            <input
-              type="text"
-              value={apiBase}
-              onChange={(e) => handleApiBaseChange(e.target.value)}
-              placeholder="https://scankey-gateway-..."
-              className="w-full bg-zinc-950 border border-zinc-800 rounded-xl py-4 px-5 text-white font-mono text-xs outline-none focus:border-emerald-500/50 transition-all"
-            />
-          </div>
-
-          <div className="space-y-2">
-            <label className="text-[9px] font-black text-zinc-600 uppercase tracking-[0.2em] ml-1 flex items-center gap-2">
-              <Key size={10} /> API KEY
-            </label>
-            <div className="relative">
-              <input
-                type={showApiKey ? "text" : "password"}
-                value={apiKey}
-                onChange={(e) => handleApiKeyChange(e.target.value)}
-                placeholder="Introduce API Key..."
-                className="w-full bg-zinc-950 border border-zinc-800 rounded-xl py-4 px-5 pr-12 text-white font-mono text-xs outline-none focus:border-emerald-500/50 transition-all"
-              />
-              <button
-                onClick={() => setShowApiKey(!showApiKey)}
-                className="absolute right-4 top-1/2 -translate-y-1/2 text-zinc-600 active:text-white"
-              >
-                {showApiKey ? <EyeOff size={16} /> : <Eye size={16} />}
-              </button>
+          <div className="space-y-1 text-xs text-[var(--text-secondary)]">
+            <div className="flex justify-between">
+              <span>Gateway</span>
+              <span>
+                {gatewayHealth == null
+                  ? 'Comprobando…'
+                  : gatewayHealth.ok
+                    ? `OK ${gatewayHealth.ms} ms`
+                    : `ERROR ${gatewayHealth.error || gatewayHealth.status}`}
+              </span>
             </div>
-            {apiKey && !showApiKey && (
-              <p className="text-[8px] text-zinc-700 font-mono tracking-widest mt-1 ml-1 uppercase">
-                IDENTIFICADOR: {maskedKey}
-              </p>
+            <div className="flex justify-between">
+              <span>Motor</span>
+              <span>
+                {motorHealth == null && gatewayHealth != null
+                  ? 'No disponible'
+                  : motorHealth == null
+                    ? '—'
+                    : motorHealth.ok
+                      ? `OK ${motorHealth.ms} ms`
+                      : `ERROR ${motorHealth.status}`}
+              </span>
+            </div>
+            {lastOk && (
+              <div className="flex justify-between text-[10px] opacity-80">
+                <span>Última verificación OK</span>
+                <span>{formatTimeAgo(lastOk)}</span>
+              </div>
+            )}
+            {gatewayHealth?.request_id && mostrarDebug && (
+              <div className="text-[10px] font-mono opacity-60 truncate" title={gatewayHealth.request_id}>
+                {gatewayHealth.request_id}
+              </div>
             )}
           </div>
+        </Card>
 
-          <button
-            onClick={testHealth}
-            disabled={healthStatus === 'loading'}
-            className="w-full flex items-center justify-between p-4 bg-zinc-900 rounded-2xl border border-zinc-800 active:scale-[0.98] transition-all"
-          >
-            <div className="flex items-center gap-3">
-              <Activity size={16} className="text-zinc-500" />
-              <span className="text-[10px] font-black text-zinc-400 uppercase tracking-widest">Probar Conexión</span>
+        {/* Card Modelo */}
+        {(gatewayHealth?.body || motorHealth?.body) && (
+          <Card className="mb-4">
+            <h4 className="text-xs font-black text-zinc-500 uppercase tracking-widest mb-3">Modelo</h4>
+            <div className="space-y-1 text-xs text-[var(--text-secondary)]">
+              {(motorHealth?.body?.model_version ?? gatewayHealth?.body?.model_version) && (
+                <div className="flex justify-between">
+                  <span>Versión</span>
+                  <span>{motorHealth?.body?.model_version ?? gatewayHealth?.body?.model_version}</span>
+                </div>
+              )}
+              {motorHealth?.body?.labels_count != null && (
+                <div className="flex justify-between">
+                  <span>Etiquetas</span>
+                  <span>{motorHealth.body.labels_count}</span>
+                </div>
+              )}
+              {motorHealth?.body?.model_ready != null && (
+                <div className="flex justify-between">
+                  <span>Modelo listo</span>
+                  <span>{motorHealth.body.model_ready ? 'Sí' : 'No'}</span>
+                </div>
+              )}
             </div>
-            <div>
-              {healthStatus === 'loading' && <Loader2 size={16} className="animate-spin text-zinc-500" />}
-              {healthStatus === 'ok' && <CheckCircle2 size={16} className="text-emerald-500" />}
-              {healthStatus === 'error' && <AlertCircle size={16} className="text-red-500" />}
-              {healthStatus === 'idle' && <ChevronRight size={16} className="text-zinc-700" />}
+          </Card>
+        )}
+
+        {/* Card Actividad */}
+        <Card className="mb-4">
+          <h4 className="text-xs font-black text-zinc-500 uppercase tracking-widest mb-3">Actividad</h4>
+          <div className="space-y-1 text-xs text-[var(--text-secondary)]">
+            <div className="flex justify-between">
+              <span>Total análisis</span>
+              <span>{histStats.total}</span>
             </div>
-          </button>
+            <div className="flex justify-between">
+              <span>Hoy</span>
+              <span>{histStats.todayCount}</span>
+            </div>
+            <div className="flex justify-between">
+              <span>Alta / Baja confianza</span>
+              <span>
+                {histStats.highCount} / {histStats.lowCount}
+              </span>
+            </div>
+            {histStats.avgConfidence != null && (
+              <div className="flex justify-between">
+                <span>Confianza media</span>
+                <span>{(histStats.avgConfidence * 100).toFixed(1)}%</span>
+              </div>
+            )}
+            <div className="flex justify-between">
+              <span>Último análisis</span>
+              <span>{formatTimeAgo(histStats.lastScanAt)}</span>
+            </div>
+            {history?.[0]?.top1 && (
+              <div className="pt-1 border-t border-zinc-800 mt-1 text-[10px]">
+                Top1: {history[0].top1.brand} {history[0].top1.model}{' '}
+                {history[0].top1.confidence != null ? `(${(history[0].top1.confidence * 100).toFixed(0)}%)` : ''}{' '}
+                {histStats.lastScanAt ? formatTimeAgo(histStats.lastScanAt) : ''}
+              </div>
+            )}
+          </div>
+        </Card>
 
-          {healthStatus === 'error' && (
-            <p className="text-[9px] text-red-500 font-black uppercase tracking-widest px-2">{healthError}</p>
-          )}
-        </div>
+        {/* Card Feedback */}
+        <Card className="mb-4">
+          <h4 className="text-xs font-black text-zinc-500 uppercase tracking-widest mb-3">Feedback</h4>
+          <div className="space-y-2 text-xs text-[var(--text-secondary)]">
+            <div className="flex justify-between">
+              <span>Pendientes cola</span>
+              <span>{queueStats.pending}</span>
+            </div>
+            {queueStats.oldestPendingAt && (
+              <div className="flex justify-between">
+                <span>Más antiguo</span>
+                <span>{formatTimeAgo(queueStats.oldestPendingAt)}</span>
+              </div>
+            )}
+            <button
+              onClick={handleSync}
+              disabled={queueStats.pending === 0 || flushStatus === 'loading'}
+              className="w-full py-2 mt-2 rounded-xl bg-[var(--accent)]/20 border border-[var(--accent)]/50 text-[var(--accent)] text-sm font-bold hover:bg-[var(--accent)]/30 transition-colors disabled:opacity-50"
+            >
+              {flushStatus === 'loading' ? (
+                <span className="flex items-center justify-center gap-2">
+                  <Loader2 size={14} className="animate-spin" /> Sincronizando…
+                </span>
+              ) : (
+                'Sincronizar'
+              )}
+            </button>
+            {flushStatus === 'done' && flushResult && (
+              <AlertBanner variant="success">
+                Enviados {flushResult.sent}, quedan {flushResult.remaining}
+              </AlertBanner>
+            )}
+            {flushStatus === 'error' && (
+              <AlertBanner variant="error">Error al sincronizar</AlertBanner>
+            )}
+          </div>
+        </Card>
 
-        <div className="bg-zinc-900/20 border border-zinc-800 rounded-3xl p-6 mb-6 space-y-4">
+        {/* Preferencias */}
+        <div className="bg-zinc-900/20 border border-zinc-800 rounded-3xl p-6 mb-4 space-y-4">
           <h4 className="text-[11px] font-black text-zinc-500 uppercase tracking-widest">Preferencias</h4>
           <div className="flex justify-between items-center">
             <span className="text-sm text-zinc-400">Modo</span>
@@ -203,6 +356,7 @@ export const ProfileModal = memo(({ isOpen, onClose, onLogout, onResetData }) =>
           </div>
         </div>
 
+        {/* Reset */}
         <div className="space-y-3 mb-6">
           {showResetConfirm ? (
             <div className="bg-red-500/10 border border-red-500/30 rounded-2xl p-4">
@@ -242,7 +396,7 @@ export const ProfileModal = memo(({ isOpen, onClose, onLogout, onResetData }) =>
         <div className="mt-auto space-y-4 pb-4">
           <button
             onClick={onLogout}
-            className="w-full h-18 bg-red-500/10 border border-red-500/20 rounded-[2rem] flex items-center justify-center space-x-3 text-red-500 active:bg-red-500 active:text-white transition-all duration-300"
+            className="w-full h-18 bg-red-500/10 border border-red-500/20 rounded-[2rem] flex items-center justify-center space-x-3 text-red-500 active:scale-100 active:bg-red-500 active:text-white transition-all duration-300"
           >
             <LogOut size={22} strokeWidth={2.5} />
             <span className="font-black text-lg uppercase tracking-widest">{copy.profile.logout}</span>
@@ -253,7 +407,7 @@ export const ProfileModal = memo(({ isOpen, onClose, onLogout, onResetData }) =>
           <div className="flex items-center justify-center gap-2 opacity-20">
             <ShieldCheck size={12} className="text-white" />
             <p className="text-center text-white text-[9px] font-black uppercase tracking-[0.4em]">
-              SESIÓN ENCRIPTADA AES-256
+              Conexión segura (HTTPS)
             </p>
           </div>
         </div>
@@ -261,9 +415,3 @@ export const ProfileModal = memo(({ isOpen, onClose, onLogout, onResetData }) =>
     </div>
   );
 });
-
-const ChevronRight = ({ size, className }) => (
-  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" className={className}>
-    <path d="m9 18 6-6-6-6"/>
-  </svg>
-);

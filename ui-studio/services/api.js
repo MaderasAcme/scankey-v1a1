@@ -48,30 +48,96 @@ export function setApiKey(val) {
   storage.set(KEY_API_KEY, String(val || '').trim());
 }
 
-export async function getHealth() {
+const DEFAULT_HEALTH_TIMEOUT_MS = 5000;
+
+/**
+ * Health check del gateway. No lanza errores.
+ * @param {{ timeoutMs?: number }} [opts]
+ * @returns {Promise<{ ok: boolean, status: number, ms: number, body: object|null, request_id?: string, error?: string }>}
+ */
+export async function getHealth({ timeoutMs = DEFAULT_HEALTH_TIMEOUT_MS } = {}) {
   const { base, hasBase } = getApiConfig();
-  if (!hasBase) {
-    throw new Error('API no configurada. Indica VITE_GATEWAY_BASE_URL o configura en Perfil.');
+  const start = performance.now();
+  const requestId = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
+    const r = (Math.random() * 16) | 0;
+    return (c === 'x' ? r : (r & 0x3) | 0x8).toString(16);
+  });
+  if (!hasBase || !base) {
+    return { ok: false, status: 0, ms: 0, body: null, request_id: requestId, error: 'API no configurada' };
   }
   const apiKey = getApiKey();
-  const headers = {};
+  const headers = { 'X-Request-ID': requestId };
   if (apiKey) headers['X-API-Key'] = apiKey;
-  const res = await fetch(`${base}/health`, { headers });
-  if (!res.ok) throw new Error(`Health check failed: ${res.status}`);
-  return res.json();
+  const ac = new AbortController();
+  const t = setTimeout(() => ac.abort(), timeoutMs);
+  try {
+    const res = await fetch(`${base}/health`, { headers, signal: ac.signal });
+    const ms = Math.round(performance.now() - start);
+    clearTimeout(t);
+    let body = null;
+    try {
+      body = await res.json();
+    } catch (_) {}
+    return {
+      ok: res.ok,
+      status: res.status,
+      ms,
+      body,
+      request_id: body?.request_id || res.headers?.get?.('X-Request-ID') || requestId,
+    };
+  } catch (e) {
+    clearTimeout(t);
+    const ms = Math.round(performance.now() - start);
+    return {
+      ok: false,
+      status: e.name === 'AbortError' ? 408 : 0,
+      ms,
+      body: null,
+      request_id: requestId,
+      error: e.name === 'AbortError' ? 'Timeout' : (e.message || 'Error de red'),
+    };
+  }
 }
 
-export async function getMotorHealth() {
+/**
+ * Health check del motor. No lanza errores. Retorna null si no disponible.
+ * @param {{ timeoutMs?: number }} [opts]
+ * @returns {Promise<{ ok: boolean, status: number, ms: number, body: object|null, request_id?: string }|null>}
+ */
+export async function getMotorHealth({ timeoutMs = DEFAULT_HEALTH_TIMEOUT_MS } = {}) {
   const { base, hasBase } = getApiConfig();
-  if (!hasBase) {
-    throw new Error('API no configurada.');
+  const start = performance.now();
+  const requestId = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
+    const r = (Math.random() * 16) | 0;
+    return (c === 'x' ? r : (r & 0x3) | 0x8).toString(16);
+  });
+  if (!hasBase || !base) {
+    return null;
   }
   const apiKey = getApiKey();
-  const headers = {};
+  const headers = { 'X-Request-ID': requestId };
   if (apiKey) headers['X-API-Key'] = apiKey;
-  const res = await fetch(`${base}/motor/health`, { headers });
-  if (!res.ok) throw new Error(`Motor health failed: ${res.status}`);
-  return res.json();
+  const ac = new AbortController();
+  const t = setTimeout(() => ac.abort(), timeoutMs);
+  try {
+    const res = await fetch(`${base}/motor/health`, { headers, signal: ac.signal });
+    const ms = Math.round(performance.now() - start);
+    clearTimeout(t);
+    let body = null;
+    try {
+      body = await res.json();
+    } catch (_) {}
+    return {
+      ok: res.ok,
+      status: res.status,
+      ms,
+      body,
+      request_id: body?.request_id || res.headers?.get?.('X-Request-ID') || requestId,
+    };
+  } catch (_) {
+    clearTimeout(t);
+    return null;
+  }
 }
 
 /** Genera uuid simple (sin crypto si no disponible). */
