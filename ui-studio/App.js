@@ -41,6 +41,7 @@ export default function App() {
   const [capturedPhotos, setCapturedPhotos] = useState(null);
   const [analyzeError, setAnalyzeError] = useState(null);
   const [feedbackPendingCount, setFeedbackPendingCount] = useState(0);
+  const [historyOpenLast, setHistoryOpenLast] = useState(false);
 
   const refreshFeedbackCount = useCallback(() => {
     setFeedbackPendingCount(getFeedbackQueue().length);
@@ -164,7 +165,14 @@ export default function App() {
           />
         )}
         {screen === 'History' && (
-          <HistoryScreen onBack={() => setScreen('Home')} />
+          <HistoryScreen
+            onBack={() => {
+              setHistoryOpenLast(false);
+              setScreen('Home');
+            }}
+            openLast={historyOpenLast}
+            onConsumeOpenLast={() => setHistoryOpenLast(false)}
+          />
         )}
         {screen === 'Taller' && (
           <TallerScreen
@@ -186,6 +194,11 @@ export default function App() {
         onLogout={handleLogout}
         onResetData={refreshFeedbackCount}
         onFlushQueue={handleFlushQueue}
+        onViewLast={() => {
+          setProfileOpen(false);
+          setScreen('History');
+          setHistoryOpenLast(true);
+        }}
       />
     </div>
   );

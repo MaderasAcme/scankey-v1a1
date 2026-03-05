@@ -52,8 +52,9 @@ const DEFAULT_HEALTH_TIMEOUT_MS = 5000;
 
 /**
  * Health check del gateway. No lanza errores.
+ * Incluye cause para diagnóstico: SIN_RED, CORS_OR_DNS, GATEWAY_DOWN
  * @param {{ timeoutMs?: number }} [opts]
- * @returns {Promise<{ ok: boolean, status: number, ms: number, body: object|null, request_id?: string, error?: string }>}
+ * @returns {Promise<{ ok: boolean, status: number, ms: number, body: object|null, request_id?: string, error?: string, cause?: string }>}
  */
 export async function getHealth({ timeoutMs = DEFAULT_HEALTH_TIMEOUT_MS } = {}) {
   const { base, hasBase } = getApiConfig();
@@ -64,6 +65,17 @@ export async function getHealth({ timeoutMs = DEFAULT_HEALTH_TIMEOUT_MS } = {}) 
   });
   if (!hasBase || !base) {
     return { ok: false, status: 0, ms: 0, body: null, request_id: requestId, error: 'API no configurada' };
+  }
+  if (typeof navigator !== 'undefined' && navigator.onLine === false) {
+    return {
+      ok: false,
+      status: 0,
+      ms: 0,
+      body: null,
+      request_id: requestId,
+      error: 'Sin red',
+      cause: 'SIN_RED',
+    };
   }
   const apiKey = getApiKey();
   const headers = { 'X-Request-ID': requestId };
@@ -78,16 +90,24 @@ export async function getHealth({ timeoutMs = DEFAULT_HEALTH_TIMEOUT_MS } = {}) 
     try {
       body = await res.json();
     } catch (_) {}
+    const cause = !res.ok && (res.status >= 500 || res.status === 408) ? 'GATEWAY_DOWN' : undefined;
     return {
       ok: res.ok,
       status: res.status,
       ms,
       body,
       request_id: body?.request_id || res.headers?.get?.('X-Request-ID') || requestId,
+      cause,
     };
   } catch (e) {
     clearTimeout(t);
     const ms = Math.round(performance.now() - start);
+    const msg = (e.message || '').toLowerCase();
+    const isCors =
+      msg.includes('failed to fetch') ||
+      msg.includes('network request failed') ||
+      (e.constructor && e.constructor.name === 'TypeError');
+    const cause = e.name === 'AbortError' ? 'GATEWAY_DOWN' : isCors ? 'CORS_OR_DNS' : undefined;
     return {
       ok: false,
       status: e.name === 'AbortError' ? 408 : 0,
@@ -95,6 +115,7 @@ export async function getHealth({ timeoutMs = DEFAULT_HEALTH_TIMEOUT_MS } = {}) 
       body: null,
       request_id: requestId,
       error: e.name === 'AbortError' ? 'Timeout' : (e.message || 'Error de red'),
+      cause,
     };
   }
 }
@@ -127,16 +148,27 @@ export async function getMotorHealth({ timeoutMs = DEFAULT_HEALTH_TIMEOUT_MS } =
     try {
       body = await res.json();
     } catch (_) {}
+    const cause = !res.ok ? 'MOTOR_DOWN' : undefined;
     return {
       ok: res.ok,
       status: res.status,
       ms,
       body,
       request_id: body?.request_id || res.headers?.get?.('X-Request-ID') || requestId,
+      cause,
     };
   } catch (_) {
     clearTimeout(t);
-    return null;
+    const ms = Math.round(performance.now() - start);
+    return {
+      ok: false,
+      status: 0,
+      ms,
+      body: null,
+      request_id: requestId,
+      error: 'Error de red',
+      cause: 'MOTOR_DOWN',
+    };
   }
 }
 
@@ -311,10 +343,24 @@ export async function sendFeedback(payload, { timeoutMs = FEEDBACK_TIMEOUT_MS } 
   }
 }
 
+const SETTINGS_KEY = 'scn_settings';
+
+function _ensureFeedbackStatsDate(stats) {
+  const today = new Date().toISOString().slice(0, 10);
+  if (stats.feedbackStatsDate !== today) {
+    stats.feedbackStatsDate = today;
+    stats.sentToday = 0;
+    stats.failedToday = 0;
+    stats.retryStopToday = 0;
+  }
+  return stats;
+}
+
 /**
  * Procesa la cola de feedback local. Envía en orden FIFO.
  * Si un item falla con RETRYABLE => para y devuelve resumen.
  * Si falla 4xx => lo quita de la cola (no reintentar).
+ * Contabiliza sentToday, failedToday, retryStopToday en scn_settings.stats.
  * @param {Object} [opts]
  * @param {function(number, number): void} [opts.onProgress] - (sent, remaining)
  * @param {function(Object): void} [opts.onSent] - (payload) por cada envío exitoso
@@ -327,6 +373,8 @@ export async function flushFeedbackQueue({ onProgress, onSent } = {}) {
   }
 
   let sent = 0;
+  let failed = 0;
+  let retryStop = false;
   const remaining = [];
 
   for (let i = 0; i < queue.length; i++) {
@@ -339,10 +387,20 @@ export async function flushFeedbackQueue({ onProgress, onSent } = {}) {
     } catch (e) {
       if (e.message === 'RETRYABLE' || _isRetryableError(e)) {
         remaining.push(...queue.slice(i));
+        retryStop = true;
         break;
+      } else {
+        failed++;
       }
     }
   }
+
+  const s = loadJSON(SETTINGS_KEY, {});
+  const stats = _ensureFeedbackStatsDate(s.stats || {});
+  stats.sentToday = (stats.sentToday || 0) + sent;
+  stats.failedToday = (stats.failedToday || 0) + failed;
+  if (retryStop) stats.retryStopToday = (stats.retryStopToday || 0) + 1;
+  saveJSON(SETTINGS_KEY, { ...s, stats });
 
   saveJSON(FEEDBACK_QUEUE_KEY, remaining);
   return { sent, remaining: remaining.length, failed: queue.length - sent - remaining.length };

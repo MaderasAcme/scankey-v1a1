@@ -33,10 +33,17 @@ function formatTitle(top1) {
 /**
  * HistoryScreen — lista de scans + detalle
  */
-export function HistoryScreen({ onBack, onNavigate }) {
+export function HistoryScreen({ onBack, onNavigate, openLast, onConsumeOpenLast }) {
   const history = useMemo(() => loadJSON('scn_history', []), []);
   const queue = useMemo(() => getFeedbackQueue(), []);
   const [detailItem, setDetailItem] = useState(null);
+
+  React.useEffect(() => {
+    if (openLast && Array.isArray(history) && history.length > 0) {
+      setDetailItem(history[0]);
+      onConsumeOpenLast?.();
+    }
+  }, [openLast, history, onConsumeOpenLast]);
 
   const hasPendingForInput = (inputId) => queue.some((q) => q.input_id === inputId);
 

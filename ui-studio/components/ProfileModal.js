@@ -21,6 +21,7 @@ import {
   getQueueStats,
   updateHealthStats,
   getHealthStats,
+  calcPercentiles,
 } from '../utils/storage';
 import { Card } from './ui/Card';
 import { Pill } from './ui/Pill';
@@ -46,7 +47,17 @@ function formatTimeAgo(iso) {
  * Lead Engineer - ProfileModal
  * Panel automático de estado + estadísticas. Sin configuración manual.
  */
-export const ProfileModal = memo(({ isOpen, onClose, onLogout, onResetData, onFlushQueue }) => {
+function getNetworkStatusLabel(gatewayHealth, motorHealth) {
+  if (!gatewayHealth) return null;
+  const cause = gatewayHealth.cause;
+  if (cause === 'SIN_RED') return 'SIN RED';
+  if (cause === 'CORS_OR_DNS') return 'CORS/BLOQUEADO o DNS';
+  if (cause === 'GATEWAY_DOWN') return 'GATEWAY DOWN';
+  if (gatewayHealth.ok && motorHealth && !motorHealth.ok) return 'MOTOR DOWN';
+  return null;
+}
+
+export const ProfileModal = memo(({ isOpen, onClose, onLogout, onResetData, onFlushQueue, onViewLast }) => {
   const [gatewayHealth, setGatewayHealth] = useState(null);
   const [motorHealth, setMotorHealth] = useState(null);
   const [modo, setModo] = useState('cliente');
@@ -62,7 +73,7 @@ export const ProfileModal = memo(({ isOpen, onClose, onLogout, onResetData, onFl
     ]);
     setGatewayHealth(gw);
     setMotorHealth(mot);
-    if (gw?.ok) updateHealthStats(true);
+    if (gw?.ok) updateHealthStats(true, gw.ms, mot?.ok ? mot.ms : null);
     else if (gw && !gw.ok) updateHealthStats(false);
   }, []);
 
@@ -93,6 +104,9 @@ export const ProfileModal = memo(({ isOpen, onClose, onLogout, onResetData, onFl
   const histStats = getHistoryStats(history);
   const queueStats = getQueueStats(queue);
   const healthStats = getHealthStats();
+  const latencies = (healthStats.healthLatencies || []).map((h) => h.gw).filter(Boolean);
+  const percentiles = calcPercentiles(latencies);
+  const networkStatus = getNetworkStatusLabel(gatewayHealth, motorHealth);
 
   const isOnline =
     gatewayHealth?.ok || (motorHealth != null && motorHealth.ok);
@@ -183,6 +197,9 @@ export const ProfileModal = memo(({ isOpen, onClose, onLogout, onResetData, onFl
               )}
             </Pill>
           </div>
+          {networkStatus && (
+            <p className="text-[10px] text-zinc-500 uppercase tracking-wider mb-2">{networkStatus}</p>
+          )}
           <div className="space-y-1 text-xs text-[var(--text-secondary)]">
             <div className="flex justify-between">
               <span>Gateway</span>
@@ -206,6 +223,15 @@ export const ProfileModal = memo(({ isOpen, onClose, onLogout, onResetData, onFl
                       : `ERROR ${motorHealth.status}`}
               </span>
             </div>
+            {(percentiles.p50 != null || percentiles.p95 != null) && (
+              <div className="flex justify-between text-[10px] opacity-80">
+                <span>p50 / p95</span>
+                <span>
+                  {percentiles.p50 != null ? `${percentiles.p50} ms` : '—'} /{' '}
+                  {percentiles.p95 != null ? `${percentiles.p95} ms` : '—'}
+                </span>
+              </div>
+            )}
             {lastOk && (
               <div className="flex justify-between text-[10px] opacity-80">
                 <span>Última verificación OK</span>
@@ -275,6 +301,17 @@ export const ProfileModal = memo(({ isOpen, onClose, onLogout, onResetData, onFl
               <span>Último análisis</span>
               <span>{formatTimeAgo(histStats.lastScanAt)}</span>
             </div>
+            {onViewLast && history?.length > 0 && (
+              <button
+                onClick={() => {
+                  onClose();
+                  onViewLast();
+                }}
+                className="w-full py-2 mt-2 rounded-xl bg-zinc-800/50 border border-zinc-700 text-zinc-300 text-sm font-bold hover:bg-zinc-700/50 transition-colors"
+              >
+                Ver último
+              </button>
+            )}
             {history?.[0]?.top1 && (
               <div className="pt-1 border-t border-zinc-800 mt-1 text-[10px]">
                 Top1: {history[0].top1.brand} {history[0].top1.model}{' '}
@@ -293,6 +330,26 @@ export const ProfileModal = memo(({ isOpen, onClose, onLogout, onResetData, onFl
               <span>Pendientes cola</span>
               <span>{queueStats.pending}</span>
             </div>
+            {(healthStats.sentToday != null || healthStats.failedToday > 0 || healthStats.retryStopToday > 0) && (
+              <div className="space-y-0.5 text-[10px] opacity-80 pt-1 border-t border-zinc-800">
+                <div className="flex justify-between">
+                  <span>Hoy enviados</span>
+                  <span>{healthStats.sentToday ?? 0}</span>
+                </div>
+                {healthStats.failedToday > 0 && (
+                  <div className="flex justify-between">
+                    <span>Hoy fallidos (4xx)</span>
+                    <span>{healthStats.failedToday}</span>
+                  </div>
+                )}
+                {healthStats.retryStopToday > 0 && (
+                  <div className="flex justify-between">
+                    <span>Hoy paradas retry</span>
+                    <span>{healthStats.retryStopToday}</span>
+                  </div>
+                )}
+              </div>
+            )}
             {queueStats.oldestPendingAt && (
               <div className="flex justify-between">
                 <span>Más antiguo</span>

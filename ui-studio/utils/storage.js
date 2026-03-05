@@ -174,23 +174,53 @@ export function getQueueStats(queue) {
 }
 
 const SETTINGS_KEY = 'scn_settings';
+const HEALTH_HISTORY_LIMIT = 50;
+
+/**
+ * Calcula percentiles p50 y p95 de un array de números.
+ * @param {number[]} values - Valores numéricos (se filtran no-números)
+ * @returns {{ p50: number|null, p95: number|null }}
+ */
+export function calcPercentiles(values) {
+  const arr = (Array.isArray(values) ? values : []).filter((v) => typeof v === 'number' && !Number.isNaN(v));
+  if (arr.length === 0) return { p50: null, p95: null };
+  const sorted = [...arr].sort((a, b) => a - b);
+  const n = sorted.length;
+  const p50Idx = Math.floor((n - 1) * 0.5);
+  const p95Idx = Math.floor((n - 1) * 0.95);
+  return {
+    p50: sorted[p50Idx],
+    p95: sorted[p95Idx],
+  };
+}
 
 /**
  * Actualiza timestamps de salud en scn_settings (solo metadatos).
+ * Si ok, también añade latencia al historial circular (max 50).
  * @param {boolean} ok - true si health OK, false si falló
+ * @param {number} [gwMs] - Latencia gateway en ms (solo si ok)
+ * @param {number|null} [motorMs] - Latencia motor en ms (solo si ok)
  */
-export function updateHealthStats(ok) {
+export function updateHealthStats(ok, gwMs, motorMs) {
   const s = loadJSON(SETTINGS_KEY, {});
   const stats = s.stats || {};
   const now = new Date().toISOString();
-  if (ok) stats.lastHealthOkAt = now;
-  else stats.lastHealthFailAt = now;
+  if (ok) {
+    stats.lastHealthOkAt = now;
+    if (typeof gwMs === 'number' && !Number.isNaN(gwMs)) {
+      const history = Array.isArray(stats.healthLatencies) ? stats.healthLatencies : [];
+      const entry = { ts: Date.now(), gw: Number(gwMs), motor: motorMs != null ? Number(motorMs) : null };
+      stats.healthLatencies = [entry, ...history].slice(0, HEALTH_HISTORY_LIMIT);
+    }
+  } else {
+    stats.lastHealthFailAt = now;
+  }
   saveJSON(SETTINGS_KEY, { ...s, stats });
 }
 
 /**
  * Lee stats de salud desde scn_settings.
- * @returns {{ lastHealthOkAt?: string, lastHealthFailAt?: string }}
+ * @returns {{ lastHealthOkAt?: string, lastHealthFailAt?: string, healthLatencies?: Array<{ts:number,gw:number,motor:number|null}>, sentToday?: number, failedToday?: number, retryStopToday?: number }}
  */
 export function getHealthStats() {
   const s = loadJSON(SETTINGS_KEY, {});
