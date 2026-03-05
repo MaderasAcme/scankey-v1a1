@@ -1,4 +1,3 @@
-
 /**
  * Lead Engineer Note:
  * Project restriction: NO TypeScript. Interfaces removed.

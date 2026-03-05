@@ -1,0 +1,17 @@
+body {
+  margin: 0;
+  font-family: "Inter", system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+  background-color: var(--bg);
+  color: var(--text);
+  -webkit-tap-highlight-color: transparent;
+}
+.revolut-gradient {
+  background: linear-gradient(135deg, #1c1c1e 0%, #000000 100%);
+}
+.card-blur {
+  backdrop-filter: blur(10px);
+  background: rgba(28, 28, 30, 0.8);
+}
+#root {
+  min-height: 100vh;
+}

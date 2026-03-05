@@ -1,7 +1,7 @@
-
 /**
  * Lead Engineer - Storage Abstraction
  * Maneja localStorage con fallbacks para evitar bloqueos en entornos restrictivos.
+ * REGLA: No almacenar nunca imágenes ni base64; solo configuración y colas de metadatos (feedback queue, history sin fotos).
  */
 
 export const storage = {

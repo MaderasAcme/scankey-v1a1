@@ -1,6 +1,5 @@
-
-import React, { memo, useState, useCallback, useEffect } from 'react';
-import { LogOut, Mail, ShieldCheck, X, Zap, Cpu, Key, Globe, Activity, Loader2, CheckCircle2, AlertCircle, Eye, EyeOff } from 'lucide-react';
+import React, { memo, useState, useEffect } from 'react';
+import { LogOut, ShieldCheck, X, Cpu, Key, Globe, Activity, Loader2, CheckCircle2, AlertCircle, Eye, EyeOff } from 'lucide-react';
 import { copy } from '../utils/copy';
 import { getApiBase, setApiBase, getApiKey, setApiKey, getHealth } from '../services/api';
 
@@ -8,15 +7,13 @@ import { getApiBase, setApiBase, getApiKey, setApiKey, getHealth } from '../serv
  * Lead Engineer - ProfileModal
  * Implementa auto-guardado inmediato y sincronización reactiva al abrir el modal.
  */
-// @ts-ignore
-export const ProfileModal = memo(({ isOpen, onClose, onLogout }: any) => {
+export const ProfileModal = memo(({ isOpen, onClose, onLogout }) => {
   const [apiKey, setApiKeyLocal] = useState(getApiKey());
   const [apiBase, setApiBaseLocal] = useState(getApiBase());
   const [showApiKey, setShowApiKey] = useState(false);
-  const [healthStatus, setHealthStatus] = useState<'idle' | 'loading' | 'ok' | 'error'>('idle');
+  const [healthStatus, setHealthStatus] = useState('idle');
   const [healthError, setHealthError] = useState('');
 
-  // Sincronizar con el storage cada vez que se abre el modal
   useEffect(() => {
     if (isOpen) {
       setApiKeyLocal(getApiKey());
@@ -26,14 +23,14 @@ export const ProfileModal = memo(({ isOpen, onClose, onLogout }: any) => {
     }
   }, [isOpen]);
 
-  const handleApiKeyChange = (val: string) => {
+  const handleApiKeyChange = (val) => {
     setApiKeyLocal(val);
-    setApiKey(val); // Guarda inmediatamente en localStorage
+    setApiKey(val);
   };
 
-  const handleApiBaseChange = (val: string) => {
+  const handleApiBaseChange = (val) => {
     setApiBaseLocal(val);
-    setApiBase(val); // Guarda inmediatamente en localStorage
+    setApiBase(val);
   };
 
   const testHealth = async () => {
@@ -42,7 +39,7 @@ export const ProfileModal = memo(({ isOpen, onClose, onLogout }: any) => {
     try {
       await getHealth();
       setHealthStatus('ok');
-    } catch (e: any) {
+    } catch (e) {
       setHealthStatus('error');
       setHealthError(e.message || 'Fallo de conexión');
     }
@@ -54,7 +51,7 @@ export const ProfileModal = memo(({ isOpen, onClose, onLogout }: any) => {
 
   return (
     <div className="fixed inset-0 bg-black/90 backdrop-blur-2xl z-[100] flex items-end animate-in fade-in duration-300">
-      <div 
+      <div
         className="w-full bg-[#0a0a0a] rounded-t-[3rem] border-t border-zinc-800 p-8 pt-10 flex flex-col max-h-[95vh] shadow-[0_-20px_50px_rgba(0,0,0,1)] overflow-hidden"
         onClick={(e) => e.stopPropagation()}
       >
@@ -70,15 +67,14 @@ export const ProfileModal = memo(({ isOpen, onClose, onLogout }: any) => {
               SISTEMA OPERATIVO
             </span>
           </div>
-          <button 
-            onClick={onClose} 
+          <button
+            onClick={onClose}
             className="p-3 bg-zinc-900/50 rounded-full border border-zinc-800 text-zinc-500 active:scale-90 active:bg-zinc-800 transition-all"
           >
             <X size={20} />
           </button>
         </div>
 
-        {/* Card de Identidad */}
         <div className="flex items-center space-x-6 mb-8 p-6 bg-zinc-900/30 rounded-[2rem] border border-zinc-800/50">
           <div className="w-20 h-20 bg-white rounded-3xl flex items-center justify-center shadow-[0_0_30px_rgba(255,255,255,0.15)] rotate-3">
             <span className="text-black text-3xl font-black -rotate-3">SK</span>
@@ -92,18 +88,17 @@ export const ProfileModal = memo(({ isOpen, onClose, onLogout }: any) => {
           </div>
         </div>
 
-        {/* Sección Settings - Advanced */}
         <div className="bg-zinc-900/20 border border-zinc-800 rounded-3xl p-6 mb-8 space-y-6">
           <div className="flex items-center space-x-3">
             <ShieldCheck size={18} className="text-zinc-500" />
             <h4 className="text-[11px] font-black text-zinc-500 uppercase tracking-widest">Configuración Técnica</h4>
           </div>
-          
+
           <div className="space-y-2">
             <label className="text-[9px] font-black text-zinc-600 uppercase tracking-[0.2em] ml-1 flex items-center gap-2">
               <Globe size={10} /> BASE URL
             </label>
-            <input 
+            <input
               type="text"
               value={apiBase}
               onChange={(e) => handleApiBaseChange(e.target.value)}
@@ -117,14 +112,14 @@ export const ProfileModal = memo(({ isOpen, onClose, onLogout }: any) => {
               <Key size={10} /> API KEY
             </label>
             <div className="relative">
-              <input 
+              <input
                 type={showApiKey ? "text" : "password"}
                 value={apiKey}
                 onChange={(e) => handleApiKeyChange(e.target.value)}
                 placeholder="Introduce API Key..."
                 className="w-full bg-zinc-950 border border-zinc-800 rounded-xl py-4 px-5 pr-12 text-white font-mono text-xs outline-none focus:border-emerald-500/50 transition-all"
               />
-              <button 
+              <button
                 onClick={() => setShowApiKey(!showApiKey)}
                 className="absolute right-4 top-1/2 -translate-y-1/2 text-zinc-600 active:text-white"
               >
@@ -138,7 +133,7 @@ export const ProfileModal = memo(({ isOpen, onClose, onLogout }: any) => {
             )}
           </div>
 
-          <button 
+          <button
             onClick={testHealth}
             disabled={healthStatus === 'loading'}
             className="w-full flex items-center justify-between p-4 bg-zinc-900 rounded-2xl border border-zinc-800 active:scale-[0.98] transition-all"
@@ -154,14 +149,14 @@ export const ProfileModal = memo(({ isOpen, onClose, onLogout }: any) => {
               {healthStatus === 'idle' && <ChevronRight size={16} className="text-zinc-700" />}
             </div>
           </button>
-          
+
           {healthStatus === 'error' && (
             <p className="text-[9px] text-red-500 font-black uppercase tracking-widest px-2">{healthError}</p>
           )}
         </div>
 
         <div className="mt-auto space-y-4 pb-4">
-          <button 
+          <button
             onClick={onLogout}
             className="w-full h-18 bg-red-500/10 border border-red-500/20 rounded-[2rem] flex items-center justify-center space-x-3 text-red-500 active:bg-red-500 active:text-white transition-all duration-300"
           >
@@ -181,8 +176,7 @@ export const ProfileModal = memo(({ isOpen, onClose, onLogout }: any) => {
   );
 });
 
-// Helper for UI consistency
-const ChevronRight = ({ size, className }: any) => (
+const ChevronRight = ({ size, className }) => (
   <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" className={className}>
     <path d="m9 18 6-6-6-6"/>
   </svg>

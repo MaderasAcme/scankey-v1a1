@@ -27,9 +27,9 @@
     "qa:governance-tests": "cd .. && python -m pytest gateway/tests/test_dataset_governance.py -v",
     "qa:no-ts": "node scripts/verify_no_ts.js",
     "qa:all": "npm run qa:contract && npm run qa:secrets && npm run qa:smoke && npm run qa:pages && npm run qa:no-ts",
-    "stack:up": "docker compose -f ../docker-compose.yml up -d --build",
-    "stack:down": "docker compose -f ../docker-compose.yml down",
-    "stack:logs": "docker compose -f ../docker-compose.yml logs -f"
+    "stack:up": "docker compose -f ../docker-compose.local.yml up -d --build",
+    "stack:down": "docker compose -f ../docker-compose.local.yml down",
+    "stack:logs": "docker compose -f ../docker-compose.local.yml logs -f"
   },
   "dependencies": {
     "@expo/metro-runtime": "~3.2.3",
