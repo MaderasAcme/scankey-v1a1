@@ -52,15 +52,20 @@ jobs:
           echo "GATEWAY=$VITE_GATEWAY_BASE_URL" >> dist/deploy-ping.txt
           echo "UI_SOURCE=ui-studio" >> dist/deploy-ping.txt
 
+      - name: Assert NO root dist (anti-UI vieja)
+        run: |
+          test ! -d dist || (echo "ERROR: dist/ at repo root must not exist. Solo ui-studio/dist se publica." && exit 1)
+          echo "OK: no root dist/"
+
       - name: Assert dist contents (anti-UI vieja)
         working-directory: ui-studio
         run: |
-          echo "== dist/ listing =="
+          echo "== ui-studio/dist listing =="
           ls -la dist | head -50
           echo "== required files =="
           test -f dist/index.html || (echo "ERROR: dist/index.html missing" && exit 1)
           test -f dist/ui-source.txt || (echo "ERROR: dist/ui-source.txt missing" && exit 1)
-          grep -q "UI_SOURCE=ui-studio" dist/ui-source.txt || (echo "ERROR: ui-source.txt must contain UI_SOURCE=ui-studio" && exit 1)
+          grep -q "^UI_SOURCE=ui-studio" dist/ui-source.txt || (echo "ERROR: ui-source.txt must contain UI_SOURCE=ui-studio" && exit 1)
           test -f dist/deploy-ping.txt || (echo "ERROR: dist/deploy-ping.txt missing" && exit 1)
           echo "deploy-ping.txt contents:"
           cat dist/deploy-ping.txt
@@ -74,7 +79,11 @@ jobs:
         run: |
           echo "scankeyapp.com" > dist/CNAME
 
-      - name: Upload artifact
+      - name: Upload artifact (SOLO ui-studio/dist)
+        run: |
+          test -f ui-studio/dist/index.html || (echo "ERROR: upload path must be ui-studio/dist" && exit 1)
+          echo "OK: uploading ui-studio/dist only"
+      - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3
         with:
           path: ui-studio/dist

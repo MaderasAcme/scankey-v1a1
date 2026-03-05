@@ -27,6 +27,7 @@ const content = [
   `DEPLOY_PING=${deployPing}`,
   `COMMIT=${commit}`,
   gateway ? `GATEWAY=${gateway}` : '',
+  'UI_SOURCE=ui-studio',
 ]
   .filter(Boolean)
   .join('\n');
