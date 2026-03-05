@@ -12,7 +12,7 @@ import {
   RefreshCw,
 } from 'lucide-react';
 import { copy } from '../utils/copy';
-import { getHealth, getMotorHealth } from '../services/api';
+import { getHealth, getMotorHealth, getDeployPing } from '../services/api';
 import {
   loadJSON,
   saveJSON,
@@ -65,6 +65,7 @@ export const ProfileModal = memo(({ isOpen, onClose, onLogout, onResetData, onFl
   const [showResetConfirm, setShowResetConfirm] = useState(false);
   const [flushStatus, setFlushStatus] = useState(null);
   const [flushResult, setFlushResult] = useState(null);
+  const [deployPing, setDeployPing] = useState(null);
 
   const runHealthChecks = useCallback(async () => {
     const [gw, mot] = await Promise.all([
@@ -82,6 +83,7 @@ export const ProfileModal = memo(({ isOpen, onClose, onLogout, onResetData, onFl
       setFlushStatus(null);
       setFlushResult(null);
       runHealthChecks();
+      getDeployPing().then((v) => setDeployPing(v));
       const s = loadJSON(SETTINGS_KEY, {});
       setModo(s.modo || 'cliente');
       setMostrarDebug(Boolean(s.mostrar_debug));
@@ -236,6 +238,18 @@ export const ProfileModal = memo(({ isOpen, onClose, onLogout, onResetData, onFl
               <div className="flex justify-between text-[10px] opacity-80">
                 <span>Última verificación OK</span>
                 <span>{formatTimeAgo(lastOk)}</span>
+              </div>
+            )}
+            <div className="flex justify-between text-[10px] opacity-80 pt-1 border-t border-zinc-800">
+              <span>Build ID</span>
+              <span className="font-mono">
+                {deployPing?.commit ? deployPing.commit.slice(0, 7) : 'desconocido'}
+              </span>
+            </div>
+            {deployPing?.deployPing && (
+              <div className="flex justify-between text-[10px] opacity-70">
+                <span>Deploy</span>
+                <span>{deployPing.deployPing}</span>
               </div>
             )}
             {gatewayHealth?.request_id && mostrarDebug && (

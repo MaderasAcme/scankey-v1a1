@@ -5,8 +5,8 @@
   "scripts": {
     "dev": "npm run dev:web",
     "dev:web": "vite --host --port 5173",
-    "build": "vite build",
-    "build:web": "vite build",
+    "build": "vite build && node scripts/ensure_deploy_ping.js",
+    "build:web": "vite build && node scripts/ensure_deploy_ping.js",
     "preview:web": "vite preview --host --port 5173",
     "expo:start": "expo start",
     "expo:web": "expo start --web --port 8081",
