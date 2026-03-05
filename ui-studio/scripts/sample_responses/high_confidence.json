@@ -17,7 +17,7 @@
       "confidence": 0.97,
       "explain_text": "Coincidencia perfecta con perfil estándar Yale.",
       "compatibility_tags": ["standard", "yale-compatible"],
-      "crop_bbox": { "x": 10.5, "y": 20.0, "w": 100.0, "h": 250.0 }
+      "crop_bbox": { "x": 0.1, "y": 0.15, "w": 0.3, "h": 0.5 }
     },
     {
       "rank": 2,
@@ -27,7 +27,8 @@
       "model": "TE5",
       "confidence": 0.75,
       "explain_text": "Variación similar pero con estría invertida.",
-      "compatibility_tags": ["tessa-generic"]
+      "compatibility_tags": ["tessa-generic"],
+      "crop_bbox": { "x": 0, "y": 0, "w": 1, "h": 1 }
     },
     {
       "rank": 3,
@@ -35,13 +36,15 @@
       "type": "Genérica",
       "confidence": 0.45,
       "explain_text": "Perfil genérico compatible.",
-      "compatibility_tags": []
+      "compatibility_tags": [],
+      "crop_bbox": { "x": 0, "y": 0, "w": 1, "h": 1 }
     }
   ],
   "high_confidence": true,
   "low_confidence": false,
   "should_store_sample": true,
+  "storage_probability": 0.75,
   "current_samples_for_candidate": 15,
   "manual_correction_hint": { "fields": ["marca", "modelo", "tipo"] },
-  "debug": { "processing_time_ms": 120, "model_version": "scankey-v2-prod" }
+  "debug": { "processing_time_ms": 120, "model_version": "scankey-v2-prod", "roi_source": "model" }
 }

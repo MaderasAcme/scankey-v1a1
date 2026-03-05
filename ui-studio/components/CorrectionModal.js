@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Card } from './ui/Card';
 import { Button } from './ui/Button';
-import { copy } from '../utils/copy';
 
 const FIELD_LABELS = {
   marca: 'Marca',

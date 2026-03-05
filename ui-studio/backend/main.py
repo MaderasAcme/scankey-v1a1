@@ -2,11 +2,16 @@
 import time
 import uuid
 import random
+import json
+import os
+from pathlib import Path
 from typing import Optional, List
 from fastapi import FastAPI, UploadFile, File, Form, HTTPException, Request, Header
 from fastapi.middleware.cors import CORSMiddleware
 from .schemas import AnalyzeResponse, FeedbackRequest, HealthResponse
 from .utils.normalize import normalize_engine_output
+from .utils.ab_fusion import fuse_ab_responses
+from .utils.ocr_gate_mock import apply_ocr_gate_mock
 from .utils.logging import logger, setup_logging
 from .utils.rate_limit import is_rate_limited
 import os
@@ -93,7 +98,9 @@ async def analyze_key(
     front: Optional[UploadFile] = File(None),
     back: Optional[UploadFile] = File(None),
     image_front: Optional[UploadFile] = File(None),
-    image_back: Optional[UploadFile] = File(None)
+    image_back: Optional[UploadFile] = File(None),
+    modo: Optional[str] = Form(None),
+    mock_low_confidence: Optional[str] = Form(None),
 ):
     start_time = time.time()
     request_id = getattr(request.state, "request_id", "unknown")
@@ -113,20 +120,41 @@ async def analyze_key(
     if f_file.content_type not in ["image/jpeg", "image/png"]:
          raise HTTPException(status_code=415, detail="Formato no soportado.")
 
-    # Simulación del motor de análisis
+    # Simulación del motor con fusión A/B (consenso: Yale en ambos lados)
     input_id = f"sk_{uuid.uuid4().hex[:12]}"
     proc_time = int((time.time() - start_time) * 1000)
-    
-    # Mock data para normalización
-    raw_output = {
-        "results": [
-            {"brand": "Yale", "type": "Serreta", "confidence": 0.96, "explain_text": "Coincidencia exacta Yale."},
-            {"brand": "Tesa", "type": "Serreta", "confidence": 0.72, "explain_text": "Perfil similar."},
-            {"brand": "Lince", "type": "Serreta", "confidence": 0.40, "explain_text": "Baja probabilidad."}
+
+    force_low = (mock_low_confidence or "").strip().lower() in ("1", "true", "yes")
+    if force_low:
+        results_a = [
+            {"brand": "Desconocido", "model": None, "type": "Serreta", "confidence": 0.45, "explain_text": "Baja certeza.", "compatibility_tags": []},
+            {"brand": "Lince", "model": "C5", "type": "Serreta", "confidence": 0.30, "explain_text": "Baja probabilidad.", "compatibility_tags": []},
+            {"type": "No identificado", "confidence": 0.0, "explain_text": "Sin más candidatos.", "compatibility_tags": []},
         ]
-    }
-    
+        results_b = [
+            {"brand": "Desconocido", "model": None, "type": "Serreta", "confidence": 0.40, "explain_text": "Baja certeza.", "compatibility_tags": []},
+            {"brand": "Lince", "model": "C5", "type": "Serreta", "confidence": 0.28, "explain_text": "Baja probabilidad.", "compatibility_tags": []},
+            {"type": "No identificado", "confidence": 0.0, "explain_text": "Sin más candidatos.", "compatibility_tags": []},
+        ]
+    else:
+        results_a = [
+            {"brand": "Yale", "model": "24D", "type": "Serreta", "confidence": 0.94, "explain_text": "Coincidencia Yale frontal.", "compatibility_tags": ["yale-compatible"]},
+            {"brand": "Tesa", "model": "TE5", "type": "Serreta", "confidence": 0.70, "explain_text": "Perfil similar.", "compatibility_tags": []},
+            {"brand": "Lince", "model": "C5", "type": "Serreta", "confidence": 0.38, "explain_text": "Baja probabilidad.", "compatibility_tags": []},
+        ]
+        results_b = [
+            {"brand": "Yale", "model": "24D", "type": "Serreta", "confidence": 0.92, "explain_text": "Coincidencia Yale trasera.", "compatibility_tags": ["yale-compatible"]},
+            {"brand": "Tesa", "model": "TE5", "type": "Serreta", "confidence": 0.68, "explain_text": "Perfil similar.", "compatibility_tags": []},
+            {"brand": "Lince", "model": "C5", "type": "Serreta", "confidence": 0.35, "explain_text": "Baja probabilidad.", "compatibility_tags": []},
+        ]
+    fused_results = fuse_ab_responses(results_a, results_b)
+
+    raw_output = {"results": fused_results}
     normalized = normalize_engine_output(raw_output, input_id, proc_time)
+
+    # OCR gated: si low_confidence, añade ocr_hint/ocr_detail
+    modo_taller = (modo or "").strip().lower() == "taller"
+    normalized = apply_ocr_gate_mock(normalized, is_workshop=modo_taller)
 
     # LOG ESTRUCTURADO DE NEGOCIO (OBJETIVO 2)
     logger.info("Key analysis finished", extra={
@@ -141,12 +169,33 @@ async def analyze_key(
 
     return normalized
 
+def _store_correction_always(payload: dict) -> None:
+    """Guardado de correcciones manuales siempre (solo metadatos; nunca imágenes)."""
+    try:
+        dir_path = os.getenv("FEEDBACK_CORRECTIONS_DIR", "").strip() or os.path.join(os.path.dirname(__file__), "..", "feedback_corrections")
+        path = Path(dir_path)
+        path.mkdir(parents=True, exist_ok=True)
+        fname = f"{payload.get('input_id', uuid.uuid4().hex)}_{int(time.time())}.json"
+        out_path = path / fname
+        with open(out_path, "w", encoding="utf-8") as f:
+            json.dump(payload, f, ensure_ascii=False, indent=0)
+    except Exception:
+        pass
+
+
 @app.post("/api/feedback")
 async def receive_feedback(request: Request, feedback: FeedbackRequest):
     request_id = getattr(request.state, "request_id", "unknown")
+    # Logs sin imágenes: solo metadatos
     logger.info("Feedback received", extra={
         "request_id": request_id,
         "input_id": feedback.input_id,
-        "correction": feedback.correction
+        "correction": feedback.correction,
     })
+    try:
+        payload = feedback.model_dump(mode="json") if hasattr(feedback, "model_dump") else feedback.dict()
+    except Exception:
+        payload = {"input_id": feedback.input_id, "correction": feedback.correction, "manual_data": feedback.manual_data}
+    if feedback.correction:
+        _store_correction_always(payload)
     return {"status": "ok"}
