@@ -1,5 +1,7 @@
 # ScanKey V1A1 (Expo)
 
+**Web oficial:** ui-studio · **Producción:** scankeyapp.com
+
 ## Requisitos
 - Node 18+
 - Expo (se usa vía `npx`)
@@ -32,7 +34,9 @@ npx expo start
 ## Deploy / Pages
 El sitio web se publica en GitHub Pages (Source: **GitHub Actions**). Ver `docs/PAGES_SOURCE.md` para configuración de Pages, dominio y **variables de producción** (`VITE_GATEWAY_BASE_URL`, `VITE_API_KEY`).
 
-**Troubleshooting caché:** Si ves versión antigua tras deploy, ver [docs/CLOUDFLARE_CACHE.md](docs/CLOUDFLARE_CACHE.md) para reglas anti-cache y checklist. Verificación automática: `npm run verify:cache` (bash) o `powershell -File scripts/verify_cloudflare_cache.ps1` (Windows).
+**Troubleshooting caché:** [docs/CLOUDFLARE_CACHE.md](docs/CLOUDFLARE_CACHE.md) — reglas anti-cache y checklist.
+
+**Cómo verificar versión:** `deploy-ping.txt` + `ui-source.txt` en producción (https://scankeyapp.com/deploy-ping.txt).
 
 ## QA
 

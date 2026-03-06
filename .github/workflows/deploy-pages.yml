@@ -79,10 +79,6 @@ jobs:
         run: |
           echo "scankeyapp.com" > dist/CNAME
 
-      - name: Upload artifact (SOLO ui-studio/dist)
-        run: |
-          test -f ui-studio/dist/index.html || (echo "ERROR: upload path must be ui-studio/dist" && exit 1)
-          echo "OK: uploading ui-studio/dist only"
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3
         with:
