@@ -3,11 +3,14 @@
  * Lead Engineer - Connectivity Helper
  */
 
+/** Seguro ante SSR/Node: no lanza si navigator falta */
 export const getConnectivitySnapshot = () => {
-  if (typeof navigator !== 'undefined' && 'onLine' in navigator) {
-    return navigator.onLine;
-  }
-  return true; // Asumir online si no se puede detectar
+  try {
+    if (typeof navigator !== 'undefined' && navigator != null && 'onLine' in navigator) {
+      return Boolean(navigator.onLine);
+    }
+  } catch (_) {}
+  return true;
 };
 
 export const subscribeConnectivity = (callback) => {

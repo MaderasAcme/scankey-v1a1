@@ -13,11 +13,15 @@ PATTERNS=(
   'AIza[0-9A-Za-z\-_]{35}'                 # Google API Keys
   'ghp_[0-9A-Za-z]{36}'                    # GitHub Personal Access Token
   'github_pat_[0-9A-Za-z_]{80}'            # GitHub Personal Access Token (new format)
-  '-----BEGIN (RSA|DSA|EC|PGP) PRIVATE KEY-----' # Generic Private Keys
+  '-----BEGIN (RSA|DSA|EC|PGP) PRIVATE KEY-----' # Generic Private Keys / BEGIN PRIVATE KEY
+  '-----BEGIN PRIVATE KEY-----'            # PKCS#8 Private Key
   'sk-[a-zA-Z0-9]{32,}'                     # OpenAI, Anthropic, etc. API Keys
   'private_key'                            # Generic private key keyword
   'refresh_token'                          # Refresh tokens
-  'recovery code'
+  'recovery.?code'                         # Recovery codes (2FA backup)
+  'api_key\s*[=:]\s*["\047][^"\047]{10,}'  # api_key= or api_key: with value
+  'token\s*[=:]\s*["\047][^"\047]{20,}'    # token= or token: with long value
+  'credentials\.json'                      # Google credentials file reference
   'xoxb-'                                  # Slack Bot Tokens
 )
 

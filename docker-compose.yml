@@ -1,0 +1,51 @@
+# ScanKey - Compose base (sin defaults de dev)
+# Para desarrollo local: usa docker-compose.local.yml que sí define SCN_LOCAL_DEV, etc.
+# Levantar: docker compose -f docker-compose.local.yml up -d
+# Apagar:   docker compose down
+
+services:
+  motor:
+    build:
+      context: .
+      dockerfile: motor/Dockerfile
+    ports:
+      - "8081:8081"
+    env_file:
+      - path: .env.local
+        required: false
+    environment:
+      PORT: 8081
+      MODEL_PATH: /tmp/modelo_llaves.onnx
+    volumes:
+      - motor_cache:/tmp
+    healthcheck:
+      test: ["CMD-SHELL", "python -c \"import urllib.request; urllib.request.urlopen('http://localhost:8081/health')\" || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+  gateway:
+    build:
+      context: .
+      dockerfile: gateway/Dockerfile
+    ports:
+      - "8080:8080"
+    env_file:
+      - path: .env.local
+        required: false
+    environment:
+      PORT: 8080
+      MOTOR_URL: ${MOTOR_URL:-http://motor:8081}
+      SCN_FEATURE_GATEWAY_IDTOKEN_PROXY_ENABLED: "false"
+    depends_on:
+      motor:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "python -c \"import urllib.request; urllib.request.urlopen('http://localhost:8080/health')\" || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+volumes:
+  motor_cache:

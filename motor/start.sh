@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-: "${PORT:=8080}"
+: "${PORT:=8081}"
 : "${GUNICORN_WORKERS:=1}"
 : "${GUNICORN_TIMEOUT:=900}"
 : "${GUNICORN_GRACEFUL_TIMEOUT:=900}"

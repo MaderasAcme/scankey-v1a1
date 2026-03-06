@@ -1,7 +1,8 @@
 
 /**
  * Lead Engineer - Memory Management
- * LRU Cache simple para evitar recalcular normalizaciones pesadas.
+ * Cache ligera en memoria para normalizaciones de respuesta del motor.
+ * LRU limit 30 entradas.
  */
 
 class SimpleLRU {

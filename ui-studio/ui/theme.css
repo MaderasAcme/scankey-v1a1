@@ -1,0 +1,45 @@
+/**
+ * ScanKey Design System — tokens CSS
+ * Estética: fondo negro, cards gris oscuro, border sutil, accent azul (Revolut-style)
+ */
+:root {
+  /* Colors */
+  --bg: #000000;
+  --bg-elevated: #0a0a0a;
+  --card: #141414;
+  --card-hover: #1a1a1a;
+  --border: #27272a;
+  --border-focus: #3f3f46;
+  --text: #fafafa;
+  --text-secondary: #a1a1aa;
+  --muted: #71717a;
+  --accent: #3b82f6;
+  --accent-hover: #2563eb;
+  --danger: #ef4444;
+  --danger-muted: rgba(239, 68, 68, 0.15);
+  --warning: #f59e0b;
+  --warning-muted: rgba(245, 158, 11, 0.15);
+  --success: #22c55e;
+  --success-muted: rgba(34, 197, 94, 0.15);
+  --info: #3b82f6;
+  --info-muted: rgba(59, 130, 246, 0.15);
+
+  /* Radius */
+  --r-sm: 8px;
+  --r-md: 12px;
+  --r-lg: 16px;
+  --r-xl: 20px;
+  --r-2xl: 24px;
+
+  /* Spacing */
+  --s-1: 4px;
+  --s-2: 8px;
+  --s-3: 12px;
+  --s-4: 16px;
+  --s-5: 20px;
+  --s-6: 24px;
+
+  /* Shadow */
+  --shadow-1: 0 4px 12px rgba(0, 0, 0, 0.4);
+  --shadow-2: 0 8px 24px rgba(0, 0, 0, 0.5);
+}

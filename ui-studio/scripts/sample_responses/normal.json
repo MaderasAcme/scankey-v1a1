@@ -15,7 +15,8 @@
       "type": "Serreta",
       "confidence": 0.82,
       "explain_text": "Probable perfil MCM estándar.",
-      "compatibility_tags": ["mcm-series"]
+      "compatibility_tags": ["mcm-series"],
+      "crop_bbox": { "x": 0, "y": 0, "w": 1, "h": 1 }
     },
     {
       "rank": 2,
@@ -24,20 +25,23 @@
       "type": "Serreta",
       "confidence": 0.65,
       "explain_text": "Perfil similar utilizado por Lince.",
-      "compatibility_tags": ["lince-compatible"]
+      "compatibility_tags": ["lince-compatible"],
+      "crop_bbox": { "x": 0, "y": 0, "w": 1, "h": 1 }
     },
     {
       "rank": 3,
       "type": "No identificado",
       "confidence": 0.0,
       "explain_text": "Sin más candidatos.",
-      "compatibility_tags": []
+      "compatibility_tags": [],
+      "crop_bbox": { "x": 0, "y": 0, "w": 1, "h": 1 }
     }
   ],
   "high_confidence": false,
   "low_confidence": false,
   "should_store_sample": true,
+  "storage_probability": 0.75,
   "current_samples_for_candidate": 8,
   "manual_correction_hint": { "fields": ["marca", "modelo", "tipo"] },
-  "debug": { "processing_time_ms": 180, "model_version": "scankey-v2-prod" }
+  "debug": { "processing_time_ms": 180, "model_version": "scankey-v2-prod", "roi_source": "fallback" }
 }

@@ -29,10 +29,16 @@ El sistema cuenta con un endpoint `/health` y una herramienta de diagnóstico in
 ### Logging Estructurado
 Los logs del backend están formateados en JSON para una integración nativa con Google Cloud Logging, facilitando la trazabilidad mediante `request_id`.
 
+## 📱 Ventanas UI (v2.1)
+- **Results:** Modal de corrección manual (manual_correction_hint.fields), selección TOP3, feedback robusto.
+- **History:** Lista de scans con estado (LOW/HIGH, top1, timestamp), detalle y feedback pendiente.
+- **Taller:** Estado del sistema (gateway/motor health), cola de feedback, sincronizar, configuración local.
+- **Guide:** Guía de captura y errores típicos (blur/glare/fondo/encuadre/A-B).
+- **Profile:** Preferencias (modo, mostrar debug), borrar datos locales (historial + cola + settings).
+
 ## 🔒 Seguridad y Privacidad
-- **Cero persistencia local de imágenes.**
+- **Cero persistencia local de imágenes.** Solo metadatos (scn_history, scn_feedback_queue, scn_settings).
 - **Logs anonimizados:** Solo telemetría técnica, nunca contenido visual.
-- **Protocolo de PIN:** Acceso al taller protegido por código de seguridad.
 
 ---
 **Lead Engineer Note:** Observabilidad y Runbook integrados para garantizar disponibilidad y seguridad en entornos de producción.

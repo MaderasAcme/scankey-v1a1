@@ -1,7 +1,24 @@
 # GitHub Pages — Origen del deploy
 
+## Source of truth
+**ui-studio/dist** — scankeyapp.com sirve SOLO el build de ui-studio.
+
+Si ves inputs de Base URL / API Key o botón "Probar conexión", estás en **UI vieja** → revisa redirect de www o cache del navegador.
+
 ## Resumen
 El sitio web se publica con **GitHub Actions** como fuente (no con rama `gh-pages`).
+
+## Variables de producción (obligatorias)
+
+Para que scankeyapp.com use el gateway real (Cloud Run), configura las **Repository variables** en GitHub:
+
+1. Repo → Settings → Secrets and variables → Actions
+2. Pestaña **Variables** → New repository variable
+3. Añade:
+   - **VITE_GATEWAY_BASE_URL** (obligatorio): URL del gateway en Cloud Run, ej. `https://scankey-gateway-xxxxx.run.app`
+   - **VITE_API_KEY** (opcional): API key si el gateway la requiere
+
+El build de Pages **fallará** si `VITE_GATEWAY_BASE_URL` está vacío. Las variables de Vite se inyectan en **build-time**; GitHub Pages no puede leer `.env.local` en runtime.
 
 ## Settings → Pages (comprobar manualmente)
 1. Repo → Settings → Pages

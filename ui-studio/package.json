@@ -5,7 +5,8 @@
   "scripts": {
     "dev": "npm run dev:web",
     "dev:web": "vite --host --port 5173",
-    "build:web": "vite build",
+    "build": "vite build && node scripts/ensure_deploy_ping.js",
+    "build:web": "vite build && node scripts/ensure_deploy_ping.js",
     "preview:web": "vite preview --host --port 5173",
     "expo:start": "expo start",
     "expo:web": "expo start --web --port 8081",
@@ -14,10 +15,24 @@
     "web": "expo start --web",
     "build:preview": "eas build -p android --profile preview",
     "build:prod": "eas build -p android --profile production",
-    "qa:contract": "node scripts/contract_check.js scripts/sample_responses/normal.json",
+    "qa:contract": "node scripts/contract_check.js scripts/sample_responses/normal.json scripts/sample_responses/low_confidence.json scripts/sample_responses/high_confidence.json scripts/sample_responses/ab_consensus.json scripts/sample_responses/ab_conflict.json scripts/sample_responses/with_quality_debug.json scripts/sample_responses/with_quality_warning.json scripts/sample_responses/with_override_used.json",
     "qa:secrets": "bash scripts/verify_no_secrets.sh",
     "qa:smoke": "bash scripts/smoke_test_backend.sh",
-    "qa:all": "npm run qa:contract && npm run qa:secrets && npm run qa:smoke"
+    "qa:pages": "bash scripts/verify_pages_source.sh",
+    "qa:bbox-tests": "cd ../gateway && python -m pytest tests/test_roi_bbox.py -v",
+    "qa:ab-fusion": "node scripts/test_ab_fusion.js",
+    "qa:ocr-tests": "cd .. && python -m pytest gateway/tests/test_ocr_gate.py -v",
+    "qa:ranking-tests": "cd .. && python -m pytest gateway/tests/test_manufacturer_ranking.py -v",
+    "qa:size-class-tests": "cd .. && python -m pytest gateway/tests/test_size_class.py -v",
+    "qa:governance-tests": "cd .. && python -m pytest gateway/tests/test_dataset_governance.py -v",
+    "qa:quality-gate-tests": "cd .. && python -m pytest gateway/tests/test_quality_gate.py gateway/tests/test_quality_gate_active.py -v",
+    "qa:risk-engine-tests": "cd .. && python -m pytest gateway/tests/test_risk_engine.py -v",
+    "qa:no-ts": "node scripts/verify_no_ts.js",
+    "qa:single-ui": "node scripts/verify_single_ui.js",
+    "qa:all": "npm run qa:contract && npm run qa:secrets && npm run qa:smoke && npm run qa:pages && npm run qa:no-ts && npm run qa:single-ui",
+    "stack:up": "docker compose -f ../docker-compose.local.yml up -d --build",
+    "stack:down": "docker compose -f ../docker-compose.local.yml down",
+    "stack:logs": "docker compose -f ../docker-compose.local.yml logs -f"
   },
   "dependencies": {
     "@expo/metro-runtime": "~3.2.3",
@@ -34,14 +49,11 @@
   },
   "devDependencies": {
     "@babel/core": "^7.20.0",
-    "@types/react": "^18.2.0",
-    "@types/react-dom": "^18.2.0",
     "@vitejs/plugin-react": "^4.2.0",
     "babel-preset-expo": "^55.0.10",
     "prettier-plugin-tailwindcss": "^0.5.14",
     "tailwindcss": "^3.4.19",
     "tailwindcss-animate": "^1.0.7",
-    "typescript": "^5.0.0",
     "vite": "^5.0.0"
   }
 }

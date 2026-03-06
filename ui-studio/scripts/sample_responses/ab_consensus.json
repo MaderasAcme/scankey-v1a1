@@ -1,0 +1,48 @@
+{
+  "input_id": "sk_ab_consensus_001",
+  "timestamp": "2025-05-20T11:00:00Z",
+  "manufacturer_hint": {
+    "found": true,
+    "name": "Yale",
+    "confidence": 0.90
+  },
+  "results": [
+    {
+      "rank": 1,
+      "brand": "Yale",
+      "model": "24D",
+      "type": "Serreta",
+      "confidence": 0.98,
+      "explain_text": "Coincidencia exacta Yale. Consenso A/B: coincidencia frontal y trasera.",
+      "compatibility_tags": ["yale-compatible", "standard"],
+      "crop_bbox": { "x": 0, "y": 0, "w": 1, "h": 1 }
+    },
+    {
+      "rank": 2,
+      "brand": "Tesa",
+      "model": "TE5",
+      "type": "Serreta",
+      "confidence": 0.72,
+      "explain_text": "Perfil similar.",
+      "compatibility_tags": [],
+      "crop_bbox": { "x": 0, "y": 0, "w": 1, "h": 1 }
+    },
+    {
+      "rank": 3,
+      "brand": "Lince",
+      "model": "C5",
+      "type": "Serreta",
+      "confidence": 0.42,
+      "explain_text": "Baja probabilidad.",
+      "compatibility_tags": [],
+      "crop_bbox": { "x": 0, "y": 0, "w": 1, "h": 1 }
+    }
+  ],
+  "high_confidence": true,
+  "low_confidence": false,
+  "should_store_sample": true,
+  "storage_probability": 0.75,
+  "current_samples_for_candidate": 12,
+  "manual_correction_hint": { "fields": ["marca", "modelo", "tipo"] },
+  "debug": { "processing_time_ms": 150, "model_version": "scankey-v2-prod", "roi_source": "fallback" }
+}
