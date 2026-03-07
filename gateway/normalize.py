@@ -9,7 +9,7 @@ from datetime import datetime, timezone
 from typing import Dict, Any, List, Optional
 
 from roi_bbox import ensure_valid_crop_bbox, apply_fallback_penalty, clamp_confidence, FULL_FRAME
-from size_class import extract_size_class_debug_only
+from common.size_class import extract_size_class_debug_only
 
 SCN_FEATURE_RISK_ENGINE_PASSIVE = (
     os.getenv("SCN_FEATURE_RISK_ENGINE_PASSIVE", "true").lower() == "true"

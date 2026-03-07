@@ -126,3 +126,21 @@ def size_class_explain_suffix(size_class: Optional[str], applied: bool) -> str:
     if not applied or not size_class:
         return ""
     return f" Desempate por tamaño ({size_class})."
+
+
+def extract_size_class_debug_only(
+    items: List[Dict[str, Any]],
+    get_bbox_fn,
+) -> Tuple[Optional[str], bool]:
+    """
+    P0.2: debug-only. Extrae ref size_class del primer ROI fiable.
+    NO reordena. Returns: (ref_size_class, roi_reliable_found).
+    """
+    if not items:
+        return (None, False)
+    for it in items[:3]:
+        bbox = get_bbox_fn(it)
+        feat = extract_size_features(bbox)
+        if feat["roi_reliable"] and feat["size_class"]:
+            return (feat["size_class"], True)
+    return (None, False)

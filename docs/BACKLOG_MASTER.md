@@ -2,6 +2,15 @@
 
 ---
 
+## BLOQUE 5 — Single Source of Truth (common/) ✅
+
+**Regla de arquitectura:**
+- `common/` = helpers compartidos estables (size_class, quality_gate, risk_engine, policy_engine)
+- `gateway/normalize.py` = **normalización oficial** del contrato ScanKey
+- `ui-studio/backend/utils/normalize.py` = **adaptador mock dev** — delega en gateway, sin duplicar lógica
+
+---
+
 ## ROADMAP TALLER (B) — PRIORIDADES
 
 ### P0
