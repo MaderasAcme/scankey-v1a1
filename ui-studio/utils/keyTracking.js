@@ -13,6 +13,7 @@ const MIN_ASPECT = 1.8;
 const MAX_ASPECT = 8;
 const MIN_COVERAGE = 0.02;
 const MAX_COVERAGE = 0.5;
+const MIN_COMPONENT_PIXELS = 25;
 
 /**
  * Clamp value to [0, 1].
@@ -22,71 +23,106 @@ function clamp01(v) {
 }
 
 /**
- * Convert frame to grayscale luminance and detect edges via simple gradient.
- * Returns { bbox, edgeCount, totalPixels } or null if no candidate.
+ * Flood-fill 4-connected para etiquetar región. Modifica labels en sitio.
+ */
+function floodFill(edges, labels, w, h, x, y, label) {
+  const stack = [[x, y]];
+  const idx = (xx, yy) => yy * w + xx;
+  while (stack.length) {
+    const [cx, cy] = stack.pop();
+    if (cx < 0 || cx >= w || cy < 0 || cy >= h) continue;
+    if (!edges[idx(cx, cy)] || labels[idx(cx, cy)]) continue;
+    labels[idx(cx, cy)] = label;
+    stack.push([cx + 1, cy], [cx - 1, cy], [cx, cy + 1], [cx, cy - 1]);
+  }
+}
+
+/**
+ * Detecta bordes, agrupa por componentes conectadas, elige región dominante más razonable.
+ * Evita bbox de toda la mesa/fondo; filtra ruido y componentes pequeñas.
  */
 function findKeyCandidate(ctx, w, h) {
   const imgData = ctx.getImageData(0, 0, w, h);
   const { data } = imgData;
   const edgeThreshold = 40;
 
-  // Simple horizontal + vertical gradient for edge detection
   const edges = new Uint8Array(w * h);
-  let edgeCount = 0;
-
   for (let y = 1; y < h - 1; y++) {
     for (let x = 1; x < w - 1; x++) {
       const i = (y * w + x) << 2;
-      const l = (data[i] * 0.299 + data[i + 1] * 0.587 + data[i + 2] * 0.114) | 0;
       const lR = (data[i + 4] * 0.299 + data[i + 5] * 0.587 + data[i + 6] * 0.114) | 0;
       const lL = (data[i - 4] * 0.299 + data[i - 5] * 0.587 + data[i - 6] * 0.114) | 0;
       const lD = (data[(y + 1) * w * 4 + x * 4] * 0.299 + data[(y + 1) * w * 4 + x * 4 + 1] * 0.587 + data[(y + 1) * w * 4 + x * 4 + 2] * 0.114) | 0;
       const lU = (data[(y - 1) * w * 4 + x * 4] * 0.299 + data[(y - 1) * w * 4 + x * 4 + 1] * 0.587 + data[(y - 1) * w * 4 + x * 4 + 2] * 0.114) | 0;
-
       const gx = Math.abs(lR - lL);
       const gy = Math.abs(lD - lU);
       const mag = Math.sqrt(gx * gx + gy * gy);
-      if (mag > edgeThreshold) {
-        edges[y * w + x] = 1;
-        edgeCount++;
-      }
+      if (mag > edgeThreshold) edges[y * w + x] = 1;
     }
   }
 
-  if (edgeCount < 20) return null;
+  const labels = new Array(w * h);
+  labels.fill(0);
+  let nextLabel = 1;
+  const regions = [];
 
-  // Bounding box of edge pixels
-  let minX = w, minY = h, maxX = 0, maxY = 0;
   for (let y = 0; y < h; y++) {
     for (let x = 0; x < w; x++) {
-      if (edges[y * w + x]) {
-        if (x < minX) minX = x;
-        if (x > maxX) maxX = x;
-        if (y < minY) minY = y;
-        if (y > maxY) maxY = y;
+      const i = y * w + x;
+      if (edges[i] && !labels[i]) {
+        floodFill(edges, labels, w, h, x, y, nextLabel);
+        regions.push(nextLabel);
+        nextLabel++;
       }
     }
   }
 
-  const bw = maxX - minX + 1;
-  const bh = maxY - minY + 1;
-  if (bw < 5 || bh < 5) return null;
+  const totalPixels = w * h;
+  const candidates = [];
 
-  const aspect = Math.max(bw, bh) / Math.min(bw, bh);
-  if (aspect < MIN_ASPECT || aspect > MAX_ASPECT) return null;
+  for (const label of regions) {
+    let minX = w, minY = h, maxX = 0, maxY = 0;
+    let count = 0;
+    for (let i = 0; i < labels.length; i++) {
+      if (labels[i] !== label) continue;
+      count++;
+      const x = i % w;
+      const y = (i / w) | 0;
+      if (x < minX) minX = x;
+      if (x > maxX) maxX = x;
+      if (y < minY) minY = y;
+      if (y > maxY) maxY = y;
+    }
 
-  return {
-    x: minX,
-    y: minY,
-    w: bw,
-    h: bh,
-    cx: minX + bw / 2,
-    cy: minY + bh / 2,
-    aspect,
-    edgeCount,
-    area: bw * bh,
-    totalPixels: w * h,
-  };
+    if (count < MIN_COMPONENT_PIXELS) continue;
+
+    const bw = maxX - minX + 1;
+    const bh = maxY - minY + 1;
+    const area = bw * bh;
+    const aspect = Math.max(bw, bh) / Math.min(bw, bh);
+    const coverage = area / totalPixels;
+
+    if (aspect < MIN_ASPECT || aspect > MAX_ASPECT) continue;
+    if (coverage > MAX_COVERAGE) continue;
+
+    const idealAspect = 4;
+    const aspectScore = 1 - Math.abs(aspect - idealAspect) / idealAspect;
+    const coverageScore = coverage >= MIN_COVERAGE && coverage <= MAX_COVERAGE
+      ? 1 : Math.max(0, 1 - Math.abs(coverage - MIN_COVERAGE) / MIN_COVERAGE);
+
+    candidates.push({
+      x: minX, y: minY, w: bw, h: bh,
+      cx: minX + bw / 2, cy: minY + bh / 2,
+      aspect, edgeCount: count, area, totalPixels,
+      _score: aspectScore * 0.6 + coverageScore * 0.4,
+    });
+  }
+
+  if (candidates.length === 0) return null;
+  candidates.sort((a, b) => b._score - a._score);
+  const best = candidates[0];
+  delete best._score;
+  return best;
 }
 
 /**
@@ -160,22 +196,34 @@ function computeScores(candidate, frameW, frameH, history) {
 
 /**
  * Mensaje de guía UX según scores.
+ * Casos separados: no detectada | descentrada | pequeña | inestable | válida.
  */
 export function getGuidanceMessage(result) {
-  if (!result.key_detected) {
-    if (result.coverage_score < 0.3) return 'Acércala un poco';
-    return 'Centra la llave';
-  }
+  if (!result.key_detected) return 'Busca la llave';
   const { centering_score, coverage_score, stability_score } = result;
   if (centering_score < 0.5) return 'Centra la llave';
   if (coverage_score < 0.4) return 'Acércala un poco';
   if (stability_score < 0.5) return 'Mantén el móvil quieto';
-  if (result.roi_score >= 0.7) return 'Captura válida';
-  return 'Llave detectada';
+  return 'Captura válida';
+}
+
+let _analyzeCanvas = null;
+let _analyzeCtx = null;
+
+function getAnalyzeCanvas() {
+  if (typeof document === 'undefined') return null;
+  if (!_analyzeCanvas) {
+    _analyzeCanvas = document.createElement('canvas');
+    _analyzeCanvas.width = ANALYZE_WIDTH;
+    _analyzeCanvas.height = ANALYZE_HEIGHT;
+    _analyzeCtx = _analyzeCanvas.getContext('2d');
+  }
+  return { canvas: _analyzeCanvas, ctx: _analyzeCtx };
 }
 
 /**
  * Analiza un frame de video y devuelve el resultado de tracking.
+ * Reutiliza un canvas interno; no crea uno nuevo por frame.
  *
  * @param {HTMLVideoElement} video - elemento de video con el stream
  * @param {Object} prevState - { history: Array<{cx,cy}>, lastResult }
@@ -189,10 +237,7 @@ export function analyzeFrame(video, prevState = {}) {
     return { result: makeEmptyResult(), nextState: prevState };
   }
 
-  const canvas = document.createElement('canvas');
-  canvas.width = ANALYZE_WIDTH;
-  canvas.height = ANALYZE_HEIGHT;
-  const ctx = canvas.getContext('2d');
+  const { ctx } = getAnalyzeCanvas() || {};
   if (!ctx) return { result: makeEmptyResult(), nextState: prevState };
 
   ctx.drawImage(video, 0, 0, vw, vh, 0, 0, ANALYZE_WIDTH, ANALYZE_HEIGHT);
