@@ -99,7 +99,7 @@ export function ResultsScreen({
         await onConfirm(payload);
         onBack?.();
       } catch (e) {
-        if (onQueueFeedback) onQueueFeedback(payload);
+        if (onQueueFeedback) await onQueueFeedback(payload);
       } finally {
         setConfirming(false);
       }
@@ -118,7 +118,7 @@ export function ResultsScreen({
         setShowCorrectionModal(false);
         if (forceCorrection) onBack?.();
       } catch (e) {
-        if (onQueueFeedback) onQueueFeedback(payload);
+        if (onQueueFeedback) await onQueueFeedback(payload);
         setShowCorrectionModal(false);
         if (forceCorrection) onBack?.();
       } finally {

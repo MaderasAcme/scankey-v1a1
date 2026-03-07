@@ -127,8 +127,8 @@ export default function App() {
     });
   }, []);
 
-  const handleQueueFeedback = useCallback((payload) => {
-    enqueueFeedback({
+  const handleQueueFeedback = useCallback(async (payload) => {
+    await enqueueFeedback({
       ...payload,
       created_at: new Date().toISOString(),
     });

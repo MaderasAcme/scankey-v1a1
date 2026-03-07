@@ -170,6 +170,8 @@ KEY_BUCKET = os.getenv("KEY_BUCKET", "scankey-dc007-keys")
 KEY_PREFIX = os.getenv("KEY_PREFIX", "ingest").strip("/")
 JOB_PREFIX = os.getenv("JOB_PREFIX", "jobs").strip("/")
 FEEDBACK_PREFIX = os.getenv("FEEDBACK_PREFIX", "feedback").strip("/")
+IDEMPOTENCY_KEYS_PREFIX = os.getenv("IDEMPOTENCY_KEYS_PREFIX", "idempotency_keys").strip("/")
+IDEMPOTENCY_TTL_SECONDS = int(os.getenv("IDEMPOTENCY_TTL_SECONDS", "86400"))  # 24h ventana
 
 # P1.1: QualityGate (soft-block)
 SCN_FEATURE_QUALITY_GATE_ACTIVE = os.getenv("SCN_FEATURE_QUALITY_GATE_ACTIVE", "false").lower() in ("1", "true", "yes")
@@ -653,15 +655,137 @@ async def _job_status_impl(req: Request, job_id: str, process: str = "1"):
         _gcs_put_json(KEY_BUCKET, job_path, job)
         return {"ok": True, **job}
 
+
+# -----------------------------
+# BLOQUE 4.1: Idempotencia feedback
+# -----------------------------
+def _normalize_manual_for_key(payload: Dict[str, Any]) -> Dict[str, str]:
+    """Extrae y normaliza manual_data/manual para hash determinista."""
+    manual = payload.get("manual_data") or payload.get("manual")
+    if not isinstance(manual, dict):
+        return {}
+    out = {}
+    for k, v in sorted(manual.items()):
+        if v is None:
+            out[k] = ""
+        elif isinstance(v, (str, int, float, bool)):
+            out[k] = str(v).strip()
+        else:
+            out[k] = json.dumps(v, sort_keys=True, ensure_ascii=False)
+    return out
+
+
+def _compute_feedback_idempotency_key(payload: Dict[str, Any]) -> str:
+    """
+    Clave determinista para un feedback lógico.
+    Hash de: input_id, selected_id/correction target, correction, manual_data normalizado, fecha truncada.
+    """
+    dt = datetime.now(timezone.utc)
+    date_str = f"{dt.year:04d}-{dt.month:02d}-{dt.day:02d}"
+    input_id = (payload.get("input_id") or payload.get("job_id") or "").strip()
+    selected = (
+        payload.get("selected_id")
+        or payload.get("selected_id_model_ref")
+        or payload.get("id_model_ref")
+        or ""
+    )
+    if not selected and isinstance(payload.get("choice"), dict):
+        selected = payload.get("choice", {}).get("id_model_ref") or payload.get("choice", {}).get("selected_id") or ""
+    correction = bool(payload.get("correction", False))
+    manual_norm = _normalize_manual_for_key(payload)
+    manual_str = json.dumps(manual_norm, sort_keys=True, ensure_ascii=False)
+    chosen_rank = payload.get("chosen_rank") or payload.get("selected_rank")
+    rank_str = str(chosen_rank) if chosen_rank is not None else ""
+    canonical = f"{input_id}|{selected}|{correction}|{rank_str}|{manual_str}|{date_str}"
+    return hashlib.sha256(canonical.encode("utf-8")).hexdigest()
+
+
+def _get_feedback_idempotency_key(req: Request, payload: Dict[str, Any]) -> str:
+    """Obtiene clave: Idempotency-Key header o fallback determinista desde payload."""
+    header_key = (req.headers.get("Idempotency-Key") or req.headers.get("idempotency-key") or "").strip()
+    if header_key and len(header_key) <= 128:
+        return header_key
+    return _compute_feedback_idempotency_key(payload)
+
+
+def _idempotency_registry_path(key: str, date_prefix: str) -> str:
+    return f"{IDEMPOTENCY_KEYS_PREFIX}/{date_prefix}/{key}.json"
+
+
+def _idempotency_local_dir() -> str:
+    """Directorio local para registro idempotencia cuando GCS no está disponible."""
+    base = os.getenv("IDEMPOTENCY_LOCAL_DIR", "").strip() or os.path.join(os.path.dirname(__file__), ".idempotency_keys")
+    os.makedirs(base, exist_ok=True)
+    return base
+
+
+def _check_idempotency_seen(key: str) -> tuple[bool, Optional[Dict[str, Any]]]:
+    """Devuelve (visto, respuesta_cacheada). GCS o fichero local según disponibilidad."""
+    dp = _date_prefix(datetime.now(timezone.utc))
+    if _gcs_ok():
+        path = _idempotency_registry_path(key, dp)
+        try:
+            rec = _gcs_get_json(KEY_BUCKET, path)
+        except FileNotFoundError:
+            return False, None
+    else:
+        local_dir = _idempotency_local_dir()
+        subdir = os.path.join(local_dir, dp.replace("/", os.sep))
+        os.makedirs(subdir, exist_ok=True)
+        fpath = os.path.join(subdir, f"{key}.json")
+        try:
+            with open(fpath, "r", encoding="utf-8") as f:
+                rec = json.load(f)
+        except FileNotFoundError:
+            return False, None
+        except (json.JSONDecodeError, OSError):
+            return False, None
+    first_seen = rec.get("first_seen_unix", 0)
+    if time.time() - first_seen > IDEMPOTENCY_TTL_SECONDS:
+        return False, None
+    return True, rec.get("response")
+
+
+def _store_idempotency(key: str, response: Dict[str, Any]) -> None:
+    """Registra clave idempotente con respuesta cacheada. GCS o fichero local."""
+    dp = _date_prefix(datetime.now(timezone.utc))
+    rec = {"first_seen_unix": int(time.time()), "first_seen_iso": _now_iso(), "response": response}
+    if _gcs_ok():
+        path = _idempotency_registry_path(key, dp)
+        _gcs_put_json(KEY_BUCKET, path, rec)
+    else:
+        local_dir = _idempotency_local_dir()
+        subdir = os.path.join(local_dir, dp.replace("/", os.sep))
+        os.makedirs(subdir, exist_ok=True)
+        fpath = os.path.join(subdir, f"{key}.json")
+        try:
+            with open(fpath, "w", encoding="utf-8") as f:
+                json.dump(rec, f, ensure_ascii=False, indent=None)
+        except OSError:
+            _log.warning("No se pudo guardar idempotency key local: %s", fpath)
+
+
 @APP.post("/api/feedback")
 async def feedback(req: Request, _: bool = Depends(require_apikey)):
     try:
         payload = await req.json()
     except Exception:
         raise HTTPException(400, "JSON inválido")
+    if not isinstance(payload, dict):
+        payload = {}
+
+    idem_key = _get_feedback_idempotency_key(req, payload)
+    seen, cached = _check_idempotency_seen(idem_key)
+    if seen and cached is not None:
+        _log.info("feedback_idempotent", extra={"idempotency_key": idem_key[:16] + "..."})
+        out = dict(cached) if isinstance(cached, dict) else {"ok": True}
+        out["deduped"] = True
+        return JSONResponse(content=out)
 
     if not _gcs_ok():
-        return {"ok": True, "stored": "local"}
+        resp = {"ok": True, "stored": "local"}
+        _store_idempotency(idem_key, resp)
+        return resp
 
     dp = _date_prefix(datetime.now(timezone.utc))
     ts = int(time.time())
@@ -669,4 +793,6 @@ async def feedback(req: Request, _: bool = Depends(require_apikey)):
 
     path = f"{FEEDBACK_PREFIX}/{dp}/{input_id}_{ts}.json"
     _gcs_put_json(KEY_BUCKET, path, {"received_at": _now_iso(), **payload})
-    return {"ok": True, "stored": path}
+    resp = {"ok": True, "stored": path}
+    _store_idempotency(idem_key, resp)
+    return resp
