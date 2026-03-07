@@ -168,6 +168,16 @@ function validateContract(data, filePath) {
   if (dbg.consistency_supports != null && !Array.isArray(dbg.consistency_supports)) {
     errors.push(`[${basename}] debug.consistency_supports debe ser array.`);
   }
+  // Multi-label Fase 6: opcionales (confidence-aware fusion)
+  if (dbg.consistency_strong_conflicts != null && !Array.isArray(dbg.consistency_strong_conflicts)) {
+    errors.push(`[${basename}] debug.consistency_strong_conflicts debe ser array.`);
+  }
+  if (dbg.consistency_weak_conflicts != null && !Array.isArray(dbg.consistency_weak_conflicts)) {
+    errors.push(`[${basename}] debug.consistency_weak_conflicts debe ser array.`);
+  }
+  if (dbg.evidence_notes != null && !Array.isArray(dbg.evidence_notes)) {
+    errors.push(`[${basename}] debug.evidence_notes debe ser array.`);
+  }
   // Multi-label Fase 4: opcionales
   if (dbg.multi_label_enabled != null && typeof dbg.multi_label_enabled !== 'boolean') {
     errors.push(`[${basename}] debug.multi_label_enabled debe ser boolean.`);

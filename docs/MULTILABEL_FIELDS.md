@@ -170,5 +170,61 @@ Ejemplo:
 ### Consistency / Risk / Policy
 
 - Fase 3 sin reescribir.
-- Preparado para usar `*_meta.source` y `*_meta.confidence` en Fase 6.
-- Mejora mínima: si brand_* viene de OCR con confianza muy baja → documentado pendiente Fase 6 para evitar conflicto agresivo.
+- **Fase 6** implementa fusión por confianza (ver sección siguiente).
+
+---
+
+## Fase 6 — Fusión por confianza (confidence-aware fusion)
+
+### Regla principal
+
+- **No disparar** conflictos duros con evidencia débil.
+- **Sí reforzar** señales con evidencia fuerte y confiable.
+- **Single-class sin meta** sigue funcionando como antes (evidencia implícita suficiente).
+
+### Fuentes ordenadas por fiabilidad
+
+| source     | Peso   |
+|------------|--------|
+| manual     | muy fuerte |
+| model      | fuerte |
+| catalog    | media-fuerte |
+| ocr        | media |
+| heuristic  | débil-media |
+| unknown    | débil |
+
+### Confidence
+
+| Rango      | Fuerza |
+|------------|--------|
+| >= 0.85    | fuerte |
+| 0.60–0.84  | media |
+| < 0.60     | débil |
+
+### Cuándo un conflicto es fuerte o débil
+
+- **Conflicto fuerte**: source en (manual, model, catalog) y confidence >= 0.85. Penalización completa en consistency, risk y policy.
+- **Conflicto suave (medio)**: evidencia media (ej. ocr con conf 0.70). Penalización reducida.
+- **Evidencia débil**: source heuristic/unknown o confidence < 0.60. No conflicto duro; como mucho `evidence_notes` informativa.
+
+### Ejemplos
+
+- `brand_conflict` con OCR confidence 0.45 → **no** conflicto fuerte; solo nota informativa.
+- `brand_conflict` con model/manual confidence 0.92 → conflicto fuerte.
+- `orientation_conflict` con evidencia baja en alguna orientación → conflicto débil o ninguno.
+- `legal_restriction` / `security_restriction` con source fuerte → impacto claro.
+- Sin `*_meta` (legacy/single-class) → se asume evidencia suficiente; comportamiento previo.
+
+### Helpers (common/multilabel_evidence.py)
+
+- `get_attr_meta(item, field_name)`
+- `meta_confidence(item, field_name, default=None)`
+- `meta_source(item, field_name, default="unknown")`
+- `is_strong_evidence(field_name, meta)`
+- `is_weak_evidence(field_name, meta)`
+
+### Debug (Fase 6)
+
+- `consistency_strong_conflicts`: conflictos con evidencia fuerte.
+- `consistency_weak_conflicts`: conflictos con evidencia media.
+- `evidence_notes`: notas informativas (ej. "brand_conflict: evidencia débil OCR, no conflicto duro").

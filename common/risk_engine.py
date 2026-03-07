@@ -158,11 +158,13 @@ def compute_risk(
     elif mfr_match:
         risk_score -= 5
 
-    # Multi-label Fase 3: consistency fusion
-    consistency_conflicts = (debug or {}).get("consistency_conflicts") or []
+    # Multi-label Fase 3 + Fase 6: consistency fusion con pesos por evidencia
+    # strong_conflicts = penalización completa; weak_conflicts = penalización reducida
+    strong_conflicts = (debug or {}).get("consistency_strong_conflicts") or (debug or {}).get("consistency_conflicts") or []
+    weak_conflicts = (debug or {}).get("consistency_weak_conflicts") or []
     consistency_supports = (debug or {}).get("consistency_supports") or []
-    if isinstance(consistency_conflicts, list):
-        for c in consistency_conflicts:
+    if isinstance(strong_conflicts, list):
+        for c in strong_conflicts:
             if c in ("orientation_conflict", "brand_conflict", "legal_restriction"):
                 risk_score += 12
                 reasons.append(c)
@@ -172,8 +174,16 @@ def compute_risk(
             elif c == "visual_degradation":
                 risk_score += 4
                 reasons.append(c)
+    if isinstance(weak_conflicts, list):
+        for c in weak_conflicts:
+            if c in ("orientation_conflict", "brand_conflict", "legal_restriction"):
+                risk_score += 4
+            elif c in ("security_restriction", "type_tag_conflict"):
+                risk_score += 2
+            elif c == "visual_degradation":
+                risk_score += 1
     if isinstance(consistency_supports, list) and len(consistency_supports) >= 2:
-        risk_score -= 5
+        risk_score -= 6
         if "consistency_support" not in reasons:
             reasons.append("consistency_support")
 

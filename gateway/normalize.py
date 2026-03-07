@@ -373,12 +373,21 @@ def normalize_contract(raw: Dict[str, Any]) -> Dict[str, Any]:
         debug["consistency_conflicts"] = cons["consistency_conflicts"]
         debug["consistency_supports"] = cons["consistency_supports"]
         debug["consistency_level"] = cons["consistency_level"]
+        if "consistency_strong_conflicts" in cons:
+            debug["consistency_strong_conflicts"] = cons["consistency_strong_conflicts"]
+        if "consistency_weak_conflicts" in cons:
+            debug["consistency_weak_conflicts"] = cons["consistency_weak_conflicts"]
+        if "evidence_notes" in cons:
+            debug["evidence_notes"] = cons["evidence_notes"]
     except Exception:
         debug["consistency_score"] = 70.0
         debug["consistency_reasons"] = []
         debug["consistency_conflicts"] = []
         debug["consistency_supports"] = []
         debug["consistency_level"] = "neutral"
+        debug.setdefault("consistency_strong_conflicts", [])
+        debug.setdefault("consistency_weak_conflicts", [])
+        debug.setdefault("evidence_notes", [])
 
     # P0.3: risk engine pasivo — margin, risk_score, risk_level, risk_reasons
     if SCN_FEATURE_RISK_ENGINE_PASSIVE:

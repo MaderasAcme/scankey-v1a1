@@ -28,7 +28,7 @@
     "qa:quality-gate-tests": "cd .. && python -m pytest gateway/tests/test_quality_gate.py gateway/tests/test_quality_gate_active.py -v",
     "qa:risk-engine-tests": "cd .. && python -m pytest gateway/tests/test_risk_engine.py -v",
     "qa:policy-engine-tests": "cd .. && python -m pytest gateway/tests/test_policy_engine.py gateway/tests/test_policy_actions.py -v",
-    "qa:multilabel-tests": "cd .. && python -m pytest gateway/tests/test_normalize_multilabel.py gateway/tests/test_multilabel_consistency.py gateway/tests/test_multilabel_phase5.py -v",
+    "qa:multilabel-tests": "cd .. && python -m pytest gateway/tests/test_normalize_multilabel.py gateway/tests/test_multilabel_consistency.py gateway/tests/test_multilabel_phase5.py gateway/tests/test_multilabel_phase6.py -v",
     "qa:no-ts": "node scripts/verify_no_ts.js",
     "qa:single-ui": "node scripts/verify_single_ui.js",
     "qa:all": "npm run qa:contract && npm run qa:secrets && npm run qa:smoke && npm run qa:pages && npm run qa:no-ts && npm run qa:single-ui",

@@ -27,27 +27,37 @@ function getSourceDataUrl(capturedPhotos, result, resultIndex) {
 const POLICY_BANNER_ACTIONS = ['BLOCK', 'REQUIRE_MANUAL_REVIEW', 'ALLOW_WITH_OVERRIDE', 'RUN_OCR', 'WARN'];
 
 /**
- * Badge de consistencia (Fase 3): Alta / Media / Baja.
- * En modo taller: hasta 2 supports/conflicts.
+ * Badge de consistencia (Fase 3 + Fase 6): Alta / Media / Baja.
+ * En modo taller: supports/conflicts; si hay strong/weak, etiquetas cortas (ej. "conflicto débil OCR").
  */
 function ConsistencyBadge({ result, modoTaller }) {
   const level = result?.debug?.consistency_level;
   const conflicts = Array.isArray(result?.debug?.consistency_conflicts) ? result.debug.consistency_conflicts : [];
+  const weakConflicts = Array.isArray(result?.debug?.consistency_weak_conflicts) ? result.debug.consistency_weak_conflicts : [];
   const supports = Array.isArray(result?.debug?.consistency_supports) ? result.debug.consistency_supports : [];
+  const evidenceNotes = Array.isArray(result?.debug?.evidence_notes) ? result.debug.evidence_notes : [];
   if (!level) return null;
   const labels = { high: 'Alta', medium: 'Media', low: 'Baja' };
   const label = labels[level];
   if (!label) return null;
   const pillClass = level === 'high' ? 'border-[var(--success)] text-[var(--success)]' : level === 'low' ? 'border-[var(--warning)] text-[var(--warning)]' : '';
+  let detail = '';
+  if (modoTaller && (conflicts.length > 0 || weakConflicts.length > 0 || supports.length > 0)) {
+    const parts = [];
+    if (conflicts.length > 0) parts.push(conflicts.slice(0, 2).map((c) => `conflicto fuerte ${c}`).join(', '));
+    if (weakConflicts.length > 0) parts.push(weakConflicts.slice(0, 2).map((c) => `conflicto débil ${c}`).join(', '));
+    if (supports.length > 0 && parts.length < 2) parts.push(supports.slice(0, 2).map((s) => `coincidencia ${s}`).join(', '));
+    detail = parts.slice(0, 2).join(' · ');
+  }
+  if (!detail && evidenceNotes.length > 0 && modoTaller) {
+    const note = evidenceNotes[0];
+    if (note && typeof note === 'string' && note.length < 35) detail = note;
+  }
   return (
     <div className="flex items-center gap-2 text-xs text-[var(--text-secondary)]">
       <span>Consistencia:</span>
       <Pill className={pillClass}>{label}</Pill>
-      {modoTaller && (conflicts.length > 0 || supports.length > 0) && (
-        <span className="opacity-80">
-          {[...supports.slice(0, 2), ...conflicts.slice(0, 2)].slice(0, 2).join(', ')}
-        </span>
-      )}
+      {detail && <span className="opacity-80">{detail}</span>}
     </div>
   );
 }

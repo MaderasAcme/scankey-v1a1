@@ -62,9 +62,15 @@ def build_policy_inputs(response: Dict[str, Any], context: Optional[Dict[str, An
     roi_score = _get_float(debug.get("roi_score"), 1.0)
     quality_warning = bool(debug.get("quality_warning")) or (quality_score is not None and quality_score < 0.55) or (roi_score is not None and roi_score < 0.60)
     consistency_conflicts = debug.get("consistency_conflicts") or []
+    consistency_strong_conflicts = debug.get("consistency_strong_conflicts") or consistency_conflicts
+    consistency_weak_conflicts = debug.get("consistency_weak_conflicts") or []
     consistency_supports = debug.get("consistency_supports") or []
     if not isinstance(consistency_conflicts, list):
         consistency_conflicts = []
+    if not isinstance(consistency_strong_conflicts, list):
+        consistency_strong_conflicts = consistency_conflicts
+    if not isinstance(consistency_weak_conflicts, list):
+        consistency_weak_conflicts = []
     if not isinstance(consistency_supports, list):
         consistency_supports = []
 
@@ -78,6 +84,8 @@ def build_policy_inputs(response: Dict[str, Any], context: Optional[Dict[str, An
         "risk_reasons": risk_reasons,
         "quality_warning": quality_warning,
         "consistency_conflicts": consistency_conflicts,
+        "consistency_strong_conflicts": consistency_strong_conflicts,
+        "consistency_weak_conflicts": consistency_weak_conflicts,
         "consistency_supports": consistency_supports,
         "consistency_score": _get_float(debug.get("consistency_score"), None),
         "explain_text": _get_str(top1.get("explain_text")),
@@ -136,10 +144,16 @@ def _has_manufacturer_mismatch(inputs: Dict[str, Any]) -> bool:
 
 
 def _has_consistency_conflicts(inputs: Dict[str, Any]) -> bool:
-    """Multi-label Fase 3: conflictos fuertes que refuerzan cautela."""
-    cf = inputs.get("consistency_conflicts") or []
-    strong = {"orientation_conflict", "brand_conflict", "legal_restriction"}
-    return bool(set(cf) & strong)
+    """Multi-label Fase 3 + Fase 6: conflictos fuertes o varias señales medias disparan WARN.
+    No subir por una sola señal débil."""
+    strong_cf = inputs.get("consistency_strong_conflicts") or inputs.get("consistency_conflicts") or []
+    weak_cf = inputs.get("consistency_weak_conflicts") or []
+    strong_set = {"orientation_conflict", "brand_conflict", "legal_restriction"}
+    if set(strong_cf) & strong_set:
+        return True
+    if len(weak_cf) >= 2 and set(weak_cf) & strong_set:
+        return True
+    return False
 
 
 def _has_patentada(inputs: Dict[str, Any]) -> bool:
