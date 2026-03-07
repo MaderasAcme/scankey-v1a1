@@ -22,6 +22,17 @@ export const copy = {
     analyze: "Analizar",
     protocol: "Protocolo de Captura",
     attempt: (n) => `Intento ${n}/2`,
+    // Flujo guiado mismo-pantalla
+    stepA: "Haz una foto del lado A",
+    stepAAfter: "Perfecto. Ahora haz la foto del lado B",
+    stepBOptional: "Lado B opcional",
+    captureA: "Capturar lado A",
+    captureB: "Capturar lado B",
+    analyzeKey: "Analizar llave",
+    repeat: "Repetir",
+    uploadPhoto: "Subir foto",
+    noCamera: "No se pudo acceder a la cámara",
+    noCameraHint: "Puedes subir una foto manualmente",
   },
   results: {
     title: "Resultados",
