@@ -26,6 +26,34 @@ function getSourceDataUrl(capturedPhotos, result, resultIndex) {
  */
 const POLICY_BANNER_ACTIONS = ['BLOCK', 'REQUIRE_MANUAL_REVIEW', 'ALLOW_WITH_OVERRIDE', 'RUN_OCR', 'WARN'];
 
+/**
+ * Pills multi-label: prioridad type, orientation, patentada, high_security, requires_card,
+ * head_color, visual_state, brand_head_text, brand_blade_text, tags.
+ * Solo muestra atributos presentes. Sin huecos vacíos.
+ */
+function MultilabelPills({ result: r }) {
+  if (!r) return null;
+  const tags = Array.isArray(r.tags) && r.tags.length > 0 ? r.tags : (Array.isArray(r.compatibility_tags) ? r.compatibility_tags : []);
+  const items = [];
+  if (r.orientation) items.push({ k: 'orientation', v: r.orientation });
+  if (r.patentada === true) items.push({ k: 'patentada', v: 'Sí' });
+  if (r.high_security === true) items.push({ k: 'high_security', v: 'Alta seguridad' });
+  if (r.requires_card === true) items.push({ k: 'requires_card', v: 'Requiere tarjeta' });
+  if (r.head_color) items.push({ k: 'head_color', v: r.head_color });
+  if (r.visual_state) items.push({ k: 'visual_state', v: r.visual_state });
+  if (r.brand_head_text) items.push({ k: 'brand_head', v: r.brand_head_text });
+  if (r.brand_blade_text) items.push({ k: 'brand_blade', v: r.brand_blade_text });
+  tags.forEach((t) => items.push({ k: 'tag', v: t }));
+  if (items.length === 0) return null;
+  return (
+    <div className="flex flex-wrap gap-1">
+      {items.map(({ k, v }, j) => (
+        <Pill key={`${k}-${j}`}>{String(v)}</Pill>
+      ))}
+    </div>
+  );
+}
+
 export function ResultsScreen({
   result,
   capturedPhotos,
@@ -180,13 +208,7 @@ export function ResultsScreen({
                 <h3 className="text-sm font-bold text-[var(--text)] uppercase tracking-wide">
                   {formatTitle(r)}
                 </h3>
-                {Array.isArray(r.compatibility_tags) && r.compatibility_tags.length > 0 && (
-                  <div className="flex flex-wrap gap-1">
-                    {r.compatibility_tags.map((t, j) => (
-                      <Pill key={j}>{t}</Pill>
-                    ))}
-                  </div>
-                )}
+                <MultilabelPills result={r} />
                 {r.explain_text && (
                   <p className="text-xs text-[var(--text-secondary)] line-clamp-2">{r.explain_text}</p>
                 )}

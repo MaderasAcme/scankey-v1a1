@@ -49,6 +49,10 @@ function validateContract(data, filePath) {
     if (!Array.isArray(res.compatibility_tags)) {
       errors.push(`[${basename}] Resultado ${i}: 'compatibility_tags' debe ser array.`);
     }
+    // Multi-label: tags oficial (debe ser array si existe)
+    if (res.tags != null && !Array.isArray(res.tags)) {
+      errors.push(`[${basename}] Resultado ${i}: 'tags' debe ser array.`);
+    }
     if (!res.crop_bbox || typeof res.crop_bbox !== 'object') {
       errors.push(`[${basename}] Resultado ${i}: crop_bbox es obligatorio.`);
     } else {

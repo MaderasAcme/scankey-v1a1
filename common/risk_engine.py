@@ -1,6 +1,8 @@
 """
 P0.3 Risk Engine PASIVO — margin top1-top2, risk_score 0..100, risk_reasons.
 No cambia ranking ni bloquea flujo (solo informa).
+Multi-label (Fase 2): preparado para incorporar patentada, orientation vs top1,
+brand_head/brand_blade vs OCR en risk_reasons futuras.
 """
 import os
 from typing import Dict, Any, List, Optional

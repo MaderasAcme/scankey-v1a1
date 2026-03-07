@@ -76,8 +76,15 @@ def _ensure_contract_v2(data: dict) -> dict:
         rr.setdefault("brand", None)
         rr.setdefault("model", rr.get("model") or rr.get("id_model_ref"))
         rr.setdefault("confidence", 0.0)
-        if not isinstance(rr.get("compatibility_tags"), list):
-            rr["compatibility_tags"] = []
+        ct = rr.get("compatibility_tags")
+        if not isinstance(ct, list):
+            ct = [ct] if isinstance(ct, str) else []
+        rr["compatibility_tags"] = ct
+        # Multi-label: tags oficial, compatibility_tags legacy
+        tags = rr.get("tags")
+        if not isinstance(tags, list):
+            tags = ct  # fallback desde compatibility_tags
+        rr["tags"] = tags
         out.append(rr)
 
     while len(out) < 3:
@@ -88,7 +95,8 @@ def _ensure_contract_v2(data: dict) -> dict:
             "model": None,
             "id_model_ref": None,
             "confidence": 0.0,
-            "compatibility_tags": []
+            "compatibility_tags": [],
+            "tags": [],
         })
 
     d["results"] = out
@@ -126,7 +134,7 @@ def _proxy_httpx_json(r: httpx.Response, request_id: str):
     if ct == "application/json":
         try:
             payload = r.json()
-            # SCN_PATCH_FIX_COMPAT_TAGS
+            # SCN_PATCH_FIX_COMPAT_TAGS + Multi-label tags
             if isinstance(payload, dict):
                 payload.setdefault('manufacturer_hint', {'found': False, 'name': None, 'confidence': 0.0})
                 for _k in ('results','candidates'):
@@ -136,13 +144,19 @@ def _proxy_httpx_json(r: httpx.Response, request_id: str):
                             if isinstance(_it, dict):
                                 _ct = _it.get('compatibility_tags')
                                 if _ct is None:
-                                    _it['compatibility_tags'] = []
+                                    _ct = []
                                 elif isinstance(_ct, list):
                                     pass
                                 elif isinstance(_ct, str):
-                                    _it['compatibility_tags'] = [_ct]
+                                    _ct = [_ct]
                                 else:
-                                    _it['compatibility_tags'] = []
+                                    _ct = []
+                                _it['compatibility_tags'] = _ct
+                                _tags = _it.get('tags')
+                                if not isinstance(_tags, list):
+                                    _it['tags'] = _ct
+                                else:
+                                    _it['tags'] = _tags
 
             # SCN_PATCH_MANUFACTURER_HINT_DEFAULT
             if isinstance(payload, dict) and "manufacturer_hint" not in payload:

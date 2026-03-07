@@ -35,6 +35,8 @@ def build_policy_inputs(response: Dict[str, Any], context: Optional[Dict[str, An
     """
     Extrae señales de response para evaluar políticas.
     Lee de response y response.debug.
+    Multi-label (Fase 2): preparado para usar top1.patentada, orientation,
+    brand_head_text/brand_blade_text (contradicción OCR/top1), high_security, requires_card.
     """
     if not response:
         return {}

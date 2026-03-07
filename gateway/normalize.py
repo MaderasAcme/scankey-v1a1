@@ -38,12 +38,94 @@ def _get_confidence(item: Dict[str, Any]) -> float:
         return 0.0
 
 
+# Multi-label Fase 2: valores válidos oficiales
+_BRAND_VISIBLE_ZONE = frozenset(("head", "blade", "both", "none"))
+_WEAR_LEVEL = frozenset(("low", "medium", "high"))
+
+
+def _normalize_tags(item: Dict[str, Any]) -> list:
+    """tags oficial; compatibility_tags legacy. Siempre devuelve lista."""
+    tags = item.get("tags")
+    ct = item.get("compatibility_tags")
+    if isinstance(tags, list) and len(tags) > 0:
+        return tags
+    if isinstance(ct, list):
+        return ct
+    if isinstance(ct, str):
+        return [ct] if ct.strip() else []
+    if isinstance(tags, str):
+        return [tags] if tags.strip() else []
+    return []
+
+
+def _normalize_bool_or_null(val: Any) -> Optional[bool]:
+    """Boolean o null. No inventar."""
+    if val is None:
+        return None
+    if isinstance(val, bool):
+        return val
+    if isinstance(val, str):
+        s = val.strip().lower()
+        if s in ("true", "1", "yes", "si"):
+            return True
+        if s in ("false", "0", "no"):
+            return False
+    return None
+
+
+def _normalize_patentada(item: Dict[str, Any]) -> bool:
+    """Oficial: patentada. Legacy: patent, is_patented. Default False si no viene."""
+    v = item.get("patentada") if "patentada" in item else item.get("patent") or item.get("is_patented")
+    if v is None:
+        return False
+    b = _normalize_bool_or_null(v)
+    return b if b is not None else False
+
+
+def _normalize_orientation(val: Any) -> Optional[str]:
+    """Orientation consistente."""
+    if val is None or not isinstance(val, str):
+        return None
+    s = str(val).strip().lower()
+    return s if s else None
+
+
+def _normalize_brand_visible_zone(val: Any) -> Optional[str]:
+    """head | blade | both | none"""
+    if val is None or not isinstance(val, str):
+        return None
+    s = str(val).strip().lower()
+    return s if s in _BRAND_VISIBLE_ZONE else None
+
+
+def _normalize_wear_level(val: Any) -> Optional[str]:
+    """low | medium | high"""
+    if val is None or not isinstance(val, str):
+        return None
+    s = str(val).strip().lower()
+    return s if s in _WEAR_LEVEL else None
+
+
+def _normalize_side_count(val: Any) -> Optional[int]:
+    """Entero o null."""
+    if val is None:
+        return None
+    try:
+        n = int(val)
+        return n if n >= 0 else None
+    except (TypeError, ValueError):
+        return None
+
+
 def _normalize_result(
     item: Dict[str, Any],
     rank: int,
     roi_sources: Optional[List[str]] = None,
 ) -> Dict[str, Any]:
-    """Normaliza un item a la forma del contrato. Siempre incluye crop_bbox válido."""
+    """
+    Normaliza un item a la forma del contrato. Siempre incluye crop_bbox válido.
+    Multi-label Fase 2: campos opcionales. Si no vienen, null/[] sin inventar.
+    """
     conf = _get_confidence(item)
     bbox, roi_source, was_fallback = ensure_valid_crop_bbox(item, "")
     conf = apply_fallback_penalty(conf, was_fallback)
@@ -57,21 +139,47 @@ def _normalize_result(
     elif was_fallback and not explain:
         explain = "Recorte no fiable."
 
-    ct = item.get("compatibility_tags")
-    if not isinstance(ct, list):
-        ct = [ct] if isinstance(ct, str) else []
+    tags = _normalize_tags(item)
 
-    out = {
+    out: Dict[str, Any] = {
         "rank": rank,
         "brand": item.get("brand"),
         "model": item.get("model") or item.get("id_model_ref"),
         "type": item.get("type") or ("No identificado" if rank > 1 and not item else "key"),
         "confidence": conf,
         "explain_text": explain,
-        "compatibility_tags": ct,
+        "tags": tags,
+        "compatibility_tags": tags,  # legacy: mismo valor que tags
         "id_model_ref": item.get("id_model_ref") or item.get("ref"),
         "crop_bbox": bbox,
+        # Obligatorios multi-label
+        "orientation": _normalize_orientation(item.get("orientation") or item.get("orientacion")),
+        "head_color": (item.get("head_color") or item.get("headColor") or "").strip() or None,
+        "visual_state": (item.get("visual_state") or item.get("state") or "").strip() or None,
+        "patentada": _normalize_patentada(item),
     }
+    # Recomendados
+    out["brand_head_text"] = (item.get("brand_head_text") or "").strip() or None
+    out["brand_blade_text"] = (item.get("brand_blade_text") or "").strip() or None
+    out["brand_visible_zone"] = _normalize_brand_visible_zone(item.get("brand_visible_zone"))
+    out["ocr_brand_guess"] = (item.get("ocr_brand_guess") or "").strip() or None
+    out["head_shape"] = (item.get("head_shape") or "").strip() or None
+    out["blade_profile"] = (item.get("blade_profile") or "").strip() or None
+    out["tip_shape"] = (item.get("tip_shape") or "").strip() or None
+    out["side_count"] = _normalize_side_count(item.get("side_count"))
+    out["symmetry"] = _normalize_bool_or_null(item.get("symmetry"))
+    out["wear_level"] = _normalize_wear_level(item.get("wear_level"))
+    out["high_security"] = _normalize_bool_or_null(item.get("high_security"))
+    out["requires_card"] = _normalize_bool_or_null(item.get("requires_card"))
+    # Experimentales
+    out["oxidation_present"] = _normalize_bool_or_null(item.get("oxidation_present"))
+    out["surface_damage"] = _normalize_bool_or_null(item.get("surface_damage"))
+    out["material_hint"] = (item.get("material_hint") or "").strip() or None
+    out["restricted_copy"] = _normalize_bool_or_null(item.get("restricted_copy"))
+    out["text_visible_head"] = (item.get("text_visible_head") or "").strip() or None
+    out["text_visible_blade"] = (item.get("text_visible_blade") or "").strip() or None
+    out["structural_notes"] = (item.get("structural_notes") or "").strip() or None
+
     if item.get("label") is not None and out.get("brand") is None:
         out["brand"] = item.get("label")
     if item.get("label") is not None and out.get("model") is None:
