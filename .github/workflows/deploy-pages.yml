@@ -2,7 +2,7 @@ name: Deploy Pages
 
 on:
   push:
-    branches: [ main ]
+    branches: [ main, feat/ui-studio-official ]
     paths:
       - 'ui-studio/**'
       - '.github/workflows/deploy-pages.yml'
