@@ -6,15 +6,38 @@ import React, { useState, useCallback } from 'react';
 import { Shield } from 'lucide-react';
 import { loginWorkshop } from '../services/auth';
 
-const DEFAULT_EMAIL = 'scankey@scankey.com';
+const DEFAULT_EMAIL_PLACEHOLDER = 'scankey@scankey.com';
+
+const INPUT_BASE =
+  'w-full h-14 pl-12 pr-4 bg-[#1a1a1e] rounded-2xl border-0 text-white placeholder:text-[#71717a] text-base transition-shadow focus:outline-none focus:ring-2 focus:ring-[var(--accent)] focus:ring-offset-2 focus:ring-offset-[#000000]';
+
+function getErrorMessage(code, isDev) {
+  switch (code) {
+    case 'INVALID_CREDENTIALS':
+      return 'Credenciales incorrectas';
+    case 'LOGIN_NOT_CONFIGURED':
+      return 'Login no configurado en el servidor';
+    case 'API_NOT_CONFIGURED':
+      return isDev
+        ? 'API no configurada. Indica VITE_GATEWAY_BASE_URL en .env.local'
+        : 'Servicio no disponible';
+    case 'TIMEOUT':
+      return 'Tiempo de espera agotado. Comprueba tu conexión.';
+    case 'NETWORK_ERROR':
+      return 'Sin conexión o servidor no disponible';
+    default:
+      return 'Credenciales incorrectas';
+  }
+}
 
 export function LoginScreen({ onLoginSuccess, onSuccess }) {
-  const [email, setEmail] = useState(DEFAULT_EMAIL);
+  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
   const canSubmit = Boolean(email?.trim() && password?.trim());
+  const isDev = typeof import.meta !== 'undefined' && import.meta.env?.DEV;
 
   const handleSubmit = useCallback(
     async (e) => {
@@ -26,15 +49,13 @@ export function LoginScreen({ onLoginSuccess, onSuccess }) {
         await loginWorkshop(email.trim(), password);
         (onLoginSuccess || onSuccess)?.();
       } catch (err) {
-        const msg = err?.message;
-        if (msg === 'LOGIN_NOT_CONFIGURED') setError('Login no configurado');
-        else if (msg === 'API no configurada') setError('API no configurada. Indica VITE_GATEWAY_BASE_URL en .env.local');
-        else setError('Credenciales incorrectas');
+        const code = err?.message || 'INVALID_CREDENTIALS';
+        setError(getErrorMessage(code, isDev));
       } finally {
         setLoading(false);
       }
     },
-    [email, password, canSubmit, loading, onLoginSuccess, onSuccess]
+    [email, password, canSubmit, loading, onLoginSuccess, onSuccess, isDev]
   );
 
   return (
@@ -72,9 +93,12 @@ export function LoginScreen({ onLoginSuccess, onSuccess }) {
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder={DEFAULT_EMAIL}
-                className="w-full h-14 pl-12 pr-4 bg-[#1a1a1e] rounded-2xl border-0 text-white placeholder:text-[#71717a] text-base focus:outline-none focus:ring-0"
+                placeholder={DEFAULT_EMAIL_PLACEHOLDER}
+                className={INPUT_BASE}
                 autoComplete="email"
+                disabled={loading}
+                aria-invalid={!!error}
+                aria-describedby={error ? 'login-error' : undefined}
               />
             </div>
           </div>
@@ -99,14 +123,19 @@ export function LoginScreen({ onLoginSuccess, onSuccess }) {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder=""
-                className="w-full h-14 pl-12 pr-4 bg-[#1a1a1e] rounded-2xl border-0 text-white placeholder:text-[#71717a] text-base focus:outline-none focus:ring-0"
+                className={INPUT_BASE}
                 autoComplete="current-password"
+                disabled={loading}
+                aria-invalid={!!error}
+                aria-describedby={error ? 'login-error' : undefined}
               />
             </div>
           </div>
 
           {error && (
-            <p className="text-sm text-[var(--danger)] -mt-2">{error}</p>
+            <p id="login-error" className="text-sm text-[var(--danger)] -mt-2" role="alert">
+              {error}
+            </p>
           )}
 
           <div className="pt-2">
@@ -114,8 +143,9 @@ export function LoginScreen({ onLoginSuccess, onSuccess }) {
               type="submit"
               disabled={!canSubmit || loading}
               className="w-full h-14 rounded-2xl bg-[#0d1117] text-white font-bold text-base uppercase tracking-wider disabled:opacity-50 disabled:cursor-not-allowed enabled:bg-[#151b24] enabled:hover:bg-[#1c2430] transition-colors"
+              aria-busy={loading}
             >
-              {loading ? '…' : 'ENTRAR'}
+              {loading ? 'Entrando…' : 'ENTRAR'}
             </button>
           </div>
         </form>
