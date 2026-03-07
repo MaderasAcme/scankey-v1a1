@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import { Navigation } from './components/Navigation';
 import { LoaderOverlay } from './components/ui/LoaderOverlay';
 import { HomeScreen } from './screens/HomeScreen';
@@ -7,7 +7,9 @@ import { ResultsScreen } from './screens/ResultsScreen';
 import { HistoryScreen } from './screens/HistoryScreen';
 import { TallerScreen } from './screens/TallerScreen';
 import { GuideScreen } from './screens/GuideScreen';
+import { LoginScreen } from './screens/LoginScreen';
 import { ProfileModal } from './screens/ProfileModal';
+import { isWorkshopSessionValid, clearWorkshopSession } from './services/auth';
 import { AlertBanner } from './components/ui/AlertBanner';
 import {
   analyzeKey,
@@ -17,7 +19,7 @@ import {
   getFeedbackQueue,
   flushFeedbackQueue,
 } from './services/api';
-import { safePushLimited, updateHistoryByInputId, loadJSON, incrementQualityGateStat } from './utils/storage';
+import { safePushLimited, updateHistoryByInputId, loadJSON, saveJSON, incrementQualityGateStat } from './utils/storage';
 
 const SETTINGS_KEY = 'scn_settings';
 
@@ -31,10 +33,14 @@ const SCREENS = {
 };
 
 /**
- * App — shell con máquina de estados: screen, isAnalyzing, attemptCount, result, capturedPhotos
- * capturedPhotos en memoria (NO localStorage).
+ * App — shell con máquina de estados.
+ * Login como puerta de entrada: sin sesión válida solo LoginScreen.
+ * Con sesión válida: app completa (Home, Scan, History, Taller, Guide, Profile).
  */
 export default function App() {
+  const [refreshKey, setRefreshKey] = useState(0);
+  const sessionValid = isWorkshopSessionValid();
+
   const [screen, setScreen] = useState('Home');
   const [profileOpen, setProfileOpen] = useState(false);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
@@ -121,8 +127,8 @@ export default function App() {
     });
   }, []);
 
-  const handleQueueFeedback = useCallback((payload) => {
-    enqueueFeedback({
+  const handleQueueFeedback = useCallback(async (payload) => {
+    await enqueueFeedback({
       ...payload,
       created_at: new Date().toISOString(),
     });
@@ -146,12 +152,40 @@ export default function App() {
   }, []);
 
   const handleLogout = useCallback(() => {
+    clearWorkshopSession();
+    const s = loadJSON(SETTINGS_KEY, {});
+    saveJSON(SETTINGS_KEY, { ...s, modo: 'cliente' });
     setProfileOpen(false);
+    setScreen('Home');
+    setRefreshKey((k) => k + 1);
   }, []);
 
-  const ScreenComponent = SCREENS[screen] || SCREENS.home;
+  useEffect(() => {
+    const id = setInterval(() => {
+      if (!isWorkshopSessionValid()) {
+        clearWorkshopSession();
+        const s = loadJSON(SETTINGS_KEY, {});
+        saveJSON(SETTINGS_KEY, { ...s, modo: 'cliente' });
+        setProfileOpen(false);
+        setScreen('Home');
+        setRefreshKey((k) => k + 1);
+      }
+    }, 30000);
+    return () => clearInterval(id);
+  }, []);
 
   const apiConfig = getApiConfig();
+
+  if (!sessionValid) {
+    return (
+      <div className="min-h-screen bg-[var(--bg)] text-[var(--text)] flex flex-col">
+        <LoginScreen
+          key={refreshKey}
+          onLoginSuccess={() => setRefreshKey((k) => k + 1)}
+        />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-[var(--bg)] text-[var(--text)] flex flex-col pb-20">
@@ -190,6 +224,7 @@ export default function App() {
             onConfirm={handleSendFeedback}
             onQueueFeedback={handleQueueFeedback}
             feedbackPending={feedbackPendingCount > 0}
+            modoTaller={loadJSON(SETTINGS_KEY, {}).modo === 'taller'}
           />
         )}
         {screen === 'History' && (

@@ -69,13 +69,13 @@ export function HomeScreen({ onNavigate, onOpenProfile }) {
             </button>
           )}
           <span
-          className={`inline-flex items-center gap-2 px-2 py-1 rounded-full text-[10px] font-bold uppercase ${
-            online ? 'bg-[var(--success-muted)] text-[var(--success)]' : 'bg-[var(--danger-muted)] text-[var(--danger)]'
-          }`}
-        >
-          <span className={`w-1.5 h-1.5 rounded-full ${online ? 'bg-[var(--success)]' : 'bg-[var(--danger)]'}`} />
-          {online ? 'Online' : 'Offline'}
-        </span>
+            className={`inline-flex items-center gap-2 px-2 py-1 rounded-full text-[10px] font-bold uppercase ${
+              online ? 'bg-[var(--success-muted)] text-[var(--success)]' : 'bg-[var(--danger-muted)] text-[var(--danger)]'
+            }`}
+          >
+            <span className={`w-1.5 h-1.5 rounded-full ${online ? 'bg-[var(--success)]' : 'bg-[var(--danger)]'}`} />
+            {online ? 'Online' : 'Offline'}
+          </span>
         </div>
       </div>
 

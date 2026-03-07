@@ -72,7 +72,7 @@ export function HistoryScreen({ onBack, onNavigate, openLast, onConsumeOpenLast 
             </Card>
           ))}
           {detailItem.debug && (
-            <p className="text-xs text-[var(--text-muted)]">
+            <p className="text-[10px] text-[var(--text-muted)] opacity-80 pt-2 border-t border-[var(--border)]">
               model: {detailItem.debug.model_version} · roi: {detailItem.debug.roi_source}
             </p>
           )}
@@ -90,9 +90,14 @@ export function HistoryScreen({ onBack, onNavigate, openLast, onConsumeOpenLast 
       <div className="flex-1 overflow-auto p-4 space-y-3">
         {!Array.isArray(history) || history.length === 0 ? (
           <Card>
-            <p className="text-[var(--text-secondary)] text-sm text-center py-8">
-              Sin historial aún
-            </p>
+            <div className="text-center py-10 space-y-1">
+              <p className="text-[var(--text-secondary)] text-sm">
+                Sin historial aún
+              </p>
+              <p className="text-[var(--text-muted)] text-xs">
+                Realiza tu primer escaneo desde Inicio
+              </p>
+            </div>
           </Card>
         ) : (
           history.map((item, idx) => {

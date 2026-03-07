@@ -23,6 +23,7 @@ import {
   getHealthStats,
   calcPercentiles,
 } from '../utils/storage';
+import { isWorkshopSessionValid } from '../services/auth';
 import { Card } from './ui/Card';
 import { Pill } from './ui/Pill';
 import { AlertBanner } from './ui/AlertBanner';
@@ -85,7 +86,12 @@ export const ProfileModal = memo(({ isOpen, onClose, onLogout, onResetData, onFl
       runHealthChecks();
       getDeployPing().then((v) => setDeployPing(v));
       const s = loadJSON(SETTINGS_KEY, {});
-      setModo(s.modo || 'cliente');
+      let modoVal = s.modo || 'cliente';
+      if (modoVal === 'taller' && !isWorkshopSessionValid()) {
+        modoVal = 'cliente';
+        saveJSON(SETTINGS_KEY, { ...s, modo: 'cliente' });
+      }
+      setModo(modoVal);
       setMostrarDebug(Boolean(s.mostrar_debug));
     }
   }, [isOpen, runHealthChecks]);
@@ -438,16 +444,17 @@ export const ProfileModal = memo(({ isOpen, onClose, onLogout, onResetData, onFl
           <div className="flex justify-between items-center">
             <span className="text-sm text-zinc-400">Modo</span>
             <select
-              value={modo}
+              value={isWorkshopSessionValid() ? modo : 'cliente'}
               onChange={(e) => {
                 const v = e.target.value;
+                if (v === 'taller' && !isWorkshopSessionValid()) return;
                 setModo(v);
                 saveSettings({ modo: v });
               }}
               className="bg-zinc-950 border border-zinc-800 rounded-lg px-3 py-2 text-sm text-white"
             >
               <option value="cliente">Cliente</option>
-              <option value="taller">Taller</option>
+              {isWorkshopSessionValid() && <option value="taller">Taller</option>}
             </select>
           </div>
           <div className="flex justify-between items-center">

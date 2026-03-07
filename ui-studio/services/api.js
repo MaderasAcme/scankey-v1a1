@@ -5,11 +5,15 @@
  * Uses VITE_* env at build, __SCN_CONFIG__/localStorage for runtime override.
  */
 import { storage, loadJSON, saveJSON } from '../utils/storage';
+import { getWorkshopSession } from './workshopSession';
 
 const KEY_BASE = 'scankey_api_base';
 const KEY_API_KEY = 'scankey_api_key';
 
-const ENV_BASE = (typeof import.meta !== 'undefined' && import.meta.env?.VITE_GATEWAY_BASE_URL) || '';
+const ENV_BASE =
+  (typeof import.meta !== 'undefined' && import.meta.env?.VITE_GATEWAY_BASE_URL) ||
+  (typeof import.meta !== 'undefined' && import.meta.env?.DEV ? 'http://localhost:8080' : '') ||
+  '';
 const API_KEY_ENV = (typeof import.meta !== 'undefined' && import.meta.env?.VITE_API_KEY) || '';
 
 /**
@@ -279,6 +283,8 @@ export async function analyzeKey(photos, { modo, qualityOverride, onAttempt } = 
     const headers = { 'X-Request-ID': requestId };
     if (apiKey) headers['X-API-Key'] = apiKey;
     if (qualityOverride) headers['X-Quality-Override'] = '1';
+    const ws = getWorkshopSession();
+    if (ws?.token) headers['X-Workshop-Token'] = ws.token;
     const ac = new AbortController();
     const t = setTimeout(() => ac.abort(), ANALYZE_TIMEOUT_MS);
     return fetch(url, { method: 'POST', headers, body: form, signal: ac.signal })
@@ -299,9 +305,9 @@ export async function analyzeKey(photos, { modo, qualityOverride, onAttempt } = 
       try {
         if (text) body = JSON.parse(text);
       } catch (_) {}
-      if (res.status === 422 && body && body.error === 'QUALITY_GATE') {
-        const err = new Error(body.message || 'Calidad insuficiente');
-        err.code = 'QUALITY_GATE';
+      if (res.status === 422 && body && (body.error === 'QUALITY_GATE' || body.error === 'POLICY_BLOCK')) {
+        const err = new Error(body.message || (body.error === 'POLICY_BLOCK' ? 'Política de bloqueo' : 'Calidad insuficiente'));
+        err.code = body.error;
         err.reasons = body.reasons || [];
         err.debug = body.debug || {};
         throw err;
@@ -328,6 +334,56 @@ export async function analyzeKey(photos, { modo, qualityOverride, onAttempt } = 
 const FEEDBACK_QUEUE_KEY = 'scn_feedback_queue';
 const FEEDBACK_TIMEOUT_MS = 15000;
 
+/**
+ * Normaliza manual_data/manual para hash determinista.
+ * Orden estable de claves, valores como string.
+ */
+function _normalizeManualForKey(manual) {
+  if (!manual || typeof manual !== 'object') return {};
+  const out = {};
+  for (const k of Object.keys(manual).sort()) {
+    const v = manual[k];
+    if (v == null) out[k] = '';
+    else if (typeof v === 'object') out[k] = JSON.stringify(v, Object.keys(v).sort());
+    else out[k] = String(v).trim();
+  }
+  return out;
+}
+
+/**
+ * Genera idempotency key determinista para feedback.
+ * Hash de: input_id, selected_id, correction, chosen_rank, manual_data normalizado.
+ * No usa campos volátiles (timestamp, etc.) para que reintentos usen la misma key.
+ * @param {Object} payload - { input_id, selected_id?, selected_id_model_ref?, correction, selected_rank?, chosen_rank?, manual?, manual_data? }
+ * @returns {Promise<string>} hex SHA-256
+ */
+export async function computeFeedbackIdempotencyKey(payload) {
+  const inputId = (payload?.input_id || payload?.job_id || '').toString().trim();
+  const selected =
+    (payload?.selected_id || payload?.selected_id_model_ref || payload?.id_model_ref || '').toString().trim() ||
+    (payload?.choice && typeof payload.choice === 'object'
+      ? (payload.choice.id_model_ref || payload.choice.selected_id || '').toString().trim()
+      : '');
+  const correction = Boolean(payload?.correction);
+  const rank = payload?.chosen_rank ?? payload?.selected_rank;
+  const rankStr = rank != null ? String(rank) : '';
+  const manual = payload?.manual_data || payload?.manual;
+  const manualNorm = _normalizeManualForKey(manual);
+  const manualStr = JSON.stringify(
+    Object.fromEntries(Object.entries(manualNorm).sort((a, b) => String(a[0]).localeCompare(String(b[0]))))
+  );
+  const canonical = `${inputId}|${selected}|${correction}|${rankStr}|${manualStr}`;
+  if (typeof crypto !== 'undefined' && crypto.subtle && crypto.subtle.digest) {
+    const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(canonical));
+    const arr = Array.from(new Uint8Array(buf));
+    return arr.map((b) => b.toString(16).padStart(2, '0')).join('');
+  }
+  // Fallback sync simple (djb2) — no criptográfico, solo para dev/legacy
+  let h = 5381;
+  for (let i = 0; i < canonical.length; i++) h = ((h << 5) + h) ^ canonical.charCodeAt(i);
+  return (h >>> 0).toString(16) + canonical.length.toString(36);
+}
+
 function _isRetryableError(err) {
   const msg = (err && err.message) || String(err);
   return (
@@ -342,10 +398,13 @@ function _isRetryableError(err) {
 }
 
 /**
- * Envía feedback al backend. Si timeout/5xx/504/red => lanza error con message "RETRYABLE".
- * @param {Object} payload - { input_id, request_id, modo, selected_rank, selected_id_model_ref, correction, manual, meta }
+ * Envía feedback al backend. Siempre envía Idempotency-Key.
+ * Si payload.idempotency_key existe, la reutiliza; si no, la genera determinísticamente.
+ * Si timeout/5xx/504/red => lanza error con message "RETRYABLE".
+ * @param {Object} payload - { input_id, request_id, modo, selected_rank, selected_id_model_ref, correction, manual, meta, idempotency_key? }
  * @param {Object} [opts]
  * @param {number} [opts.timeoutMs=15000]
+ * @returns {Promise<{ ok: boolean, deduped?: boolean }>}
  */
 export async function sendFeedback(payload, { timeoutMs = FEEDBACK_TIMEOUT_MS } = {}) {
   const { base, hasBase } = getApiConfig();
@@ -355,12 +414,23 @@ export async function sendFeedback(payload, { timeoutMs = FEEDBACK_TIMEOUT_MS } 
   const apiKey = getApiKey();
   const url = `${base}/api/feedback`;
   const requestId = payload.request_id || simpleUuid();
-  const body = JSON.stringify({ ...payload, request_id: requestId });
+  let idempotencyKey = payload.idempotency_key;
+  if (!idempotencyKey || typeof idempotencyKey !== 'string') {
+    idempotencyKey = await computeFeedbackIdempotencyKey(payload);
+  }
+  const toSend = { ...payload, request_id: requestId };
+  if (toSend.selected_id != null && toSend.selected_id_model_ref == null) {
+    toSend.selected_id_model_ref = toSend.selected_id;
+  }
+  const body = JSON.stringify(toSend);
   const headers = {
     'Content-Type': 'application/json',
     'X-Request-ID': requestId,
+    'Idempotency-Key': idempotencyKey,
   };
   if (apiKey) headers['X-API-Key'] = apiKey;
+  const ws = getWorkshopSession();
+  if (ws?.token) headers['X-Workshop-Token'] = ws.token;
 
   const ac = new AbortController();
   const t = setTimeout(() => ac.abort(), timeoutMs);
@@ -372,7 +442,10 @@ export async function sendFeedback(payload, { timeoutMs = FEEDBACK_TIMEOUT_MS } 
       signal: ac.signal,
     }).finally(() => clearTimeout(t));
 
-    if (res.status >= 200 && res.status < 300) return { ok: true };
+    if (res.status >= 200 && res.status < 300) {
+      const data = await res.json().catch(() => ({}));
+      return { ok: true, ...data };
+    }
 
     const text = await res.text();
     const err = new Error(`feedback ${res.status}: ${text || res.statusText}`);
@@ -462,8 +535,41 @@ export function getFeedbackQueue() {
   return loadJSON(FEEDBACK_QUEUE_KEY, []);
 }
 
-export function enqueueFeedback(item) {
+/**
+ * Item seguro para cola: idempotency_key, input_id, selected_id, correction, manual_data, created_at + meta API.
+ * Nunca guarda imágenes/base64. Si item no trae idempotency_key, la genera.
+ */
+function _buildFeedbackQueueItem(item) {
+  const created = item.created_at || new Date().toISOString();
+  const base = {
+    input_id: item.input_id,
+    selected_id: item.selected_id ?? item.selected_id_model_ref ?? null,
+    correction: Boolean(item.correction),
+    manual_data: item.manual_data ?? item.manual ?? null,
+    created_at: created,
+  };
+  const meta = {
+    request_id: item.request_id,
+    modo: item.modo,
+    selected_rank: item.selected_rank,
+    meta: item.meta,
+  };
+  return { ...base, ...meta };
+}
+
+/**
+ * Añade feedback a la cola. Guarda solo metadatos (nunca imágenes).
+ * Si item no trae idempotency_key, la genera determinísticamente.
+ * En reintentos (flush), se reutiliza la misma key.
+ */
+export async function enqueueFeedback(item) {
+  let idempotencyKey = item.idempotency_key;
+  if (!idempotencyKey || typeof idempotencyKey !== 'string') {
+    idempotencyKey = await computeFeedbackIdempotencyKey(item);
+  }
+  const safe = _buildFeedbackQueueItem(item);
+  safe.idempotency_key = idempotencyKey;
   const queue = loadJSON(FEEDBACK_QUEUE_KEY, []);
-  queue.push({ ...item, created_at: item.created_at || new Date().toISOString() });
+  queue.push(safe);
   saveJSON(FEEDBACK_QUEUE_KEY, queue);
 }

@@ -49,6 +49,10 @@ function validateContract(data, filePath) {
     if (!Array.isArray(res.compatibility_tags)) {
       errors.push(`[${basename}] Resultado ${i}: 'compatibility_tags' debe ser array.`);
     }
+    // Multi-label: tags oficial (debe ser array si existe)
+    if (res.tags != null && !Array.isArray(res.tags)) {
+      errors.push(`[${basename}] Resultado ${i}: 'tags' debe ser array.`);
+    }
     if (!res.crop_bbox || typeof res.crop_bbox !== 'object') {
       errors.push(`[${basename}] Resultado ${i}: crop_bbox es obligatorio.`);
     } else {
@@ -151,6 +155,38 @@ function validateContract(data, filePath) {
     if (typeof dbg.margin !== 'number' || dbg.margin < 0 || dbg.margin > 1) {
       errors.push(`[${basename}] debug.margin debe ser número 0..1.`);
     }
+  }
+  // Multi-label Fase 3: consistency_* opcional (PASIVO)
+  if (dbg.consistency_score != null) {
+    if (typeof dbg.consistency_score !== 'number' || dbg.consistency_score < 0 || dbg.consistency_score > 100) {
+      errors.push(`[${basename}] debug.consistency_score debe ser número 0..100.`);
+    }
+  }
+  if (dbg.consistency_conflicts != null && !Array.isArray(dbg.consistency_conflicts)) {
+    errors.push(`[${basename}] debug.consistency_conflicts debe ser array.`);
+  }
+  if (dbg.consistency_supports != null && !Array.isArray(dbg.consistency_supports)) {
+    errors.push(`[${basename}] debug.consistency_supports debe ser array.`);
+  }
+  // Multi-label Fase 6: opcionales (confidence-aware fusion)
+  if (dbg.consistency_strong_conflicts != null && !Array.isArray(dbg.consistency_strong_conflicts)) {
+    errors.push(`[${basename}] debug.consistency_strong_conflicts debe ser array.`);
+  }
+  if (dbg.consistency_weak_conflicts != null && !Array.isArray(dbg.consistency_weak_conflicts)) {
+    errors.push(`[${basename}] debug.consistency_weak_conflicts debe ser array.`);
+  }
+  if (dbg.evidence_notes != null && !Array.isArray(dbg.evidence_notes)) {
+    errors.push(`[${basename}] debug.evidence_notes debe ser array.`);
+  }
+  // Multi-label Fase 4: opcionales
+  if (dbg.multi_label_enabled != null && typeof dbg.multi_label_enabled !== 'boolean') {
+    errors.push(`[${basename}] debug.multi_label_enabled debe ser boolean.`);
+  }
+  if (dbg.multi_label_fields_supported != null && !Array.isArray(dbg.multi_label_fields_supported)) {
+    errors.push(`[${basename}] debug.multi_label_fields_supported debe ser array.`);
+  }
+  if (dbg.multi_label_fields_present != null && !Array.isArray(dbg.multi_label_fields_present)) {
+    errors.push(`[${basename}] debug.multi_label_fields_present debe ser array.`);
   }
 
   return { ok: errors.length === 0, errors };

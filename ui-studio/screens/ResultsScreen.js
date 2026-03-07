@@ -6,6 +6,7 @@ import { Pill } from '../components/ui/Pill';
 import { AlertBanner } from '../components/ui/AlertBanner';
 import { ConfidenceBar } from '../components/ui/ConfidenceBar';
 import { CropThumbnail } from '../components/ui/CropThumbnail';
+import { ComparePanel } from '../components/ui/ComparePanel';
 import { CorrectionModal } from '../components/CorrectionModal';
 import { copy } from '../utils/copy';
 
@@ -23,6 +24,104 @@ function getSourceDataUrl(capturedPhotos, result, resultIndex) {
 /**
  * ResultsScreen — TOP3 cards, selección, corrección manual, feedback
  */
+const POLICY_BANNER_ACTIONS = ['BLOCK', 'REQUIRE_MANUAL_REVIEW', 'ALLOW_WITH_OVERRIDE', 'RUN_OCR', 'WARN'];
+
+/**
+ * Badge de consistencia (Fase 3 + Fase 6): Alta / Media / Baja.
+ * En modo taller: supports/conflicts; si hay strong/weak, etiquetas cortas (ej. "conflicto débil OCR").
+ */
+function ConsistencyBadge({ result, modoTaller }) {
+  const level = result?.debug?.consistency_level;
+  const conflicts = Array.isArray(result?.debug?.consistency_conflicts) ? result.debug.consistency_conflicts : [];
+  const weakConflicts = Array.isArray(result?.debug?.consistency_weak_conflicts) ? result.debug.consistency_weak_conflicts : [];
+  const supports = Array.isArray(result?.debug?.consistency_supports) ? result.debug.consistency_supports : [];
+  const evidenceNotes = Array.isArray(result?.debug?.evidence_notes) ? result.debug.evidence_notes : [];
+  if (!level) return null;
+  const labels = { high: 'Alta', medium: 'Media', low: 'Baja' };
+  const label = labels[level];
+  if (!label) return null;
+  const pillClass = level === 'high' ? 'border-[var(--success)] text-[var(--success)]' : level === 'low' ? 'border-[var(--warning)] text-[var(--warning)]' : '';
+  let detail = '';
+  if (modoTaller && (conflicts.length > 0 || weakConflicts.length > 0 || supports.length > 0)) {
+    const parts = [];
+    if (conflicts.length > 0) parts.push(conflicts.slice(0, 2).map((c) => `conflicto fuerte ${c}`).join(', '));
+    if (weakConflicts.length > 0) parts.push(weakConflicts.slice(0, 2).map((c) => `conflicto débil ${c}`).join(', '));
+    if (supports.length > 0 && parts.length < 2) parts.push(supports.slice(0, 2).map((s) => `coincidencia ${s}`).join(', '));
+    detail = parts.slice(0, 2).join(' · ');
+  }
+  if (!detail && evidenceNotes.length > 0 && modoTaller) {
+    const note = evidenceNotes[0];
+    if (note && typeof note === 'string' && note.length < 35) detail = note;
+  }
+  return (
+    <div className="flex items-center gap-2 text-xs text-[var(--text-secondary)]">
+      <span>Consistencia:</span>
+      <Pill className={pillClass}>{label}</Pill>
+      {detail && <span className="opacity-80">{detail}</span>}
+    </div>
+  );
+}
+
+/**
+ * Multi-label Fase 4: línea corta opcional en modo taller cuando multi_label activo.
+ * No saturar UI. Solo si multi_label_enabled y hay campos present.
+ */
+function MultilabelDebugLine({ result, modoTaller }) {
+  if (!modoTaller || !result?.debug?.multi_label_enabled) return null;
+  const present = result.debug.multi_label_fields_present;
+  if (!Array.isArray(present) || present.length === 0) return null;
+  return (
+    <div className="text-[10px] text-[var(--text-secondary)] opacity-80 font-mono">
+      Multi-label activo · Campos: {present.slice(0, 5).join(', ')}{present.length > 5 ? '…' : ''}
+    </div>
+  );
+}
+
+/**
+ * Formatea valor para mostrar. En modoTaller, si existe *_meta, muestra discreto (source conf).
+ * Ej: "left (model 0.92)"
+ */
+function formatAttrDisplay(value, meta, modoTaller) {
+  if (!value && value !== false) return null;
+  const label = typeof value === 'boolean' ? (value ? 'Sí' : 'No') : String(value);
+  if (!modoTaller || !meta || typeof meta !== 'object') return label;
+  const src = meta.source;
+  const conf = meta.confidence;
+  if (src || (conf != null && conf !== undefined)) {
+    const extra = [src, conf != null ? String(Math.round(conf * 100) / 100) : null].filter(Boolean).join(' ');
+    return extra ? `${label} (${extra})` : label;
+  }
+  return label;
+}
+
+/**
+ * Pills multi-label: prioridad type, orientation, patentada, high_security, requires_card,
+ * head_color, visual_state, brand_head_text, brand_blade_text, tags.
+ * Solo muestra atributos presentes. En modoTaller: meta discreto si existe (source/confidence).
+ */
+function MultilabelPills({ result: r, modoTaller = false }) {
+  if (!r) return null;
+  const tags = Array.isArray(r.tags) && r.tags.length > 0 ? r.tags : (Array.isArray(r.compatibility_tags) ? r.compatibility_tags : []);
+  const items = [];
+  if (r.orientation) items.push({ k: 'orientation', v: formatAttrDisplay(r.orientation, r.orientation_meta, modoTaller) });
+  if (r.patentada === true) items.push({ k: 'patentada', v: formatAttrDisplay(true, r.patentada_meta, modoTaller) || 'Sí' });
+  if (r.high_security === true) items.push({ k: 'high_security', v: formatAttrDisplay(true, r.high_security_meta, modoTaller) || 'Alta seguridad' });
+  if (r.requires_card === true) items.push({ k: 'requires_card', v: formatAttrDisplay(true, r.requires_card_meta, modoTaller) || 'Requiere tarjeta' });
+  if (r.head_color) items.push({ k: 'head_color', v: formatAttrDisplay(r.head_color, r.head_color_meta, modoTaller) });
+  if (r.visual_state) items.push({ k: 'visual_state', v: formatAttrDisplay(r.visual_state, r.visual_state_meta, modoTaller) });
+  if (r.brand_head_text) items.push({ k: 'brand_head', v: formatAttrDisplay(r.brand_head_text, r.brand_head_text_meta, modoTaller) });
+  if (r.brand_blade_text) items.push({ k: 'brand_blade', v: formatAttrDisplay(r.brand_blade_text, r.brand_blade_text_meta, modoTaller) });
+  tags.forEach((t) => items.push({ k: 'tag', v: t }));
+  if (items.length === 0) return null;
+  return (
+    <div className="flex flex-wrap gap-1">
+      {items.map(({ k, v }, j) => (
+        <Pill key={`${k}-${j}`}>{String(v)}</Pill>
+      ))}
+    </div>
+  );
+}
+
 export function ResultsScreen({
   result,
   capturedPhotos,
@@ -30,11 +129,17 @@ export function ResultsScreen({
   onConfirm,
   onQueueFeedback,
   feedbackPending,
+  modoTaller = false,
 }) {
   const results = result?.results || [];
   const lowConfidence = Boolean(result?.low_confidence);
   const highConfidence = Boolean(result?.high_confidence);
   const forceCorrection = lowConfidence;
+
+  const policyAction = result?.debug?.policy_action;
+  const policyUserMessage = result?.debug?.policy_user_message;
+  const policyReasons = Array.isArray(result?.debug?.policy_reasons) ? result.debug.policy_reasons : [];
+  const showPolicyBanner = POLICY_BANNER_ACTIONS.includes(policyAction) && policyUserMessage;
 
   const [selectedRank, setSelectedRank] = useState(null);
   const [showCorrectionModal, setShowCorrectionModal] = useState(false);
@@ -90,7 +195,7 @@ export function ResultsScreen({
         await onConfirm(payload);
         onBack?.();
       } catch (e) {
-        if (onQueueFeedback) onQueueFeedback(payload);
+        if (onQueueFeedback) await onQueueFeedback(payload);
       } finally {
         setConfirming(false);
       }
@@ -109,7 +214,7 @@ export function ResultsScreen({
         setShowCorrectionModal(false);
         if (forceCorrection) onBack?.();
       } catch (e) {
-        if (onQueueFeedback) onQueueFeedback(payload);
+        if (onQueueFeedback) await onQueueFeedback(payload);
         setShowCorrectionModal(false);
         if (forceCorrection) onBack?.();
       } finally {
@@ -130,18 +235,32 @@ export function ResultsScreen({
           </AlertBanner>
         )}
 
+        {showPolicyBanner && (
+          <AlertBanner variant={policyAction === 'BLOCK' ? 'error' : 'warn'}>
+            <div>
+              <div>{policyUserMessage}</div>
+              {modoTaller && policyReasons.length > 0 && (
+                <div className="text-xs mt-1 opacity-80">
+                  {policyReasons.slice(0, 2).join(', ')}
+                </div>
+              )}
+            </div>
+          </AlertBanner>
+        )}
+
+        <ConsistencyBadge result={result} modoTaller={modoTaller} />
+        <MultilabelDebugLine result={result} modoTaller={modoTaller} />
+
         {feedbackPending && (
           <AlertBanner variant="info">Feedback pendiente. Se enviará al sincronizar.</AlertBanner>
         )}
 
-        <Button
-          variant="destructive"
-          className="w-full"
-          onClick={() => setShowCorrectionModal(true)}
-          aria-label="Corregir manualmente"
-        >
-          {copy.results.manual}
-        </Button>
+        <ComparePanel
+          capturedPhotos={capturedPhotos}
+          results={results}
+          hasB={Boolean(capturedPhotos?.B)}
+          defaultMode={capturedPhotos?.B ? 'ab' : 'top'}
+        />
 
         {results.slice(0, 3).map((r, i) => {
           const dataUrl = getSourceDataUrl(capturedPhotos, r, i);
@@ -160,13 +279,7 @@ export function ResultsScreen({
                 <h3 className="text-sm font-bold text-[var(--text)] uppercase tracking-wide">
                   {formatTitle(r)}
                 </h3>
-                {Array.isArray(r.compatibility_tags) && r.compatibility_tags.length > 0 && (
-                  <div className="flex flex-wrap gap-1">
-                    {r.compatibility_tags.map((t, j) => (
-                      <Pill key={j}>{t}</Pill>
-                    ))}
-                  </div>
-                )}
+                <MultilabelPills result={r} modoTaller={modoTaller} />
                 {r.explain_text && (
                   <p className="text-xs text-[var(--text-secondary)] line-clamp-2">{r.explain_text}</p>
                 )}
@@ -202,7 +315,7 @@ export function ResultsScreen({
         )}
 
         <Button
-          variant="secondary"
+          variant={lowConfidence ? 'destructive' : 'secondary'}
           className="w-full"
           onClick={() => setShowCorrectionModal(true)}
           aria-label="Corregir manualmente"
