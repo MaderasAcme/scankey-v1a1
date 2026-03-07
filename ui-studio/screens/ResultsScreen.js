@@ -6,6 +6,7 @@ import { Pill } from '../components/ui/Pill';
 import { AlertBanner } from '../components/ui/AlertBanner';
 import { ConfidenceBar } from '../components/ui/ConfidenceBar';
 import { CropThumbnail } from '../components/ui/CropThumbnail';
+import { ComparePanel } from '../components/ui/ComparePanel';
 import { CorrectionModal } from '../components/CorrectionModal';
 import { copy } from '../utils/copy';
 
@@ -133,6 +134,13 @@ export function ResultsScreen({
         {feedbackPending && (
           <AlertBanner variant="info">Feedback pendiente. Se enviará al sincronizar.</AlertBanner>
         )}
+
+        <ComparePanel
+          capturedPhotos={capturedPhotos}
+          results={results}
+          hasB={Boolean(capturedPhotos?.B)}
+          defaultMode={capturedPhotos?.B ? 'ab' : 'top'}
+        />
 
         <Button
           variant="destructive"
