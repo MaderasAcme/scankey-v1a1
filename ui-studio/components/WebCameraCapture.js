@@ -6,6 +6,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Button } from './ui/Button';
 import { analyzeFrame, getGuidanceMessage, makeTrackingSnapshot } from '../utils/keyTracking';
+import { analyzeGlare, getGlareGuidanceMessage, makeGlareSnapshot } from '../utils/glareSense';
 
 const MAX_DIM = 1920;
 const TRACKING_FPS = 8;
@@ -15,12 +16,14 @@ export function WebCameraCapture({ onCapture, onError, onUploadFallback, disable
   const videoRef = useRef(null);
   const streamRef = useRef(null);
   const trackingStateRef = useRef({ history: [], lastResult: null });
+  const glareResultRef = useRef(null);
   const trackingIntervalRef = useRef(null);
   const lastLogRef = useRef(0);
   const [ready, setReady] = useState(false);
   const [error, setError] = useState(null);
   const [facingMode, setFacingMode] = useState('environment');
   const [trackingResult, setTrackingResult] = useState(null);
+  const [glareResult, setGlareResult] = useState(null);
 
   const stopStream = () => {
     if (trackingIntervalRef.current) {
@@ -28,6 +31,7 @@ export function WebCameraCapture({ onCapture, onError, onUploadFallback, disable
       trackingIntervalRef.current = null;
     }
     setTrackingResult(null);
+    setGlareResult(null);
     const stream = streamRef.current;
     if (!stream) return;
     stream.getTracks().forEach((t) => t.stop());
@@ -43,6 +47,11 @@ export function WebCameraCapture({ onCapture, onError, onUploadFallback, disable
       const { result, nextState } = analyzeFrame(video, trackingStateRef.current);
       trackingStateRef.current = nextState;
       setTrackingResult(result);
+
+      const glareRes = analyzeGlare(video, { roiBbox: result.bbox || null });
+      glareResultRef.current = glareRes;
+      setGlareResult(glareRes);
+
       if (process.env.NODE_ENV === 'development') {
         const now = Date.now();
         if (now - lastLogRef.current > 1000) {
@@ -54,6 +63,13 @@ export function WebCameraCapture({ onCapture, onError, onUploadFallback, disable
             coverage_score: result.coverage_score?.toFixed(2),
             stability_score: result.stability_score?.toFixed(2),
             pose_score: result.pose_score?.toFixed(2),
+          });
+          console.debug('[glareSense]', {
+            glare_score: glareRes.glare_score?.toFixed(2),
+            specular_score: glareRes.specular_score?.toFixed(2),
+            burned_area_ratio: glareRes.burned_area_ratio?.toFixed(3),
+            critical_glare_zone: glareRes.critical_glare_zone,
+            reflection_state: glareRes.reflection_state,
           });
         }
       }
@@ -120,8 +136,9 @@ export function WebCameraCapture({ onCapture, onError, onUploadFallback, disable
 
     const lastResult = trackingStateRef.current?.lastResult;
     const trackingSnapshot = makeTrackingSnapshot(lastResult, w, h);
+    const glareSnapshot = makeGlareSnapshot(glareResultRef.current);
 
-    if (onCapture) onCapture(dataUrl, trackingSnapshot);
+    if (onCapture) onCapture(dataUrl, trackingSnapshot, glareSnapshot);
   };
 
   const switchCamera = () => {
@@ -150,6 +167,8 @@ export function WebCameraCapture({ onCapture, onError, onUploadFallback, disable
   }
 
   const r = trackingResult;
+  const glareMsg = getGlareGuidanceMessage(glareResult);
+  const displayMessage = glareMsg || (r ? getGuidanceMessage(r) : null);
   // bbox en keyTracking está en coords de análisis 120x90; convertir a % para overlay
   const bboxPercent = r?.bbox && r.key_detected ? {
     left: (r.bbox.x / 120) * 100,
@@ -187,11 +206,13 @@ export function WebCameraCapture({ onCapture, onError, onUploadFallback, disable
                 aria-hidden
               />
             )}
-            <div className="absolute bottom-2 left-2 right-2 flex justify-center">
-              <span className="text-xs px-2 py-1 rounded bg-black/60 text-white">
-                {getGuidanceMessage(r)}
-              </span>
-            </div>
+            {displayMessage && (
+              <div className="absolute bottom-2 left-2 right-2 flex justify-center">
+                <span className="text-xs px-2 py-1 rounded bg-black/60 text-white">
+                  {displayMessage}
+                </span>
+              </div>
+            )}
           </>
         )}
       </div>
