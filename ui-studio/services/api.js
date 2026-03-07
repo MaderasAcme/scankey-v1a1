@@ -305,9 +305,9 @@ export async function analyzeKey(photos, { modo, qualityOverride, onAttempt } = 
       try {
         if (text) body = JSON.parse(text);
       } catch (_) {}
-      if (res.status === 422 && body && body.error === 'QUALITY_GATE') {
-        const err = new Error(body.message || 'Calidad insuficiente');
-        err.code = 'QUALITY_GATE';
+      if (res.status === 422 && body && (body.error === 'QUALITY_GATE' || body.error === 'POLICY_BLOCK')) {
+        const err = new Error(body.message || (body.error === 'POLICY_BLOCK' ? 'Política de bloqueo' : 'Calidad insuficiente'));
+        err.code = body.error;
         err.reasons = body.reasons || [];
         err.debug = body.debug || {};
         throw err;

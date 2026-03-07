@@ -24,7 +24,7 @@ function getSourceDataUrl(capturedPhotos, result, resultIndex) {
 /**
  * ResultsScreen — TOP3 cards, selección, corrección manual, feedback
  */
-const POLICY_BANNER_ACTIONS = ['BLOCK', 'REQUIRE_MANUAL_REVIEW', 'ALLOW_WITH_OVERRIDE', 'WARN'];
+const POLICY_BANNER_ACTIONS = ['BLOCK', 'REQUIRE_MANUAL_REVIEW', 'ALLOW_WITH_OVERRIDE', 'RUN_OCR', 'WARN'];
 
 export function ResultsScreen({
   result,

@@ -56,15 +56,18 @@ def build_policy_inputs(response: Dict[str, Any], context: Optional[Dict[str, An
     if not isinstance(risk_reasons, list):
         risk_reasons = []
 
+    quality_score = _get_float(debug.get("quality_score"), 1.0)
+    roi_score = _get_float(debug.get("roi_score"), 1.0)
+    quality_warning = bool(debug.get("quality_warning")) or (quality_score is not None and quality_score < 0.55) or (roi_score is not None and roi_score < 0.60)
     inputs = {
         "low_confidence": bool(response.get("low_confidence")),
         "high_confidence": bool(response.get("high_confidence")),
-        "quality_score": _get_float(debug.get("quality_score"), 1.0),
-        "roi_score": _get_float(debug.get("roi_score"), 1.0),
+        "quality_score": quality_score,
+        "roi_score": roi_score,
         "risk_score": _get_float(debug.get("risk_score"), None),
         "risk_level": _get_str(debug.get("risk_level")).upper() or "LOW",
         "risk_reasons": risk_reasons,
-        "quality_warning": bool(debug.get("quality_warning")),
+        "quality_warning": quality_warning,
         "explain_text": _get_str(top1.get("explain_text")),
         "manufacturer_hint": mh,
         "manual_correction_hint": mch,

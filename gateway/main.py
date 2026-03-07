@@ -9,6 +9,7 @@ from PIL import Image
 _log = logging.getLogger(__name__)
 from normalize import normalize_contract
 from quality_gate_active import check_quality_gate
+from policy_actions import execute_policy_actions
 from fastapi import FastAPI, UploadFile, File, Form, HTTPException, Depends, Request
 from fastapi.responses import Response, JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
@@ -172,6 +173,8 @@ FEEDBACK_PREFIX = os.getenv("FEEDBACK_PREFIX", "feedback").strip("/")
 
 # P1.1: QualityGate (soft-block)
 SCN_FEATURE_QUALITY_GATE_ACTIVE = os.getenv("SCN_FEATURE_QUALITY_GATE_ACTIVE", "false").lower() in ("1", "true", "yes")
+# BLOQUE 3.1: PolicyEngine operativo (BLOCK 422, RUN_OCR, ALLOW_WITH_OVERRIDE)
+SCN_FEATURE_POLICY_ENGINE_ACTIVE = os.getenv("SCN_FEATURE_POLICY_ENGINE_ACTIVE", "false").lower() in ("1", "true", "yes")
 
 # P0.5: Input validation
 MAX_PAYLOAD_MB = float(os.getenv("SCN_MAX_PAYLOAD_MB", "10"))
@@ -506,9 +509,18 @@ async def proxy_analyze_key(
                 proc_ms = int((time.time() - t0) * 1000)
                 _log_analyze(rid, proc_ms, payload)
 
-                # P1.1: QualityGate (soft-block)
-                if SCN_FEATURE_QUALITY_GATE_ACTIVE:
-                    override = (req.headers.get("X-Quality-Override") or "").strip() == "1"
+                # BLOQUE 3.1: PolicyEngine operativo o QualityGate legacy
+                override = (req.headers.get("X-Quality-Override") or "").strip() == "1"
+                is_workshop = bool((req.headers.get("X-Workshop-Token") or "").strip()) or mt in ("1", "true", "yes", "y")
+
+                if SCN_FEATURE_POLICY_ENGINE_ACTIVE:
+                    block_resp, modified = await execute_policy_actions(payload, f_bytes, override, is_workshop)
+                    if block_resp is not None:
+                        _inject_meta(block_resp, rid)
+                        return JSONResponse(content=block_resp, status_code=422)
+                    if modified is not None:
+                        payload = modified
+                elif SCN_FEATURE_QUALITY_GATE_ACTIVE:
                     block_resp, modified = check_quality_gate(payload, override)
                     if block_resp is not None:
                         _inject_meta(block_resp, rid)
