@@ -1,0 +1,36 @@
+# Build y deploy del gateway (requiere contexto repo root por common/)
+# Uso: gcloud builds submit --config=cloudbuild-gateway.yaml .
+# O desde scripts: ./scripts/deploy_gateway.sh
+steps:
+  - name: "gcr.io/cloud-builders/docker"
+    args:
+      - "build"
+      - "-t"
+      - "europe-southwest1-docker.pkg.dev/$PROJECT_ID/scankey-repo/scankey-gateway:$SHORT_SHA"
+      - "-f"
+      - "gateway/Dockerfile"
+      - "."
+
+  - name: "gcr.io/cloud-builders/docker"
+    args:
+      - "push"
+      - "europe-southwest1-docker.pkg.dev/$PROJECT_ID/scankey-repo/scankey-gateway:$SHORT_SHA"
+
+  - name: "gcr.io/cloud-builders/gcloud"
+    args:
+      - "run"
+      - "deploy"
+      - "scankey-gateway"
+      - "--image"
+      - "europe-southwest1-docker.pkg.dev/$PROJECT_ID/scankey-repo/scankey-gateway:$SHORT_SHA"
+      - "--region"
+      - "europe-southwest1"
+      - "--allow-unauthenticated"
+      - "--port"
+      - "8080"
+
+images:
+  - "europe-southwest1-docker.pkg.dev/$PROJECT_ID/scankey-repo/scankey-gateway:$SHORT_SHA"
+
+options:
+  logging: CLOUD_LOGGING_ONLY
