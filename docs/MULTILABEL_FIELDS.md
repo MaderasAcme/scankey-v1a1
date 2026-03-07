@@ -75,3 +75,35 @@ Campos **solo informativos** (UI): head_color, head_shape, blade_profile, tip_sh
 - Si `labels_count <= 1` o no vienen atributos multi-label → UI funciona igual, sin secciones vacías.
 - Si vienen solo algunos campos → mostrar solo esos. No exigir el resto.
 - `tags` y `compatibility_tags` siempre array (vacío si no hay).
+
+---
+
+## Fase 4 — Capacidad real, health y activación controlada
+
+### multi_label_enabled
+- **Significado**: El backend/modelo soporta atributos multi-label reales.
+- **Detalle**: `true` solo si:
+  - `labels_count > 1`, O
+  - Existe metadata explícita (`model_meta.json`) con `multi_label_enabled: true`.
+- **Regla**: El sistema NO debe “parecer multi-label” si el backend no lo soporta realmente.
+
+### supported vs present
+- **multi_label_fields_supported**: Array de campos que el backend/modelo puede devolver. Viene de `model_meta.json` o de la lista por defecto del pipeline (catalog + normalize).
+- **multi_label_fields_present**: Campos realmente presentes en una respuesta concreta (top1). No se inventan campos ausentes.
+
+### Cómo detectar single-class vs multi-label real
+1. Consultar `/health` (motor) o `/motor/health` (gateway).
+2. Si `multi_label_enabled === false` → single-class. UI usa fallback, sin ruido.
+3. Si `multi_label_enabled === true` → multi-label activo. UI puede mostrar `multi_label_fields_present` en modo taller.
+
+### Metadata del modelo (model_meta.json)
+- Opcional. Ruta: mismo directorio que `labels.json` o `MODEL_META_PATH`.
+- Formato:
+```json
+{
+  "multi_label_enabled": true,
+  "multi_label_fields": ["orientation", "patentada", "head_color", "tags", ...]
+}
+```
+- Modelo viejo sin metadata → single-class (labels_count <= 1).
+- Modelo nuevo con metadata → multi-label si `multi_label_enabled: true` o `labels_count > 1`.

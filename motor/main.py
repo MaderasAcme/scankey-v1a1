@@ -107,6 +107,13 @@ def _is_workshop_authorized(request) -> bool:
 # Mock engine cuando no hay modelo (local dev)
 SCN_MOCK_ENGINE = os.getenv("SCN_MOCK_ENGINE", "").lower() in ("1", "true", "yes")
 
+# Multi-label Fase 4: campos que el backend/modelo puede soportar (catalog + normalize)
+_DEFAULT_MULTILABEL_FIELDS = [
+    "type", "orientation", "patentada", "head_color", "visual_state", "tags",
+    "brand_head_text", "brand_blade_text", "brand_visible_zone", "ocr_brand_guess",
+    "head_shape", "blade_profile", "tip_shape", "side_count", "symmetry",
+    "wear_level", "high_security", "requires_card",
+]
 STATE: Dict[str, Any] = {
     "model_ready": False,
     "model_loading": False,
@@ -114,6 +121,9 @@ STATE: Dict[str, Any] = {
     "input_name": None,
     "input_shape": None,
     "labels_count": 0,
+    "model_version": os.getenv("MODEL_VERSION", "scankey-v2-prod"),
+    "multi_label_enabled": False,
+    "multi_label_fields_supported": [],
     "error": None,
 }
 
@@ -591,6 +601,76 @@ def _labels_path() -> str:
     return os.path.join(os.path.dirname(__file__), "labels.json")
 
 
+def _model_meta_path() -> str:
+    """model_meta.json opcional: mismo dir que labels o MODEL_META_PATH."""
+    p = (os.getenv("MODEL_META_PATH", "") or "").strip()
+    if p:
+        return p
+    labels_p = _labels_path()
+    base = os.path.dirname(labels_p)
+    return os.path.join(base, "model_meta.json")
+
+
+def _load_model_meta() -> Dict[str, Any]:
+    """
+    Carga metadata opcional del modelo para multi-label.
+    Si no existe o falla -> {}.
+    Format: { "multi_label_enabled": bool, "multi_label_fields": ["orientation", ...] }
+    """
+    path = _model_meta_path()
+    if not os.path.exists(path):
+        return {}
+    try:
+        with open(path, "r", encoding="utf-8") as f:
+            obj = json.load(f)
+        if isinstance(obj, dict):
+            return obj
+        return {}
+    except Exception:
+        return {}
+
+
+def _compute_multilabel_capability(labels_count: int, model_meta: Dict[str, Any]) -> Tuple[bool, List[str]]:
+    """
+    Detecta capacidad multi-label real.
+    multi_label_enabled = True solo si:
+      - labels_count > 1, O
+      - model_meta tiene multi_label_enabled explícito True.
+    multi_label_fields_supported = de model_meta o default (campos que pipeline soporta).
+    """
+    meta_enabled = model_meta.get("multi_label_enabled") is True
+    meta_fields = model_meta.get("multi_label_fields")
+    if isinstance(meta_fields, list) and len(meta_fields) > 0:
+        supported = [str(f) for f in meta_fields if f]
+    else:
+        supported = list(_DEFAULT_MULTILABEL_FIELDS)
+
+    enabled = (labels_count > 1) or meta_enabled
+    return enabled, supported
+
+
+def _fields_present_in_result(item: Dict[str, Any], known: List[str]) -> List[str]:
+    """Devuelve lista de campos multi-label realmente presentes en item (valor no vacío)."""
+    if not item or not isinstance(item, dict):
+        return []
+    present: List[str] = []
+    for k in known:
+        if k not in item:
+            continue
+        v = item.get(k)
+        if v is None:
+            continue
+        if isinstance(v, bool):
+            present.append(k)  # True o False cuenta como presente
+        elif isinstance(v, (list, tuple)) and len(v) > 0:
+            present.append(k)
+        elif isinstance(v, (int, float)):
+            present.append(k)
+        elif isinstance(v, str) and str(v).strip():
+            present.append(k)
+    return present
+
+
 def _load_labels() -> List[str]:
     p = _labels_path()
     if not os.path.exists(p):
@@ -655,6 +735,8 @@ def _ensure_session():
             input_name = sess.get_inputs()[0].name
             input_shape = sess.get_inputs()[0].shape
             labels = _load_labels()
+            model_meta = _load_model_meta()
+            enabled, supported = _compute_multilabel_capability(len(labels), model_meta)
             with _LOCK:
                 _SESSION = sess
                 _LABELS = labels
@@ -663,6 +745,9 @@ def _ensure_session():
                 STATE["input_name"] = input_name
                 STATE["input_shape"] = input_shape
                 STATE["labels_count"] = len(labels)
+                STATE["model_version"] = os.getenv("MODEL_VERSION", "scankey-v2-prod")
+                STATE["multi_label_enabled"] = enabled
+                STATE["multi_label_fields_supported"] = supported
                 STATE["error"] = None
         except Exception as e:
             with _LOCK:
@@ -700,6 +785,9 @@ def health():
         "model_ready": bool(STATE["model_ready"]),
         "model_loading": bool(STATE["model_loading"]),
         "labels_count": int(STATE["labels_count"] or 0),
+        "model_version": STATE.get("model_version") or os.getenv("MODEL_VERSION", "scankey-v2-prod"),
+        "multi_label_enabled": bool(STATE.get("multi_label_enabled", False)),
+        "multi_label_fields_supported": list(STATE.get("multi_label_fields_supported") or []),
         "model_path": STATE.get("model_path"),
         "error": STATE.get("error"),
     }
@@ -818,7 +906,13 @@ def analyze_key(
             "store": {"stored": False, "reason": "mock", "side": "A"},
             "store_back": {"stored": False, "reason": "no_back", "side": "B"},
             "manual_correction_hint": {"fields": ["marca", "modelo", "tipo"]},
-            "debug": {"model_version": "scankey-mock-local", "processing_time_ms": 0},
+            "debug": {
+                "model_version": "scankey-mock-local",
+                "processing_time_ms": 0,
+                "multi_label_enabled": False,
+                "multi_label_fields_supported": [],
+                "multi_label_fields_present": [],
+            },
         }
 
     t0 = time.time()
@@ -999,7 +1093,12 @@ def analyze_key(
     except Exception:
         pass
 
-    model_version = os.getenv("MODEL_VERSION", "scankey-v2-prod")
+    model_version = STATE.get("model_version") or os.getenv("MODEL_VERSION", "scankey-v2-prod")
+    supported = list(STATE.get("multi_label_fields_supported") or [])
+    ml_enabled = bool(STATE.get("multi_label_enabled", False))
+    top1 = enriched_cands[0] if enriched_cands else {}
+    present = _fields_present_in_result(top1, supported) if supported else []
+
     resp_payload = {
         "ok": True,
         "request_id": request.state.request_id,
@@ -1015,7 +1114,13 @@ def analyze_key(
         "store": store,
         "store_back": store_back,
         "manual_correction_hint": {"fields": ["marca", "modelo", "tipo"]},
-        "debug": {"model_version": model_version, "processing_time_ms": dt_ms},
+        "debug": {
+            "model_version": model_version,
+            "processing_time_ms": dt_ms,
+            "multi_label_enabled": ml_enabled,
+            "multi_label_fields_supported": supported,
+            "multi_label_fields_present": present,
+        },
     }
 
     # P0.2 QualityGate PASIVO: métricas en debug sin bloquear flujo

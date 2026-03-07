@@ -53,9 +53,25 @@ function ConsistencyBadge({ result, modoTaller }) {
 }
 
 /**
+ * Multi-label Fase 4: línea corta opcional en modo taller cuando multi_label activo.
+ * No saturar UI. Solo si multi_label_enabled y hay campos present.
+ */
+function MultilabelDebugLine({ result, modoTaller }) {
+  if (!modoTaller || !result?.debug?.multi_label_enabled) return null;
+  const present = result.debug.multi_label_fields_present;
+  if (!Array.isArray(present) || present.length === 0) return null;
+  return (
+    <div className="text-[10px] text-[var(--text-secondary)] opacity-80 font-mono">
+      Multi-label activo · Campos: {present.slice(0, 5).join(', ')}{present.length > 5 ? '…' : ''}
+    </div>
+  );
+}
+
+/**
  * Pills multi-label: prioridad type, orientation, patentada, high_security, requires_card,
  * head_color, visual_state, brand_head_text, brand_blade_text, tags.
  * Solo muestra atributos presentes. Sin huecos vacíos.
+ * Fallback: si multi_label_enabled=false, sigue mostrando solo lo que venga (sin ruido).
  */
 function MultilabelPills({ result: r }) {
   if (!r) return null;
@@ -207,6 +223,7 @@ export function ResultsScreen({
         )}
 
         <ConsistencyBadge result={result} modoTaller={modoTaller} />
+        <MultilabelDebugLine result={result} modoTaller={modoTaller} />
 
         {feedbackPending && (
           <AlertBanner variant="info">Feedback pendiente. Se enviará al sincronizar.</AlertBanner>

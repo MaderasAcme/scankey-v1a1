@@ -43,5 +43,12 @@
   "storage_probability": 0.75,
   "current_samples_for_candidate": 8,
   "manual_correction_hint": { "fields": ["marca", "modelo", "tipo"] },
-  "debug": { "processing_time_ms": 180, "model_version": "scankey-v2-prod", "roi_source": "fallback" }
+  "debug": {
+    "processing_time_ms": 180,
+    "model_version": "scankey-v2-prod",
+    "roi_source": "fallback",
+    "multi_label_enabled": false,
+    "multi_label_fields_supported": [],
+    "multi_label_fields_present": []
+  }
 }

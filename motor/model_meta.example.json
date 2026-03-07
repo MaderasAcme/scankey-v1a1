@@ -1,0 +1,18 @@
+{
+  "multi_label_enabled": true,
+  "multi_label_fields": [
+    "type",
+    "orientation",
+    "patentada",
+    "head_color",
+    "visual_state",
+    "tags",
+    "brand_head_text",
+    "brand_blade_text",
+    "head_shape",
+    "blade_profile",
+    "wear_level",
+    "high_security",
+    "requires_card"
+  ]
+}

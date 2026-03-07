@@ -276,6 +276,14 @@ def normalize_contract(raw: Dict[str, Any]) -> Dict[str, Any]:
     debug["size_class"] = ref_size_class
     debug["size_class_applied"] = size_class_applied
 
+    # Multi-label Fase 4: pasar desde motor o inferir para compatibilidad
+    if "multi_label_enabled" not in debug:
+        debug["multi_label_enabled"] = False
+    if "multi_label_fields_supported" not in debug:
+        debug["multi_label_fields_supported"] = []
+    if "multi_label_fields_present" not in debug:
+        debug["multi_label_fields_present"] = []
+
     # Multi-label Fase 3: consistency (antes de risk para que risk lo use)
     _out_pre = {
         "results": results,
