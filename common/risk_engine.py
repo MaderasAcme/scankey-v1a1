@@ -158,6 +158,25 @@ def compute_risk(
     elif mfr_match:
         risk_score -= 5
 
+    # Multi-label Fase 3: consistency fusion
+    consistency_conflicts = (debug or {}).get("consistency_conflicts") or []
+    consistency_supports = (debug or {}).get("consistency_supports") or []
+    if isinstance(consistency_conflicts, list):
+        for c in consistency_conflicts:
+            if c in ("orientation_conflict", "brand_conflict", "legal_restriction"):
+                risk_score += 12
+                reasons.append(c)
+            elif c in ("security_restriction", "type_tag_conflict"):
+                risk_score += 6
+                reasons.append(c)
+            elif c == "visual_degradation":
+                risk_score += 4
+                reasons.append(c)
+    if isinstance(consistency_supports, list) and len(consistency_supports) >= 2:
+        risk_score -= 5
+        if "consistency_support" not in reasons:
+            reasons.append("consistency_support")
+
     risk_score = max(0.0, min(100.0, risk_score))
     reasons = reasons[:6]
 

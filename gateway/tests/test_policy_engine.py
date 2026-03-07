@@ -214,8 +214,20 @@ def test_policy_debug_output():
     assert "inputs" in out["debug"]
 
 
+def test_patentada_appends_legal_warning():
+    """patentada=true -> user_message incluye aviso legal."""
+    resp = {
+        "results": [{"brand": "X", "model": "Y", "confidence": 0.98, "patentada": True}],
+        "low_confidence": False,
+        "high_confidence": True,
+        "debug": {"quality_score": 0.8, "roi_score": 0.7, "risk_level": "LOW"},
+    }
+    out = evaluate_policy(resp)
+    assert "patentada" in out["user_message"].lower() or "legal" in out["user_message"].lower()
+
+
 def test_normalize_integrates_policy():
-    """normalize_contract añade policy_* a debug."""
+    """normalize_contract añade policy_* y consistency_* a debug."""
     sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
     from normalize import normalize_contract
 
@@ -234,3 +246,6 @@ def test_normalize_integrates_policy():
     assert "policy_user_message" in debug
     assert "policy_version" in debug
     assert debug.get("policy_version") == "v1"
+    assert "consistency_score" in debug
+    assert "consistency_conflicts" in debug
+    assert "consistency_supports" in debug

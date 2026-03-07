@@ -61,6 +61,13 @@ def build_policy_inputs(response: Dict[str, Any], context: Optional[Dict[str, An
     quality_score = _get_float(debug.get("quality_score"), 1.0)
     roi_score = _get_float(debug.get("roi_score"), 1.0)
     quality_warning = bool(debug.get("quality_warning")) or (quality_score is not None and quality_score < 0.55) or (roi_score is not None and roi_score < 0.60)
+    consistency_conflicts = debug.get("consistency_conflicts") or []
+    consistency_supports = debug.get("consistency_supports") or []
+    if not isinstance(consistency_conflicts, list):
+        consistency_conflicts = []
+    if not isinstance(consistency_supports, list):
+        consistency_supports = []
+
     inputs = {
         "low_confidence": bool(response.get("low_confidence")),
         "high_confidence": bool(response.get("high_confidence")),
@@ -70,6 +77,9 @@ def build_policy_inputs(response: Dict[str, Any], context: Optional[Dict[str, An
         "risk_level": _get_str(debug.get("risk_level")).upper() or "LOW",
         "risk_reasons": risk_reasons,
         "quality_warning": quality_warning,
+        "consistency_conflicts": consistency_conflicts,
+        "consistency_supports": consistency_supports,
+        "consistency_score": _get_float(debug.get("consistency_score"), None),
         "explain_text": _get_str(top1.get("explain_text")),
         "manufacturer_hint": mh,
         "manual_correction_hint": mch,
@@ -123,6 +133,19 @@ def _has_ab_conflict(inputs: Dict[str, Any]) -> bool:
 
 def _has_manufacturer_mismatch(inputs: Dict[str, Any]) -> bool:
     return "manufacturer_mismatch" in (inputs.get("risk_reasons") or [])
+
+
+def _has_consistency_conflicts(inputs: Dict[str, Any]) -> bool:
+    """Multi-label Fase 3: conflictos fuertes que refuerzan cautela."""
+    cf = inputs.get("consistency_conflicts") or []
+    strong = {"orientation_conflict", "brand_conflict", "legal_restriction"}
+    return bool(set(cf) & strong)
+
+
+def _has_patentada(inputs: Dict[str, Any]) -> bool:
+    """True si top1 tiene patentada=true."""
+    top1 = inputs.get("top1") or {}
+    return top1.get("patentada") is True
 
 
 def evaluate_policy(response: Dict[str, Any], context: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
@@ -227,14 +250,17 @@ def evaluate_policy(response: Dict[str, Any], context: Optional[Dict[str, Any]] 
     margin_narrow = _is_margin_narrow(inputs)
     ab_conflict = _has_ab_conflict(inputs)
     mfr_mismatch = _has_manufacturer_mismatch(inputs)
+    consistency_conflicts = _has_consistency_conflicts(inputs)
 
-    if margin_narrow or ab_conflict or mfr_mismatch:
+    if margin_narrow or ab_conflict or mfr_mismatch or consistency_conflicts:
         if margin_narrow:
             reasons.append("margin_narrow")
         if ab_conflict:
             reasons.append("ab_conflict")
         if mfr_mismatch:
             reasons.append("manufacturer_mismatch")
+        if consistency_conflicts:
+            reasons.append("consistency_conflicts")
         applied_rules.append("rule_warn")
         return _make_result(
             ACTION_WARN,
@@ -245,8 +271,12 @@ def evaluate_policy(response: Dict[str, Any], context: Optional[Dict[str, Any]] 
         )
 
     # ----- REGLA 6 — ALLOW -----
+    supports = inputs.get("consistency_supports") or []
+    many_supports = len(supports) >= 2
     if high_confidence and risk_level == "LOW" and quality_score >= 0.55 and roi_score >= 0.60:
         reasons.append("all_ok")
+        if many_supports:
+            reasons.append("consistency_supports")
         applied_rules.append("rule_allow")
         return _make_result(
             ACTION_ALLOW,
@@ -275,6 +305,11 @@ def _make_result(
     applied_rules: List[str],
 ) -> Dict[str, Any]:
     """Construye el objeto de salida estándar."""
+    if _has_patentada(inputs):
+        user_message = user_message.rstrip()
+        if user_message and not user_message.endswith("."):
+            user_message += "."
+        user_message += " Llave patentada: verifica restricciones legales."
     # Sanitizar inputs para debug (sin objetos pesados)
     safe_inputs = {}
     for k, v in inputs.items():

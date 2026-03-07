@@ -50,6 +50,27 @@
 
 ---
 
+## Fase 3 — Consistency / Risk / Policy
+
+Campos que **ya influyen** en consistency_score, risk y policy:
+
+| Campo              | Consistency | Risk                          | Policy                           |
+|--------------------|-------------|-------------------------------|----------------------------------|
+| orientation        | ✓ match/conflict | orientation_conflict +12    | WARN si conflictos                |
+| patentada          | ✓ legal_restriction | legal_restriction +12   | Mensaje legal en user_message     |
+| high_security      | ✓ security_restriction | +6                      | —                                 |
+| requires_card      | ✓ security_restriction | +6                      | —                                 |
+| brand_head_text    | ✓ brand_match/conflict | brand_conflict +18      | —                                 |
+| brand_blade_text   | ✓ brand_match/conflict | idem                     | —                                 |
+| ocr_brand_guess    | ✓ brand_match/conflict | idem                     | —                                 |
+| tags / type        | ✓ type_tag_match/conflict | type_tag_conflict +6 | —                                 |
+| visual_state       | ✓ visual_degradation | visual_degradation +4       | —                                 |
+| wear_level         | ✓ visual_degradation | idem                         | —                                 |
+
+Campos **solo informativos** (UI): head_color, head_shape, blade_profile, tip_shape, side_count, symmetry, brand_visible_zone, experimentales.
+
+---
+
 ## Fallback single-class
 - Si `labels_count <= 1` o no vienen atributos multi-label → UI funciona igual, sin secciones vacías.
 - Si vienen solo algunos campos → mostrar solo esos. No exigir el resto.

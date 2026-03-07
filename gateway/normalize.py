@@ -276,18 +276,34 @@ def normalize_contract(raw: Dict[str, Any]) -> Dict[str, Any]:
     debug["size_class"] = ref_size_class
     debug["size_class_applied"] = size_class_applied
 
+    # Multi-label Fase 3: consistency (antes de risk para que risk lo use)
+    _out_pre = {
+        "results": results,
+        "low_confidence": low_confidence,
+        "high_confidence": high_confidence,
+        "manufacturer_hint": mh,
+        "ocr_detail": d.get("ocr_detail"),
+        "ocr_hint": d.get("ocr_hint"),
+    }
+    try:
+        from common.multilabel_consistency import compute_consistency
+        cons = compute_consistency(_out_pre)
+        debug["consistency_score"] = cons["consistency_score"]
+        debug["consistency_reasons"] = cons["consistency_reasons"]
+        debug["consistency_conflicts"] = cons["consistency_conflicts"]
+        debug["consistency_supports"] = cons["consistency_supports"]
+        debug["consistency_level"] = cons["consistency_level"]
+    except Exception:
+        debug["consistency_score"] = 70.0
+        debug["consistency_reasons"] = []
+        debug["consistency_conflicts"] = []
+        debug["consistency_supports"] = []
+        debug["consistency_level"] = "neutral"
+
     # P0.3: risk engine pasivo — margin, risk_score, risk_level, risk_reasons
     if SCN_FEATURE_RISK_ENGINE_PASSIVE:
         try:
             from common.risk_engine import compute_risk
-            _out_pre = {
-                "results": results,
-                "low_confidence": low_confidence,
-                "high_confidence": high_confidence,
-                "manufacturer_hint": mh,
-                "ocr_detail": d.get("ocr_detail"),
-                "ocr_hint": d.get("ocr_hint"),
-            }
             risk_data = compute_risk(debug, _out_pre)
             debug["margin"] = risk_data["margin"]
             debug["risk_score"] = risk_data["risk_score"]

@@ -27,6 +27,32 @@ function getSourceDataUrl(capturedPhotos, result, resultIndex) {
 const POLICY_BANNER_ACTIONS = ['BLOCK', 'REQUIRE_MANUAL_REVIEW', 'ALLOW_WITH_OVERRIDE', 'RUN_OCR', 'WARN'];
 
 /**
+ * Badge de consistencia (Fase 3): Alta / Media / Baja.
+ * En modo taller: hasta 2 supports/conflicts.
+ */
+function ConsistencyBadge({ result, modoTaller }) {
+  const level = result?.debug?.consistency_level;
+  const conflicts = Array.isArray(result?.debug?.consistency_conflicts) ? result.debug.consistency_conflicts : [];
+  const supports = Array.isArray(result?.debug?.consistency_supports) ? result.debug.consistency_supports : [];
+  if (!level) return null;
+  const labels = { high: 'Alta', medium: 'Media', low: 'Baja' };
+  const label = labels[level];
+  if (!label) return null;
+  const pillClass = level === 'high' ? 'border-[var(--success)] text-[var(--success)]' : level === 'low' ? 'border-[var(--warning)] text-[var(--warning)]' : '';
+  return (
+    <div className="flex items-center gap-2 text-xs text-[var(--text-secondary)]">
+      <span>Consistencia:</span>
+      <Pill className={pillClass}>{label}</Pill>
+      {modoTaller && (conflicts.length > 0 || supports.length > 0) && (
+        <span className="opacity-80">
+          {[...supports.slice(0, 2), ...conflicts.slice(0, 2)].slice(0, 2).join(', ')}
+        </span>
+      )}
+    </div>
+  );
+}
+
+/**
  * Pills multi-label: prioridad type, orientation, patentada, high_security, requires_card,
  * head_color, visual_state, brand_head_text, brand_blade_text, tags.
  * Solo muestra atributos presentes. Sin huecos vacíos.
@@ -179,6 +205,8 @@ export function ResultsScreen({
             </div>
           </AlertBanner>
         )}
+
+        <ConsistencyBadge result={result} modoTaller={modoTaller} />
 
         {feedbackPending && (
           <AlertBanner variant="info">Feedback pendiente. Se enviará al sincronizar.</AlertBanner>

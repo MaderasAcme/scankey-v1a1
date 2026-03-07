@@ -156,6 +156,18 @@ function validateContract(data, filePath) {
       errors.push(`[${basename}] debug.margin debe ser número 0..1.`);
     }
   }
+  // Multi-label Fase 3: consistency_* opcional (PASIVO)
+  if (dbg.consistency_score != null) {
+    if (typeof dbg.consistency_score !== 'number' || dbg.consistency_score < 0 || dbg.consistency_score > 100) {
+      errors.push(`[${basename}] debug.consistency_score debe ser número 0..100.`);
+    }
+  }
+  if (dbg.consistency_conflicts != null && !Array.isArray(dbg.consistency_conflicts)) {
+    errors.push(`[${basename}] debug.consistency_conflicts debe ser array.`);
+  }
+  if (dbg.consistency_supports != null && !Array.isArray(dbg.consistency_supports)) {
+    errors.push(`[${basename}] debug.consistency_supports debe ser array.`);
+  }
 
   return { ok: errors.length === 0, errors };
 }
