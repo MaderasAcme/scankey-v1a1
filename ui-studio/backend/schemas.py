@@ -1,7 +1,7 @@
 """
 Lead Engineer - Schema Contracts
 Multi-label Fase 2: taxonomía oficial en 3 capas (obligatorio/recomendado/experimental).
-Compatibilidad: compatibility_tags legacy, tags oficial. Si no hay tags, usar compatibility_tags.
+Fase 5: *_meta opcional con value/confidence/source. Compatibilidad total con respuestas antiguas.
 """
 from pydantic import BaseModel, Field
 from typing import List, Optional, Dict, Any
@@ -10,6 +10,13 @@ from typing import List, Optional, Dict, Any
 BRAND_VISIBLE_ZONE_VALUES = ("head", "blade", "both", "none")
 # Valores válidos para wear_level (recomendado)
 WEAR_LEVEL_VALUES = ("low", "medium", "high")
+
+
+class AttrMeta(BaseModel):
+    """Metadato por atributo: value, confidence opcional, source. Fase 5."""
+    value: Any
+    confidence: Optional[float] = Field(default=None, ge=0.0, le=1.0)
+    source: Optional[str] = None  # model | ocr | catalog | heuristic | manual | unknown
 
 
 class CropBBox(BaseModel):
@@ -63,6 +70,24 @@ class KeyResult(BaseModel):
     text_visible_head: Optional[str] = None
     text_visible_blade: Optional[str] = None
     structural_notes: Optional[str] = None
+
+    # --- Fase 5: *_meta opcional (value/confidence/source) ---
+    orientation_meta: Optional[Dict[str, Any]] = None
+    patentada_meta: Optional[Dict[str, Any]] = None
+    head_color_meta: Optional[Dict[str, Any]] = None
+    visual_state_meta: Optional[Dict[str, Any]] = None
+    brand_head_text_meta: Optional[Dict[str, Any]] = None
+    brand_blade_text_meta: Optional[Dict[str, Any]] = None
+    brand_visible_zone_meta: Optional[Dict[str, Any]] = None
+    ocr_brand_guess_meta: Optional[Dict[str, Any]] = None
+    head_shape_meta: Optional[Dict[str, Any]] = None
+    blade_profile_meta: Optional[Dict[str, Any]] = None
+    tip_shape_meta: Optional[Dict[str, Any]] = None
+    side_count_meta: Optional[Dict[str, Any]] = None
+    symmetry_meta: Optional[Dict[str, Any]] = None
+    wear_level_meta: Optional[Dict[str, Any]] = None
+    high_security_meta: Optional[Dict[str, Any]] = None
+    requires_card_meta: Optional[Dict[str, Any]] = None
 
 class ManufacturerHint(BaseModel):
     found: bool

@@ -107,3 +107,68 @@ Campos **solo informativos** (UI): head_color, head_shape, blade_profile, tip_sh
 ```
 - Modelo viejo sin metadata → single-class (labels_count <= 1).
 - Modelo nuevo con metadata → multi-label si `multi_label_enabled: true` o `labels_count > 1`.
+
+---
+
+## Fase 5 — Vocabularios canónicos, provenance, *_meta
+
+### Vocabularios canónicos (common/multilabel_vocab.py)
+
+| Campo              | Valores canónicos                    | Aliases / normalización                     |
+|--------------------|--------------------------------------|---------------------------------------------|
+| orientation        | left, right, front, back             | izq/izquierda/l → left; der/derecha/r → right |
+| brand_visible_zone | head, blade, both, none              | —                                           |
+| wear_level         | low, medium, high                    | bajo→low, mediano/medio→medium, alto→high   |
+| visual_state       | good, worn, oxidized, damaged        | desgastado→worn, oxidado→oxidized, etc.     |
+| type               | Serreta, Cilindro, etc.              | Variantes sin romper compatibilidad         |
+| head_color         | lowercase estable                    | —                                           |
+| side_count         | int >= 0 o null                      | —                                           |
+| patentada, high_security, requires_card, symmetry | bool o null | true/1/yes/si, false/0/no |
+
+### Provenance / Source (common/multilabel_attrs.py)
+
+Fuentes válidas: `model` | `ocr` | `catalog` | `heuristic` | `manual` | `unknown`
+
+- **model**: viene del clasificador/backbone
+- **ocr**: viene de OCR (brand_head_text, brand_blade_text, ocr_brand_guess)
+- **catalog**: viene de catálogo
+- **heuristic**: inferencia/normalización auxiliar
+- **manual**: corrección manual
+- **unknown**: no se sabe
+
+### Campos con *_meta
+
+Para cada atributo relevante existe:
+- **campo plano** (legacy): valor directo
+- **campo_meta** (opcional): `{ value, confidence?, source }`
+
+Campos con *_meta: orientation, patentada, head_color, visual_state, brand_head_text, brand_blade_text, brand_visible_zone, ocr_brand_guess, head_shape, blade_profile, tip_shape, side_count, symmetry, wear_level, high_security, requires_card.
+
+Ejemplo:
+```json
+{
+  "orientation": "left",
+  "orientation_meta": { "value": "left", "confidence": 0.92, "source": "model" }
+}
+```
+
+### Reglas de source esperadas
+
+| Origen              | source   |
+|---------------------|----------|
+| Modelo/clasificador | model    |
+| OCR                 | ocr      |
+| Catálogo            | catalog  |
+| Inferencia auxiliar | heuristic|
+| Corrección manual   | manual   |
+| Desconocido         | unknown  |
+
+### tags
+
+`tags` se mantiene simple por ahora, sin `tags_meta`. Pendiente Fase 6 si se requiere trazabilidad por tag.
+
+### Consistency / Risk / Policy
+
+- Fase 3 sin reescribir.
+- Preparado para usar `*_meta.source` y `*_meta.confidence` en Fase 6.
+- Mejora mínima: si brand_* viene de OCR con confianza muy baja → documentado pendiente Fase 6 para evitar conflicto agresivo.

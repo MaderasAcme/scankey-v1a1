@@ -3,6 +3,7 @@ ScanKey Contract Normalizer (estricto).
 Acepta variantes (candidates/results, conf/confidence, bbox/crop_bbox)
 y produce SIEMPRE la forma final del contrato.
 ROI/crop_bbox: fallback seguro a {0,0,1,1} cuando no hay detección fiable.
+Multi-label Fase 5: vocabularios canónicos, *_meta con value/confidence/source.
 """
 import os
 from datetime import datetime, timezone
@@ -10,6 +11,8 @@ from typing import Dict, Any, List, Optional
 
 from roi_bbox import ensure_valid_crop_bbox, apply_fallback_penalty, clamp_confidence, FULL_FRAME
 from common.size_class import extract_size_class_debug_only
+from common import multilabel_vocab
+from common.multilabel_attrs import normalize_attr
 
 SCN_FEATURE_RISK_ENGINE_PASSIVE = (
     os.getenv("SCN_FEATURE_RISK_ENGINE_PASSIVE", "true").lower() == "true"
@@ -23,6 +26,26 @@ STORAGE_PROBABILITY = 0.75
 MAX_SAMPLES_PER_REF = 30
 
 UNRELIABLE_CROP_SUFFIX = " Recorte no fiable."
+
+# Campos con soporte *_meta (Fase 5)
+_META_FIELDS = (
+    "orientation",
+    "patentada",
+    "head_color",
+    "visual_state",
+    "brand_head_text",
+    "brand_blade_text",
+    "brand_visible_zone",
+    "ocr_brand_guess",
+    "head_shape",
+    "blade_profile",
+    "tip_shape",
+    "side_count",
+    "symmetry",
+    "wear_level",
+    "high_security",
+    "requires_card",
+)
 
 
 def _get_confidence(item: Dict[str, Any]) -> float:
@@ -38,9 +61,31 @@ def _get_confidence(item: Dict[str, Any]) -> float:
         return 0.0
 
 
-# Multi-label Fase 2: valores válidos oficiales
-_BRAND_VISIBLE_ZONE = frozenset(("head", "blade", "both", "none"))
-_WEAR_LEVEL = frozenset(("low", "medium", "high"))
+def _infer_source(field_name: str, item: Dict[str, Any], has_ocr_in_response: bool) -> str:
+    """Infiere source: model | ocr | catalog | heuristic | manual | unknown."""
+    explicit = item.get(f"{field_name}_source")
+    if isinstance(explicit, str) and explicit.strip().lower() in ("model", "ocr", "catalog", "heuristic", "manual", "unknown"):
+        return explicit.strip().lower()
+    if field_name in ("ocr_brand_guess",) and has_ocr_in_response:
+        return "ocr"
+    if field_name in ("brand_head_text", "brand_blade_text") and has_ocr_in_response:
+        return "ocr"
+    return "model"
+
+
+def _build_field_meta(
+    field_name: str,
+    raw_value: Any,
+    item: Dict[str, Any],
+    item_confidence: float,
+    has_ocr: bool,
+) -> Dict[str, Any]:
+    """Construye { value, confidence?, source } para campo con *_meta."""
+    src = _infer_source(field_name, item, has_ocr)
+    per_field_conf = item.get(f"{field_name}_confidence")
+    conf = float(per_field_conf) if per_field_conf is not None else item_confidence
+    meta = normalize_attr(field_name, raw_value, confidence=conf, source=src)
+    return meta
 
 
 def _normalize_tags(item: Dict[str, Any]) -> list:
@@ -58,69 +103,20 @@ def _normalize_tags(item: Dict[str, Any]) -> list:
     return []
 
 
-def _normalize_bool_or_null(val: Any) -> Optional[bool]:
-    """Boolean o null. No inventar."""
-    if val is None:
-        return None
-    if isinstance(val, bool):
-        return val
-    if isinstance(val, str):
-        s = val.strip().lower()
-        if s in ("true", "1", "yes", "si"):
-            return True
-        if s in ("false", "0", "no"):
-            return False
-    return None
-
-
 def _normalize_patentada(item: Dict[str, Any]) -> bool:
     """Oficial: patentada. Legacy: patent, is_patented. Default False si no viene."""
     v = item.get("patentada") if "patentada" in item else item.get("patent") or item.get("is_patented")
     if v is None:
         return False
-    b = _normalize_bool_or_null(v)
+    b = multilabel_vocab.normalize_bool_or_null(v)
     return b if b is not None else False
-
-
-def _normalize_orientation(val: Any) -> Optional[str]:
-    """Orientation consistente."""
-    if val is None or not isinstance(val, str):
-        return None
-    s = str(val).strip().lower()
-    return s if s else None
-
-
-def _normalize_brand_visible_zone(val: Any) -> Optional[str]:
-    """head | blade | both | none"""
-    if val is None or not isinstance(val, str):
-        return None
-    s = str(val).strip().lower()
-    return s if s in _BRAND_VISIBLE_ZONE else None
-
-
-def _normalize_wear_level(val: Any) -> Optional[str]:
-    """low | medium | high"""
-    if val is None or not isinstance(val, str):
-        return None
-    s = str(val).strip().lower()
-    return s if s in _WEAR_LEVEL else None
-
-
-def _normalize_side_count(val: Any) -> Optional[int]:
-    """Entero o null."""
-    if val is None:
-        return None
-    try:
-        n = int(val)
-        return n if n >= 0 else None
-    except (TypeError, ValueError):
-        return None
 
 
 def _normalize_result(
     item: Dict[str, Any],
     rank: int,
     roi_sources: Optional[List[str]] = None,
+    has_ocr_in_response: bool = False,
 ) -> Dict[str, Any]:
     """
     Normaliza un item a la forma del contrato. Siempre incluye crop_bbox válido.
@@ -140,42 +136,117 @@ def _normalize_result(
         explain = "Recorte no fiable."
 
     tags = _normalize_tags(item)
+    has_ocr = bool(has_ocr_in_response)
+
+    def _field_with_meta(field_name: str, raw_getter, default=None):
+        """Obtiene valor normalizado y meta. Si hay valor, añade field_meta."""
+        raw = raw_getter()
+        meta = _build_field_meta(field_name, raw, item, conf, has_ocr)
+        value = meta.get("value") if meta else default
+        return value, meta
+
+    # Orientation (raw: orientation | orientacion)
+    orient_raw = item.get("orientation") or item.get("orientacion")
+    orient_val, orient_meta = _field_with_meta("orientation", lambda: orient_raw)
+    out_orientation = orient_val or multilabel_vocab.normalize_orientation(orient_raw)
+
+    # Patentada (special: default False cuando no viene)
+    patentada_raw = item.get("patentada") if "patentada" in item else item.get("patent") or item.get("is_patented")
+    patentada_val = _normalize_patentada(item)
+    patentada_meta = {}
+    if patentada_raw is not None:
+        _, m = _field_with_meta("patentada", lambda: patentada_raw)
+        if m:
+            patentada_meta = dict(m, value=patentada_val)
+        else:
+            patentada_meta = {"value": patentada_val, "source": _infer_source("patentada", item, has_ocr), "confidence": conf}
+
+    # Head color, visual_state
+    hc_val, hc_meta = _field_with_meta("head_color", lambda: item.get("head_color") or item.get("headColor"))
+    vs_val, vs_meta = _field_with_meta("visual_state", lambda: item.get("visual_state") or item.get("state"))
+
+    # Recomendados
+    bht_val, bht_meta = _field_with_meta("brand_head_text", lambda: item.get("brand_head_text"))
+    bbt_val, bbt_meta = _field_with_meta("brand_blade_text", lambda: item.get("brand_blade_text"))
+    bvz_val, bvz_meta = _field_with_meta("brand_visible_zone", lambda: item.get("brand_visible_zone"))
+    obg_val, obg_meta = _field_with_meta("ocr_brand_guess", lambda: item.get("ocr_brand_guess"))
+    hs_val, hs_meta = _field_with_meta("head_shape", lambda: item.get("head_shape"))
+    bp_val, bp_meta = _field_with_meta("blade_profile", lambda: item.get("blade_profile"))
+    ts_val, ts_meta = _field_with_meta("tip_shape", lambda: item.get("tip_shape"))
+    sc_val, sc_meta = _field_with_meta("side_count", lambda: item.get("side_count"))
+    sym_val, sym_meta = _field_with_meta("symmetry", lambda: item.get("symmetry"))
+    wl_val, wl_meta = _field_with_meta("wear_level", lambda: item.get("wear_level"))
+    hsec_val, hsec_meta = _field_with_meta("high_security", lambda: item.get("high_security"))
+    rc_val, rc_meta = _field_with_meta("requires_card", lambda: item.get("requires_card"))
 
     out: Dict[str, Any] = {
         "rank": rank,
         "brand": item.get("brand"),
         "model": item.get("model") or item.get("id_model_ref"),
-        "type": item.get("type") or ("No identificado" if rank > 1 and not item else "key"),
+        "type": multilabel_vocab.normalize_type(item.get("type")) or ("No identificado" if rank > 1 and not item else "key"),
         "confidence": conf,
         "explain_text": explain,
         "tags": tags,
-        "compatibility_tags": tags,  # legacy: mismo valor que tags
+        "compatibility_tags": tags,
         "id_model_ref": item.get("id_model_ref") or item.get("ref"),
         "crop_bbox": bbox,
-        # Obligatorios multi-label
-        "orientation": _normalize_orientation(item.get("orientation") or item.get("orientacion")),
-        "head_color": (item.get("head_color") or item.get("headColor") or "").strip() or None,
-        "visual_state": (item.get("visual_state") or item.get("state") or "").strip() or None,
-        "patentada": _normalize_patentada(item),
+        "orientation": out_orientation,
+        "head_color": hc_val,
+        "visual_state": vs_val,
+        "patentada": patentada_val,
     }
-    # Recomendados
-    out["brand_head_text"] = (item.get("brand_head_text") or "").strip() or None
-    out["brand_blade_text"] = (item.get("brand_blade_text") or "").strip() or None
-    out["brand_visible_zone"] = _normalize_brand_visible_zone(item.get("brand_visible_zone"))
-    out["ocr_brand_guess"] = (item.get("ocr_brand_guess") or "").strip() or None
-    out["head_shape"] = (item.get("head_shape") or "").strip() or None
-    out["blade_profile"] = (item.get("blade_profile") or "").strip() or None
-    out["tip_shape"] = (item.get("tip_shape") or "").strip() or None
-    out["side_count"] = _normalize_side_count(item.get("side_count"))
-    out["symmetry"] = _normalize_bool_or_null(item.get("symmetry"))
-    out["wear_level"] = _normalize_wear_level(item.get("wear_level"))
-    out["high_security"] = _normalize_bool_or_null(item.get("high_security"))
-    out["requires_card"] = _normalize_bool_or_null(item.get("requires_card"))
-    # Experimentales
-    out["oxidation_present"] = _normalize_bool_or_null(item.get("oxidation_present"))
-    out["surface_damage"] = _normalize_bool_or_null(item.get("surface_damage"))
+    if orient_meta:
+        out["orientation_meta"] = orient_meta
+    if patentada_meta:
+        out["patentada_meta"] = patentada_meta
+    if hc_meta:
+        out["head_color_meta"] = hc_meta
+    if vs_meta:
+        out["visual_state_meta"] = vs_meta
+
+    out["brand_head_text"] = bht_val
+    out["brand_blade_text"] = bbt_val
+    out["brand_visible_zone"] = bvz_val
+    out["ocr_brand_guess"] = obg_val
+    out["head_shape"] = hs_val
+    out["blade_profile"] = bp_val
+    out["tip_shape"] = ts_val
+    out["side_count"] = sc_val
+    out["symmetry"] = sym_val
+    out["wear_level"] = wl_val
+    out["high_security"] = hsec_val
+    out["requires_card"] = rc_val
+
+    if bht_meta:
+        out["brand_head_text_meta"] = bht_meta
+    if bbt_meta:
+        out["brand_blade_text_meta"] = bbt_meta
+    if bvz_meta:
+        out["brand_visible_zone_meta"] = bvz_meta
+    if obg_meta:
+        out["ocr_brand_guess_meta"] = obg_meta
+    if hs_meta:
+        out["head_shape_meta"] = hs_meta
+    if bp_meta:
+        out["blade_profile_meta"] = bp_meta
+    if ts_meta:
+        out["tip_shape_meta"] = ts_meta
+    if sc_meta:
+        out["side_count_meta"] = sc_meta
+    if sym_meta:
+        out["symmetry_meta"] = sym_meta
+    if wl_meta:
+        out["wear_level_meta"] = wl_meta
+    if hsec_meta:
+        out["high_security_meta"] = hsec_meta
+    if rc_meta:
+        out["requires_card_meta"] = rc_meta
+
+    # Experimentales (sin *_meta por ahora)
+    out["oxidation_present"] = multilabel_vocab.normalize_bool_or_null(item.get("oxidation_present"))
+    out["surface_damage"] = multilabel_vocab.normalize_bool_or_null(item.get("surface_damage"))
     out["material_hint"] = (item.get("material_hint") or "").strip() or None
-    out["restricted_copy"] = _normalize_bool_or_null(item.get("restricted_copy"))
+    out["restricted_copy"] = multilabel_vocab.normalize_bool_or_null(item.get("restricted_copy"))
     out["text_visible_head"] = (item.get("text_visible_head") or "").strip() or None
     out["text_visible_blade"] = (item.get("text_visible_blade") or "").strip() or None
     out["structural_notes"] = (item.get("structural_notes") or "").strip() or None
@@ -224,13 +295,14 @@ def normalize_contract(raw: Dict[str, Any]) -> Dict[str, Any]:
     ref_size_class, roi_reliable = extract_size_class_debug_only(items, _get_bbox)
     size_class_applied = False  # Nunca reordenamos por size_class
 
+    has_ocr = bool(d.get("ocr_detail") or d.get("ocr_hint"))
     roi_sources: List[str] = []
     results: List[Dict[str, Any]] = []
     for i, it in enumerate(items[:3], start=1):
-        results.append(_normalize_result(dict(it or {}), i, roi_sources))
+        results.append(_normalize_result(dict(it or {}), i, roi_sources, has_ocr_in_response=has_ocr))
 
     while len(results) < 3:
-        results.append(_normalize_result({}, len(results) + 1, roi_sources))
+        results.append(_normalize_result({}, len(results) + 1, roi_sources, has_ocr_in_response=has_ocr))
 
     top_conf = results[0]["confidence"]
 
