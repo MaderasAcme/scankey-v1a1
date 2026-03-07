@@ -1,26 +1,72 @@
 /**
  * WebCameraCapture — captura real desde webcam vía getUserMedia.
  * Usa video + canvas para generar dataURL. Cierra tracks en unmount.
+ * Integra key tracking pasivo (mide, guía, NO bloquea).
  */
 import React, { useEffect, useRef, useState } from 'react';
 import { Button } from './ui/Button';
+import { analyzeFrame, getGuidanceMessage, makeTrackingSnapshot } from '../utils/keyTracking';
 
 const MAX_DIM = 1920;
+const TRACKING_FPS = 8;
+const TRACK_INTERVAL_MS = 1000 / TRACKING_FPS;
 
 export function WebCameraCapture({ onCapture, onError, onUploadFallback, disabled, captureLabel = 'Capturar' }) {
   const videoRef = useRef(null);
   const streamRef = useRef(null);
+  const trackingStateRef = useRef({ history: [], lastResult: null });
+  const trackingIntervalRef = useRef(null);
+  const lastLogRef = useRef(0);
   const [ready, setReady] = useState(false);
   const [error, setError] = useState(null);
   const [facingMode, setFacingMode] = useState('environment');
+  const [trackingResult, setTrackingResult] = useState(null);
 
   const stopStream = () => {
+    if (trackingIntervalRef.current) {
+      clearInterval(trackingIntervalRef.current);
+      trackingIntervalRef.current = null;
+    }
+    setTrackingResult(null);
     const stream = streamRef.current;
     if (!stream) return;
     stream.getTracks().forEach((t) => t.stop());
     streamRef.current = null;
     setReady(false);
   };
+
+  useEffect(() => {
+    if (!ready || !videoRef.current) return;
+    const video = videoRef.current;
+    const tick = () => {
+      if (!video.videoWidth) return;
+      const { result, nextState } = analyzeFrame(video, trackingStateRef.current);
+      trackingStateRef.current = nextState;
+      setTrackingResult(result);
+      if (process.env.NODE_ENV === 'development') {
+        const now = Date.now();
+        if (now - lastLogRef.current > 1000) {
+          lastLogRef.current = now;
+          console.debug('[keyTracking]', {
+            key_detected: result.key_detected,
+            roi_score: result.roi_score?.toFixed(2),
+            centering_score: result.centering_score?.toFixed(2),
+            coverage_score: result.coverage_score?.toFixed(2),
+            stability_score: result.stability_score?.toFixed(2),
+            pose_score: result.pose_score?.toFixed(2),
+          });
+        }
+      }
+    };
+    tick();
+    trackingIntervalRef.current = setInterval(tick, TRACK_INTERVAL_MS);
+    return () => {
+      if (trackingIntervalRef.current) {
+        clearInterval(trackingIntervalRef.current);
+        trackingIntervalRef.current = null;
+      }
+    };
+  }, [ready]);
 
   const startStream = async () => {
     stopStream();
@@ -71,7 +117,11 @@ export function WebCameraCapture({ onCapture, onError, onUploadFallback, disable
     if (!ctx) return;
     ctx.drawImage(video, 0, 0, cw, ch);
     const dataUrl = canvas.toDataURL('image/jpeg', 0.9);
-    if (onCapture) onCapture(dataUrl);
+
+    const lastResult = trackingStateRef.current?.lastResult;
+    const trackingSnapshot = makeTrackingSnapshot(lastResult, w, h);
+
+    if (onCapture) onCapture(dataUrl, trackingSnapshot);
   };
 
   const switchCamera = () => {
@@ -99,6 +149,15 @@ export function WebCameraCapture({ onCapture, onError, onUploadFallback, disable
     );
   }
 
+  const r = trackingResult;
+  // bbox en keyTracking está en coords de análisis 120x90; convertir a % para overlay
+  const bboxPercent = r?.bbox && r.key_detected ? {
+    left: (r.bbox.x / 120) * 100,
+    top: (r.bbox.y / 90) * 100,
+    width: (r.bbox.w / 120) * 100,
+    height: (r.bbox.h / 90) * 100,
+  } : null;
+
   return (
     <div className="flex flex-col gap-2">
       <div className="relative aspect-[4/3] rounded-lg overflow-hidden bg-black">
@@ -113,6 +172,27 @@ export function WebCameraCapture({ onCapture, onError, onUploadFallback, disable
           <div className="absolute inset-0 flex items-center justify-center bg-[var(--bg-secondary)]">
             <span className="text-[var(--muted)] text-sm">Cargando cámara…</span>
           </div>
+        )}
+        {ready && r && (
+          <>
+            {bboxPercent && r.key_detected && (
+              <div
+                className="absolute border-2 border-[var(--accent)]/60 rounded pointer-events-none"
+                style={{
+                  left: `${bboxPercent.left}%`,
+                  top: `${bboxPercent.top}%`,
+                  width: `${bboxPercent.width}%`,
+                  height: `${bboxPercent.height}%`,
+                }}
+                aria-hidden
+              />
+            )}
+            <div className="absolute bottom-2 left-2 right-2 flex justify-center">
+              <span className="text-xs px-2 py-1 rounded bg-black/60 text-white">
+                {getGuidanceMessage(r)}
+              </span>
+            </div>
+          </>
         )}
       </div>
       <div className="flex gap-2">
