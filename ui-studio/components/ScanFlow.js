@@ -94,13 +94,14 @@ function SideBlock({
           <div className="w-full p-2">
             <WebCameraCapture
               captureLabel={side === 'A' ? copy.scan.captureA : copy.scan.captureB}
-              onCapture={async (dataUrl, trackingSnapshot, glareSnapshot) => {
+              onCapture={async (dataUrl, trackingSnapshot, glareSnapshot, shapeSnapshot) => {
                 const optimizedDataUrl = await resizeDataUrl(dataUrl, MAX_OPTIMIZED_DIM);
                 onCapture(side, {
                   optimizedDataUrl,
                   originalDataUrl: dataUrl,
                   trackingSnapshot: trackingSnapshot || null,
                   glareSnapshot: glareSnapshot || null,
+                  shapeSnapshot: shapeSnapshot || null,
                 });
               }}
               onError={() => {}}

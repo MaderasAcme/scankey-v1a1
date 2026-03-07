@@ -7,6 +7,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { Button } from './ui/Button';
 import { analyzeFrame, getGuidanceMessage, makeTrackingSnapshot } from '../utils/keyTracking';
 import { analyzeGlare, getGlareGuidanceMessage, makeGlareSnapshot } from '../utils/glareSense';
+import { analyzeShapeMask, getShapeGuidanceMessage, makeShapeSnapshot } from '../utils/shapeMask';
 
 const MAX_DIM = 1920;
 const TRACKING_FPS = 8;
@@ -17,6 +18,7 @@ export function WebCameraCapture({ onCapture, onError, onUploadFallback, disable
   const streamRef = useRef(null);
   const trackingStateRef = useRef({ history: [], lastResult: null });
   const glareResultRef = useRef(null);
+  const shapeResultRef = useRef(null);
   const trackingIntervalRef = useRef(null);
   const lastLogRef = useRef(0);
   const [ready, setReady] = useState(false);
@@ -24,6 +26,7 @@ export function WebCameraCapture({ onCapture, onError, onUploadFallback, disable
   const [facingMode, setFacingMode] = useState('environment');
   const [trackingResult, setTrackingResult] = useState(null);
   const [glareResult, setGlareResult] = useState(null);
+  const [shapeResult, setShapeResult] = useState(null);
 
   const stopStream = () => {
     if (trackingIntervalRef.current) {
@@ -32,6 +35,7 @@ export function WebCameraCapture({ onCapture, onError, onUploadFallback, disable
     }
     setTrackingResult(null);
     setGlareResult(null);
+    setShapeResult(null);
     const stream = streamRef.current;
     if (!stream) return;
     stream.getTracks().forEach((t) => t.stop());
@@ -52,6 +56,10 @@ export function WebCameraCapture({ onCapture, onError, onUploadFallback, disable
       glareResultRef.current = glareRes;
       setGlareResult(glareRes);
 
+      const shapeRes = analyzeShapeMask(video, { roiBbox: result.bbox || null });
+      shapeResultRef.current = shapeRes;
+      setShapeResult(shapeRes);
+
       if (process.env.NODE_ENV === 'development') {
         const now = Date.now();
         if (now - lastLogRef.current > 1000) {
@@ -71,6 +79,14 @@ export function WebCameraCapture({ onCapture, onError, onUploadFallback, disable
             highlight_cluster_score: glareRes.highlight_cluster_score?.toFixed(2),
             critical_glare_zone: glareRes.critical_glare_zone,
             reflection_state: glareRes.reflection_state,
+          });
+          console.debug('[shapeMask]', {
+            mask_detected: shapeRes.mask_detected,
+            mask_confidence: shapeRes.mask_confidence?.toFixed(2),
+            contour_score: shapeRes.contour_score?.toFixed(2),
+            key_complete: shapeRes.key_complete,
+            shape_area_ratio: shapeRes.shape_area_ratio?.toFixed(3),
+            edge_density: shapeRes.edge_density?.toFixed(3),
           });
         }
       }
@@ -138,8 +154,9 @@ export function WebCameraCapture({ onCapture, onError, onUploadFallback, disable
     const lastResult = trackingStateRef.current?.lastResult;
     const trackingSnapshot = makeTrackingSnapshot(lastResult, w, h);
     const glareSnapshot = makeGlareSnapshot(glareResultRef.current);
+    const shapeSnapshot = makeShapeSnapshot(shapeResultRef.current, w, h);
 
-    if (onCapture) onCapture(dataUrl, trackingSnapshot, glareSnapshot);
+    if (onCapture) onCapture(dataUrl, trackingSnapshot, glareSnapshot, shapeSnapshot);
   };
 
   const switchCamera = () => {
@@ -169,7 +186,9 @@ export function WebCameraCapture({ onCapture, onError, onUploadFallback, disable
 
   const r = trackingResult;
   const glareMsg = getGlareGuidanceMessage(glareResult);
-  const displayMessage = glareMsg || (r ? getGuidanceMessage(r) : null);
+  const trackingMsg = r ? getGuidanceMessage(r) : null;
+  const shapeMsg = getShapeGuidanceMessage(shapeResult);
+  const displayMessage = glareMsg || trackingMsg || shapeMsg;
   // bbox en keyTracking está en coords de análisis 120x90; convertir a % para overlay
   const bboxPercent = r?.bbox && r.key_detected ? {
     left: (r.bbox.x / 120) * 100,
