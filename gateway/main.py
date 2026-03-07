@@ -10,6 +10,8 @@ _log = logging.getLogger(__name__)
 from normalize import normalize_contract
 from quality_gate_active import check_quality_gate
 from policy_actions import execute_policy_actions
+from rate_limit import check_rate_limit, get_identifier, is_enabled as rate_limit_enabled
+from audit import audit_analyze, audit_feedback, audit_login
 from fastapi import FastAPI, UploadFile, File, Form, HTTPException, Depends, Request
 from fastapi.responses import Response, JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
@@ -35,6 +37,14 @@ APP = FastAPI(title="ScanKey Gateway", version=APP_VERSION, redirect_slashes=Fal
 def _get_request_id(req: Request) -> str:
     rid = (req.headers.get("x-request-id") or "").strip()
     return rid or uuid.uuid4().hex
+
+
+def _client_ip(req: Request) -> str:
+    """IP del cliente para auditoría."""
+    forwarded = (req.headers.get("x-forwarded-for") or "").strip()
+    if forwarded:
+        return forwarded.split(",")[0].strip()
+    return (req.client.host if req.client else None) or "127.0.0.1"
 
 
 def _ensure_contract_v2(data: dict) -> dict:
@@ -151,6 +161,44 @@ async def _mw_request_id(request: Request, call_next):
     resp.headers["x-request-id"] = rid
     resp.headers["x-schema-version"] = SCHEMA_VERSION
     resp.headers["x-policy-version"] = POLICY_VERSION
+    return resp
+
+
+# BLOQUE 6: Rate limit por endpoint
+_RATE_LIMIT_PATHS = {
+    "/api/auth/login": "login",
+    "/api/analyze-key": "analyze",
+    "/api/feedback": "feedback",
+}
+
+
+@APP.middleware("http")
+async def _mw_rate_limit(request: Request, call_next):
+    if not rate_limit_enabled():
+        return await call_next(request)
+    path = (request.scope.get("path") or "").split("?")[0]
+    endpoint = _RATE_LIMIT_PATHS.get(path)
+    if not endpoint:
+        return await call_next(request)
+    ident = get_identifier(request)
+    limited, limit, remaining, retry_after = check_rate_limit(ident, endpoint)
+    if limited:
+        rid = getattr(request.state, "request_id", _get_request_id(request))
+        body = {
+            "ok": False,
+            "error": "RATE_LIMITED",
+            "message": "Demasiadas solicitudes. Intenta de nuevo más tarde.",
+        }
+        resp = JSONResponse(content=body, status_code=429)
+        resp.headers["x-request-id"] = rid
+        if retry_after > 0:
+            resp.headers["Retry-After"] = str(retry_after)
+        resp.headers["X-RateLimit-Limit"] = str(limit)
+        resp.headers["X-RateLimit-Remaining"] = "0"
+        return resp
+    resp = await call_next(request)
+    resp.headers["X-RateLimit-Limit"] = str(limit)
+    resp.headers["X-RateLimit-Remaining"] = str(remaining)
     return resp
 
 
@@ -388,6 +436,8 @@ def health():
 @APP.post("/api/auth/login")
 async def auth_login(req: Request):
     """Valida credenciales contra ENV. No loggear password. Comparación segura."""
+    rid = getattr(req.state, "request_id", _get_request_id(req))
+    ip = _client_ip(req)
     try:
         body = await req.json()
     except Exception:
@@ -396,6 +446,7 @@ async def auth_login(req: Request):
     email = (email_raw.lower() if email_raw else "")
     password = str(body.get("password") or "")
     if not WORKSHOP_LOGIN_EMAIL or not WORKSHOP_LOGIN_PASSWORD or not WORKSHOP_TOKEN:
+        audit_login(rid, "/api/auth/login", 503, "not_configured", ip=ip)
         return JSONResponse(
             content={"ok": False, "error": "LOGIN_NOT_CONFIGURED"},
             status_code=503,
@@ -408,10 +459,12 @@ async def auth_login(req: Request):
         email_ok = False
         password_ok = False
     if not (email_ok and password_ok):
+        audit_login(rid, "/api/auth/login", 401, "invalid_credentials", ip=ip)
         return JSONResponse(
             content={"ok": False, "error": "INVALID_CREDENTIALS"},
             status_code=401,
         )
+    audit_login(rid, "/api/auth/login", 200, "success", ip=ip)
     return {
         "ok": True,
         "role": "taller",
@@ -498,8 +551,14 @@ async def proxy_analyze_key(
         data["modo"] = "taller"
 
     rid = getattr(req.state, "request_id", _get_request_id(req))
+    api_key = (req.headers.get("x-api-key") or "").strip()
+    ip = _client_ip(req)
+    role = "taller" if mt in ("1", "true", "yes", "y") or (req.headers.get("X-Workshop-Token") or "").strip() else "cliente"
     t0 = time.time()
     r = await _motor_post("/api/analyze-key", files=files, data=data, request_id=rid, req=req)
+
+    def _audit_analyze_exit(status: int, top1=None, confidence=None, policy_action=None):
+        audit_analyze(rid, "/api/analyze-key", status, role=role, ip=ip, api_key=api_key or None, top1=top1, confidence=confidence, policy_action=policy_action)
 
     if r.status_code == 200:
         ct = (r.headers.get("content-type") or "").split(";")[0]
@@ -519,6 +578,7 @@ async def proxy_analyze_key(
                     block_resp, modified = await execute_policy_actions(payload, f_bytes, override, is_workshop)
                     if block_resp is not None:
                         _inject_meta(block_resp, rid)
+                        _audit_analyze_exit(422, policy_action=block_resp.get("policy_action"))
                         return JSONResponse(content=block_resp, status_code=422)
                     if modified is not None:
                         payload = modified
@@ -526,14 +586,22 @@ async def proxy_analyze_key(
                     block_resp, modified = check_quality_gate(payload, override)
                     if block_resp is not None:
                         _inject_meta(block_resp, rid)
+                        _audit_analyze_exit(422, policy_action=block_resp.get("policy_action"))
                         return JSONResponse(content=block_resp, status_code=422)
                     if modified is not None:
                         payload = modified
 
+                res0 = (payload.get("results") or [{}])[0] if isinstance(payload.get("results"), list) else {}
+                top1 = res0.get("model") or res0.get("id_model_ref")
+                conf = res0.get("confidence")
+                pa = (payload.get("debug") or {}).get("policy_action")
+                _audit_analyze_exit(200, top1=top1, confidence=conf, policy_action=pa)
                 return JSONResponse(content=payload, status_code=200)
             except Exception:
                 pass
-    return _proxy_httpx_json(r, rid)
+    final = _proxy_httpx_json(r, rid)
+    _audit_analyze_exit(r.status_code)
+    return final
 @APP.post("/api/ingest-key")
 async def ingest_key(
     req: Request,
@@ -767,6 +835,9 @@ def _store_idempotency(key: str, response: Dict[str, Any]) -> None:
 
 @APP.post("/api/feedback")
 async def feedback(req: Request, _: bool = Depends(require_apikey)):
+    rid = getattr(req.state, "request_id", _get_request_id(req))
+    api_key = (req.headers.get("x-api-key") or "").strip()
+    ip = _client_ip(req)
     try:
         payload = await req.json()
     except Exception:
@@ -780,11 +851,14 @@ async def feedback(req: Request, _: bool = Depends(require_apikey)):
         _log.info("feedback_idempotent", extra={"idempotency_key": idem_key[:16] + "..."})
         out = dict(cached) if isinstance(cached, dict) else {"ok": True}
         out["deduped"] = True
+        audit_feedback(rid, "/api/feedback", 200, role="cliente", ip=ip, api_key=api_key or None, deduped=True)
         return JSONResponse(content=out)
 
     if not _gcs_ok():
         resp = {"ok": True, "stored": "local"}
         _store_idempotency(idem_key, resp)
+        top1 = payload.get("selected_id") or (payload.get("choice") or {}).get("id_model_ref")
+        audit_feedback(rid, "/api/feedback", 200, role="cliente", ip=ip, api_key=api_key or None, top1=top1, deduped=False)
         return resp
 
     dp = _date_prefix(datetime.now(timezone.utc))
@@ -795,4 +869,6 @@ async def feedback(req: Request, _: bool = Depends(require_apikey)):
     _gcs_put_json(KEY_BUCKET, path, {"received_at": _now_iso(), **payload})
     resp = {"ok": True, "stored": path}
     _store_idempotency(idem_key, resp)
+    top1 = payload.get("selected_id") or (payload.get("choice") or {}).get("id_model_ref")
+    audit_feedback(rid, "/api/feedback", 200, role="cliente", ip=ip, api_key=api_key or None, top1=top1, deduped=False)
     return resp
