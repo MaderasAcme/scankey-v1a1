@@ -63,7 +63,7 @@ pip install -r requirements.txt
 uvicorn main:APP --host 0.0.0.0 --port 8080
 ```
 
-Variables: `MOTOR_URL=http://localhost:8081`, `API_KEYS=local-dev-key`, `SCN_LOCAL_DEV=1`, `SCN_FEATURE_GATEWAY_IDTOKEN_PROXY_ENABLED=false`.
+Variables (o usa `.env.local` en raíz): `MOTOR_URL=http://localhost:8081`, `API_KEYS=local-dev-key`, `SCN_LOCAL_DEV=1`, `SCN_FEATURE_GATEWAY_IDTOKEN_PROXY_ENABLED=false`, `WORKSHOP_LOGIN_EMAIL=scankey@scankey.com`, `WORKSHOP_LOGIN_PASSWORD=1357`, `WORKSHOP_TOKEN=scankey-local-token-123`.
 
 ### Motor (puerto 8081)
 ```bash

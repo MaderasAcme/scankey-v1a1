@@ -10,7 +10,10 @@ import { getWorkshopSession } from './workshopSession';
 const KEY_BASE = 'scankey_api_base';
 const KEY_API_KEY = 'scankey_api_key';
 
-const ENV_BASE = (typeof import.meta !== 'undefined' && import.meta.env?.VITE_GATEWAY_BASE_URL) || '';
+const ENV_BASE =
+  (typeof import.meta !== 'undefined' && import.meta.env?.VITE_GATEWAY_BASE_URL) ||
+  (typeof import.meta !== 'undefined' && import.meta.env?.DEV ? 'http://localhost:8080' : '') ||
+  '';
 const API_KEY_ENV = (typeof import.meta !== 'undefined' && import.meta.env?.VITE_API_KEY) || '';
 
 /**

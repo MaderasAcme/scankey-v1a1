@@ -26,7 +26,10 @@ export function LoginScreen({ onLoginSuccess, onSuccess }) {
         await loginWorkshop(email.trim(), password);
         (onLoginSuccess || onSuccess)?.();
       } catch (err) {
-        setError(err?.message === 'LOGIN_NOT_CONFIGURED' ? 'Login no configurado' : 'Credenciales incorrectas');
+        const msg = err?.message;
+        if (msg === 'LOGIN_NOT_CONFIGURED') setError('Login no configurado');
+        else if (msg === 'API no configurada') setError('API no configurada. Indica VITE_GATEWAY_BASE_URL en .env.local');
+        else setError('Credenciales incorrectas');
       } finally {
         setLoading(false);
       }
