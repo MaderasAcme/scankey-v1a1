@@ -11,8 +11,7 @@ services:
     ports:
       - "8081:8081"
     env_file:
-      - path: .env.local
-        required: false
+      - .env.local
     environment:
       PORT: 8081
       MODEL_PATH: /tmp/modelo_llaves.onnx
@@ -33,8 +32,7 @@ services:
     ports:
       - "8080:8080"
     env_file:
-      - path: .env.local
-        required: false
+      - .env.local
     environment:
       PORT: 8080
       MOTOR_URL: http://motor:8081

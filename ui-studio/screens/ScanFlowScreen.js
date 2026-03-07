@@ -4,12 +4,13 @@ import { ScanFlow } from '../components/ScanFlow';
 import { Button } from '../components/ui/Button';
 import { AlertBanner } from '../components/ui/AlertBanner';
 import { loadJSON } from '../utils/storage';
+import { isWorkshopSessionValid } from '../services/auth';
 
 const SETTINGS_KEY = 'scn_settings';
 
 /**
  * ScanFlowScreen — envuelve ScanFlow con ScreenHeader
- * P1.1: QUALITY_GATE — AlertBanner + "Continuar igualmente" (modo taller + show_debug)
+ * P1.1: QUALITY_GATE — AlertBanner + "Continuar igualmente" (modo taller + sesión válida + show_debug)
  */
 export function ScanFlowScreen({
   onBack,
@@ -21,9 +22,10 @@ export function ScanFlowScreen({
   const settings = loadJSON(SETTINGS_KEY, {});
   const modo = settings.modo || 'cliente';
   const mostrarDebug = Boolean(settings.mostrar_debug);
+  const hasValidWorkshopSession = isWorkshopSessionValid();
   const isQualityGate =
     analyzeError && typeof analyzeError === 'object' && analyzeError.type === 'QUALITY_GATE';
-  const canOverride = modo === 'taller' && mostrarDebug && onRetryWithOverride && capturedPhotos;
+  const canOverride = modo === 'taller' && hasValidWorkshopSession && mostrarDebug && onRetryWithOverride && capturedPhotos;
 
   const errorMessage =
     typeof analyzeError === 'string'

@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import { Navigation } from './components/Navigation';
 import { LoaderOverlay } from './components/ui/LoaderOverlay';
 import { HomeScreen } from './screens/HomeScreen';
@@ -9,7 +9,7 @@ import { TallerScreen } from './screens/TallerScreen';
 import { GuideScreen } from './screens/GuideScreen';
 import { LoginScreen } from './screens/LoginScreen';
 import { ProfileModal } from './screens/ProfileModal';
-import { getWorkshopSession } from './services/auth';
+import { isWorkshopSessionValid, clearWorkshopSession } from './services/auth';
 import { AlertBanner } from './components/ui/AlertBanner';
 import {
   analyzeKey,
@@ -33,10 +33,14 @@ const SCREENS = {
 };
 
 /**
- * App — shell con máquina de estados: screen, isAnalyzing, attemptCount, result, capturedPhotos
- * capturedPhotos en memoria (NO localStorage).
+ * App — shell con máquina de estados.
+ * Login como puerta de entrada: sin sesión válida solo LoginScreen.
+ * Con sesión válida: app completa (Home, Scan, History, Taller, Guide, Profile).
  */
 export default function App() {
+  const [refreshKey, setRefreshKey] = useState(0);
+  const sessionValid = isWorkshopSessionValid();
+
   const [screen, setScreen] = useState('Home');
   const [profileOpen, setProfileOpen] = useState(false);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
@@ -148,12 +152,40 @@ export default function App() {
   }, []);
 
   const handleLogout = useCallback(() => {
+    clearWorkshopSession();
+    const s = loadJSON(SETTINGS_KEY, {});
+    saveJSON(SETTINGS_KEY, { ...s, modo: 'cliente' });
     setProfileOpen(false);
+    setScreen('Home');
+    setRefreshKey((k) => k + 1);
   }, []);
 
-  const ScreenComponent = SCREENS[screen] || SCREENS.home;
+  useEffect(() => {
+    const id = setInterval(() => {
+      if (!isWorkshopSessionValid()) {
+        clearWorkshopSession();
+        const s = loadJSON(SETTINGS_KEY, {});
+        saveJSON(SETTINGS_KEY, { ...s, modo: 'cliente' });
+        setProfileOpen(false);
+        setScreen('Home');
+        setRefreshKey((k) => k + 1);
+      }
+    }, 30000);
+    return () => clearInterval(id);
+  }, []);
 
   const apiConfig = getApiConfig();
+
+  if (!sessionValid) {
+    return (
+      <div className="min-h-screen bg-[var(--bg)] text-[var(--text)] flex flex-col">
+        <LoginScreen
+          key={refreshKey}
+          onLoginSuccess={() => setRefreshKey((k) => k + 1)}
+        />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-[var(--bg)] text-[var(--text)] flex flex-col pb-20">
@@ -204,17 +236,7 @@ export default function App() {
             onConsumeOpenLast={() => setHistoryOpenLast(false)}
           />
         )}
-        {screen === 'Taller' && !getWorkshopSession() && (
-          <LoginScreen
-            onSuccess={() => {
-              const s = loadJSON(SETTINGS_KEY, {});
-              saveJSON(SETTINGS_KEY, { ...s, modo: 'taller' });
-              setScreen('Home');
-            }}
-            onBack={() => setScreen('Home')}
-          />
-        )}
-        {screen === 'Taller' && getWorkshopSession() && (
+        {screen === 'Taller' && (
           <TallerScreen
             onBack={() => setScreen('Home')}
             onNavigateToHistory={() => setScreen('History')}

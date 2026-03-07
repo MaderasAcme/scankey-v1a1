@@ -8,7 +8,7 @@ import { loginWorkshop } from '../services/auth';
 
 const DEFAULT_EMAIL = 'scankey@scankey.com';
 
-export function LoginScreen({ onSuccess, onBack }) {
+export function LoginScreen({ onLoginSuccess, onSuccess }) {
   const [email, setEmail] = useState(DEFAULT_EMAIL);
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
@@ -24,14 +24,14 @@ export function LoginScreen({ onSuccess, onBack }) {
       setLoading(true);
       try {
         await loginWorkshop(email.trim(), password);
-        onSuccess?.();
+        (onLoginSuccess || onSuccess)?.();
       } catch (err) {
-        setError('Credenciales incorrectas');
+        setError(err?.message === 'LOGIN_NOT_CONFIGURED' ? 'Login no configurado' : 'Credenciales incorrectas');
       } finally {
         setLoading(false);
       }
     },
-    [email, password, canSubmit, loading, onSuccess]
+    [email, password, canSubmit, loading, onLoginSuccess, onSuccess]
   );
 
   return (
@@ -116,16 +116,6 @@ export function LoginScreen({ onSuccess, onBack }) {
             </button>
           </div>
         </form>
-
-        {onBack && (
-          <button
-            type="button"
-            onClick={onBack}
-            className="mt-8 text-sm text-[#71717a] hover:text-[#a1a1aa] uppercase tracking-wider"
-          >
-            Volver
-          </button>
-        )}
       </div>
     </div>
   );

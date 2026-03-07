@@ -387,12 +387,17 @@ async def auth_login(req: Request):
         body = await req.json()
     except Exception:
         raise HTTPException(400, "JSON inválido")
-    email = (body.get("email") or "").strip()
-    password = (body.get("password") or "")
+    email_raw = (body.get("email") or "").strip()
+    email = (email_raw.lower() if email_raw else "")
+    password = str(body.get("password") or "")
     if not WORKSHOP_LOGIN_EMAIL or not WORKSHOP_LOGIN_PASSWORD or not WORKSHOP_TOKEN:
-        raise HTTPException(503, "Login taller no configurado (WORKSHOP_* ENV)")
+        return JSONResponse(
+            content={"ok": False, "error": "LOGIN_NOT_CONFIGURED"},
+            status_code=503,
+        )
+    expected_email = WORKSHOP_LOGIN_EMAIL.strip().lower()
     try:
-        email_ok = hmac.compare_digest(email, WORKSHOP_LOGIN_EMAIL)
+        email_ok = hmac.compare_digest(email, expected_email)
         password_ok = hmac.compare_digest(password, WORKSHOP_LOGIN_PASSWORD)
     except (TypeError, ValueError):
         email_ok = False
