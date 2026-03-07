@@ -407,6 +407,7 @@ async def auth_login(req: Request):
         "role": "taller",
         "workshop_token": WORKSHOP_TOKEN,
         "operator_label": "OPERADOR SENIOR",
+        "expires_in_days": 7,
     }
 
 

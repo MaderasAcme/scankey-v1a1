@@ -18,6 +18,9 @@ function jsxInJs() {
 export default defineConfig(({ mode }) => {
     const env = loadEnv(mode, '.', '');
     return {
+      esbuild: {
+        loader: { '.js': 'jsx' },
+      },
       server: {
         port: 5173,
         host: true,
