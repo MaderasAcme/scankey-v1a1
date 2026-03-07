@@ -163,15 +163,6 @@ export function ResultsScreen({
           defaultMode={capturedPhotos?.B ? 'ab' : 'top'}
         />
 
-        <Button
-          variant="destructive"
-          className="w-full"
-          onClick={() => setShowCorrectionModal(true)}
-          aria-label="Corregir manualmente"
-        >
-          {copy.results.manual}
-        </Button>
-
         {results.slice(0, 3).map((r, i) => {
           const dataUrl = getSourceDataUrl(capturedPhotos, r, i);
           const bbox = r.crop_bbox && r.crop_bbox.w > 0 && r.crop_bbox.h > 0 ? r.crop_bbox : { x: 0, y: 0, w: 1, h: 1 };
@@ -231,7 +222,7 @@ export function ResultsScreen({
         )}
 
         <Button
-          variant="secondary"
+          variant={lowConfidence ? 'destructive' : 'secondary'}
           className="w-full"
           onClick={() => setShowCorrectionModal(true)}
           aria-label="Corregir manualmente"

@@ -38,7 +38,7 @@ export function ScanFlowScreen({
     <div className="flex flex-col flex-1">
       <ScreenHeader title="Escanear" onBack={onBack} />
       {errorMessage && (
-        <div className="px-4">
+        <div className="px-4 pb-2">
           <AlertBanner variant="error">{errorMessage}</AlertBanner>
           {isQualityGate && canOverride && (
             <Button
