@@ -263,6 +263,66 @@ def _list_count_images(bucket_name: str, prefix: str, limit: int = 9999) -> int:
     return cnt
 
 
+# Bloque 4.2: cache corto para conteo de muestras (evitar list GCS en cada request)
+_SAMPLES_COUNT_CACHE: Dict[Tuple[str, str], Tuple[int, float]] = {}
+_SAMPLES_COUNT_CACHE_TTL_SEC = 60
+
+
+def _count_samples_for_candidate(
+    ref_canon: str,
+    side: str = "A",
+    *,
+    max_n: int = 30,
+) -> int:
+    """
+    Conteo real de muestras por candidato (ref_canon) y lado (A/B).
+    - GCS: cuenta desde samples/{side}/{ref}/ o by_ref/{ref}/{side}/ según GCS_SAMPLES_COUNT_FROM
+    - Local: usa SCN_LOCAL_SAMPLES_DIR si GCS no disponible
+    - Cache 60s para no listar GCS en cada request.
+    """
+    side2 = "B" if (side or "").strip().upper().startswith("B") else "A"
+    bucket_name = (os.getenv("GCS_BY_REF_BUCKET", "") or "").strip() or (os.getenv("GCS_BUCKET", "") or "").strip()
+    count_from = (os.getenv("GCS_SAMPLES_COUNT_FROM", "samples") or "samples").strip().lower()
+
+    # Local/dev: SCN_LOCAL_SAMPLES_DIR
+    local_dir = (os.getenv("SCN_LOCAL_SAMPLES_DIR", "") or "").strip()
+    if not bucket_name and local_dir:
+        import glob as _glob
+        path = os.path.join(local_dir, ref_canon, side2, "*")
+        try:
+            exts = (".jpg", ".jpeg", ".png", ".webp")
+            cnt = sum(
+                1 for p in _glob.glob(path)
+                if os.path.isfile(p) and (os.path.splitext(p)[1] or "").lower() in exts
+            )
+            return min(cnt, max_n + 1)
+        except Exception:
+            return -1
+
+    if not bucket_name:
+        return -1
+
+    if count_from == "by_ref":
+        by_ref_prefix = (os.getenv("GCS_BY_REF_PREFIX", "by_ref") or "by_ref").strip().strip("/")
+        prefix = f"{by_ref_prefix}/{ref_canon}/{side2}/"
+    else:
+        samples_prefix = (os.getenv("GCS_SAMPLES_PREFIX", "samples") or "samples").strip().strip("/")
+        prefix = f"{samples_prefix}/{side2}/{ref_canon}/"
+    cache_key = (bucket_name, prefix)
+    now = time.time()
+    if cache_key in _SAMPLES_COUNT_CACHE:
+        cached_count, cached_ts = _SAMPLES_COUNT_CACHE[cache_key]
+        if (now - cached_ts) < _SAMPLES_COUNT_CACHE_TTL_SEC:
+            return cached_count
+
+    try:
+        cnt = _list_count_images(bucket_name, prefix, limit=max_n + 1)
+        _SAMPLES_COUNT_CACHE[cache_key] = (cnt, now)
+        return cnt
+    except Exception:
+        return -1
+
+
 def _content_hash_and_window(raw_bytes: bytes) -> tuple:
     """Hash de imagen y ventana de tiempo (YYYY-MM-DD) para dedup."""
     h = hashlib.sha256(raw_bytes).hexdigest()[:16]
@@ -820,30 +880,35 @@ def analyze_key(
     high_confidence = top_score >= 0.95
     low_confidence = top_score < 0.60
 
-    storage_probability = float(__import__("os").getenv("STORAGE_PROBABILITY","0.75"))
+    storage_probability = float(__import__("os").getenv("STORAGE_PROBABILITY", "0.75"))
+    max_n = int((os.getenv("MAX_SAMPLES_PER_REF_SIDE", "30") or "30").strip() or "30")
     labels_count_local = len(_LABELS) if isinstance(_LABELS, list) else 0
-    disable_store_single = __import__("os").getenv("DISABLE_STORE_SINGLE_LABEL","1").lower() in ("1","true","yes")
+    disable_store_single = __import__("os").getenv("DISABLE_STORE_SINGLE_LABEL", "1").lower() in ("1", "true", "yes")
     can_store = not (disable_store_single and labels_count_local <= 1)
 
-    should_store_sample = False
+    # Bloque 4.2: conteo real de muestras por candidato (ref_canon, lado A)
     current_samples_for_candidate = -1
-
     if top_label:
-        try:
-            bucket_dst = (os.getenv("GCS_BY_REF_BUCKET", "") or "").strip() or (os.getenv("GCS_BUCKET", "") or "").strip()
-            by_ref_prefix = (os.getenv("GCS_BY_REF_PREFIX", "by_ref") or "by_ref").strip().strip("/")
-            max_n = int((os.getenv("MAX_SAMPLES_PER_REF_SIDE", "30") or "30").strip() or "30")
-            if bucket_dst:
-                ref_c = _canon(top_label)
-                a_prefix = f"{by_ref_prefix}/{ref_c}/A/"
-                current_samples_for_candidate = _list_count_images(bucket_dst, a_prefix, limit=max_n + 1)
-        except Exception:
-            current_samples_for_candidate = -1
+        ref_c = _canon(top_label)
+        current_samples_for_candidate = _count_samples_for_candidate(ref_c, side="A", max_n=max_n)
 
-    if top_label and top_score >= 0.75:
-        max_n = int((os.getenv("MAX_SAMPLES_PER_REF_SIDE", "30") or "30").strip() or "30")
-        if can_store and (current_samples_for_candidate == -1 or current_samples_for_candidate < max_n):
-            should_store_sample = (random.random() < storage_probability)
+    # Regla: top >= 0.75, current < 30, luego storage_probability
+    try:
+        from common.dataset_governance import should_store_sample_by_rules
+        rules_allow = should_store_sample_by_rules(
+            top_score,
+            current_samples_for_candidate,
+            max_per_ref=max_n,
+        )
+    except Exception:
+        rules_allow = (
+            top_score >= 0.75
+            and (current_samples_for_candidate < 0 or current_samples_for_candidate < max_n)
+        )
+
+    should_store_sample = False
+    if top_label and can_store and rules_allow:
+        should_store_sample = random.random() < storage_probability
 
     store = {"stored": False, "reason": "policy", "side": "A"}
     store_back = {"stored": False, "reason": "no_back", "side": "B"}

@@ -140,12 +140,13 @@ def normalize_contract(raw: Dict[str, Any]) -> Dict[str, Any]:
     high_confidence = top_conf >= THRESHOLD_HIGH
     low_confidence = top_conf < THRESHOLD_LOW
 
-    # should_store_sample y storage_probability
-    current = d.get("current_samples_for_candidate")
-    if current is None or not isinstance(current, (int, float)):
-        current = -1
-    else:
-        current = int(current)
+    # should_store_sample y storage_probability (bloque 4.2: conteo real)
+    try:
+        from common.dataset_governance import clamp_current_samples
+        current = clamp_current_samples(d.get("current_samples_for_candidate"))
+    except Exception:
+        current = d.get("current_samples_for_candidate")
+        current = int(current) if current is not None and isinstance(current, (int, float)) else -1
 
     should_store = False
     if top_conf >= THRESHOLD_STORE and (current < 0 or current < MAX_SAMPLES_PER_REF):
