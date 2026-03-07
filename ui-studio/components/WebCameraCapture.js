@@ -68,6 +68,7 @@ export function WebCameraCapture({ onCapture, onError, onUploadFallback, disable
             glare_score: glareRes.glare_score?.toFixed(2),
             specular_score: glareRes.specular_score?.toFixed(2),
             burned_area_ratio: glareRes.burned_area_ratio?.toFixed(3),
+            highlight_cluster_score: glareRes.highlight_cluster_score?.toFixed(2),
             critical_glare_zone: glareRes.critical_glare_zone,
             reflection_state: glareRes.reflection_state,
           });

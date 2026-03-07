@@ -65,18 +65,23 @@ export function analyzeGlare(video, opts = {}) {
   let burnedInRoi = 0;
   let specularSum = 0;
   let specularCount = 0;
+  let minX = ANALYZE_WIDTH, minY = ANALYZE_HEIGHT, maxX = 0, maxY = 0;
 
   for (let i = 0; i < totalPixels; i++) {
     const r = data[i * 4];
     const g = data[i * 4 + 1];
     const b = data[i * 4 + 2];
     const l = (r * 0.299 + g * 0.587 + b * 0.114) | 0;
+    const x = i % ANALYZE_WIDTH;
+    const y = (i / ANALYZE_WIDTH) | 0;
 
     if (l >= BURNED_LUMINANCE) {
       burnedCount++;
-      const x = i % ANALYZE_WIDTH;
-      const y = (i / ANALYZE_WIDTH) | 0;
       if (pointInRoi(x, y, roiBbox)) burnedInRoi++;
+      if (x < minX) minX = x;
+      if (x > maxX) maxX = x;
+      if (y < minY) minY = y;
+      if (y > maxY) maxY = y;
     }
     if (l >= SPECULAR_LUMINANCE) {
       specularSum += l;
@@ -93,21 +98,36 @@ export function analyzeGlare(video, opts = {}) {
   const roiArea = roiBbox ? roiBbox.w * roiBbox.h : totalPixels;
   const burnedRoiRatio = roiBbox && roiArea > 0 ? burnedInRoi / roiArea : 0;
 
-  const critical_glare_zone = roiBbox
-    ? burnedRoiRatio > 0.05 || burned_area_ratio > BURNED_AREA_CRITICAL
-    : burned_area_ratio > BURNED_AREA_CRITICAL;
+  const bboxArea = burnedCount >= 3 ? (maxX - minX + 1) * (maxY - minY + 1) : totalPixels;
+  const highlight_cluster_score = burnedCount >= 3
+    ? clamp01(burnedCount / Math.max(1, bboxArea))
+    : 0;
+
+  const roiGlareStrong = roiBbox && burnedRoiRatio > 0.05;
+  const critical_glare_zone = roiGlareStrong || burned_area_ratio > BURNED_AREA_CRITICAL;
+
+  const roiSeverity = roiBbox ? burnedRoiRatio : 0;
+  const roiWeighted = clamp01(roiSeverity * 1.5);
+
+  const combined = clamp01(
+    burned_area_ratio * 0.3 +
+    specular_score * 0.35 +
+    highlight_cluster_score * 0.2 +
+    roiWeighted * 0.4 +
+    (critical_glare_zone ? 0.25 : 0)
+  );
 
   let reflection_state = 'ok';
-  if (critical_glare_zone || burned_area_ratio >= BURNED_AREA_CRITICAL) {
+  if (critical_glare_zone || combined >= 0.6) {
     reflection_state = 'critical';
-  } else if (burned_area_ratio >= BURNED_AREA_BAD) {
+  } else if (combined >= 0.4 || burned_area_ratio >= BURNED_AREA_BAD) {
     reflection_state = 'bad';
-  } else if (burned_area_ratio >= BURNED_AREA_WARNING) {
+  } else if (combined >= 0.2 || specular_score >= 0.6 || burned_area_ratio >= BURNED_AREA_WARNING) {
     reflection_state = 'warning';
   }
 
   const glare_score = clamp01(
-    burned_area_ratio * 2 + specular_score * 0.5 + (critical_glare_zone ? 0.5 : 0)
+    burned_area_ratio * 0.4 + specular_score * 0.35 + highlight_cluster_score * 0.15 + roiWeighted * 0.3 + (critical_glare_zone ? 0.3 : 0)
   );
 
   return {
@@ -116,6 +136,7 @@ export function analyzeGlare(video, opts = {}) {
     burned_area_ratio,
     critical_glare_zone,
     reflection_state,
+    highlight_cluster_score,
   };
 }
 
@@ -126,6 +147,7 @@ function makeEmptyGlareResult() {
     burned_area_ratio: 0,
     critical_glare_zone: false,
     reflection_state: 'ok',
+    highlight_cluster_score: 0,
   };
 }
 
@@ -152,5 +174,6 @@ export function makeGlareSnapshot(result) {
     burned_area_ratio: result.burned_area_ratio,
     critical_glare_zone: result.critical_glare_zone,
     reflection_state: result.reflection_state,
+    highlight_cluster_score: result.highlight_cluster_score,
   };
 }
