@@ -204,4 +204,16 @@ def normalize_contract(raw: Dict[str, Any]) -> Dict[str, Any]:
         out["ocr_hint"] = d["ocr_hint"]
     if d.get("ocr_detail") is not None:
         out["ocr_detail"] = d["ocr_detail"]
+
+    # BLOQUE 3: PolicyEngine — añadir policy_* a debug
+    try:
+        from common.policy_engine import evaluate_policy, POLICY_VERSION
+        policy_result = evaluate_policy(out)
+        debug["policy_action"] = policy_result.get("action")
+        debug["policy_reasons"] = policy_result.get("reasons", [])
+        debug["policy_user_message"] = policy_result.get("user_message", "")
+        debug["policy_version"] = policy_result.get("debug", {}).get("policy_version", POLICY_VERSION)
+    except Exception:
+        pass
+
     return out

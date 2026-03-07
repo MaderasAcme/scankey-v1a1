@@ -24,6 +24,8 @@ function getSourceDataUrl(capturedPhotos, result, resultIndex) {
 /**
  * ResultsScreen — TOP3 cards, selección, corrección manual, feedback
  */
+const POLICY_BANNER_ACTIONS = ['BLOCK', 'REQUIRE_MANUAL_REVIEW', 'ALLOW_WITH_OVERRIDE', 'WARN'];
+
 export function ResultsScreen({
   result,
   capturedPhotos,
@@ -31,11 +33,17 @@ export function ResultsScreen({
   onConfirm,
   onQueueFeedback,
   feedbackPending,
+  modoTaller = false,
 }) {
   const results = result?.results || [];
   const lowConfidence = Boolean(result?.low_confidence);
   const highConfidence = Boolean(result?.high_confidence);
   const forceCorrection = lowConfidence;
+
+  const policyAction = result?.debug?.policy_action;
+  const policyUserMessage = result?.debug?.policy_user_message;
+  const policyReasons = Array.isArray(result?.debug?.policy_reasons) ? result.debug.policy_reasons : [];
+  const showPolicyBanner = POLICY_BANNER_ACTIONS.includes(policyAction) && policyUserMessage;
 
   const [selectedRank, setSelectedRank] = useState(null);
   const [showCorrectionModal, setShowCorrectionModal] = useState(false);
@@ -128,6 +136,19 @@ export function ResultsScreen({
         {lowConfidence && (
           <AlertBanner variant="warn">
             Resultado dudoso. Corrige manualmente para asegurar el duplicado.
+          </AlertBanner>
+        )}
+
+        {showPolicyBanner && (
+          <AlertBanner variant={policyAction === 'BLOCK' ? 'error' : 'warn'}>
+            <div>
+              <div>{policyUserMessage}</div>
+              {modoTaller && policyReasons.length > 0 && (
+                <div className="text-xs mt-1 opacity-80">
+                  {policyReasons.slice(0, 2).join(', ')}
+                </div>
+              )}
+            </div>
           </AlertBanner>
         )}
 

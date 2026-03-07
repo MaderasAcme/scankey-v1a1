@@ -224,6 +224,7 @@ export default function App() {
             onConfirm={handleSendFeedback}
             onQueueFeedback={handleQueueFeedback}
             feedbackPending={feedbackPendingCount > 0}
+            modoTaller={loadJSON(SETTINGS_KEY, {}).modo === 'taller'}
           />
         )}
         {screen === 'History' && (

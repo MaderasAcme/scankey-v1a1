@@ -20,7 +20,7 @@ from google.cloud import storage
 APP_VERSION = "0.5.0"
 
 SCHEMA_VERSION = "2026-02-17"
-POLICY_VERSION = "none"
+POLICY_VERSION = "v1"  # BLOQUE 3: policy engine
 
 _cached_id_token = None
 _cached_id_token_expiry = 0
