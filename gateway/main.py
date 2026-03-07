@@ -1,5 +1,5 @@
 import io
-import os, json, time, uuid, hashlib, logging
+import os, json, time, uuid, hashlib, hmac, logging
 from datetime import datetime, timezone, timedelta
 from typing import Optional, Dict, Any, Set
 
@@ -178,6 +178,11 @@ MAX_PAYLOAD_MB = float(os.getenv("SCN_MAX_PAYLOAD_MB", "10"))
 MAX_PAYLOAD_BYTES = int(MAX_PAYLOAD_MB * 1024 * 1024)
 ALLOWED_IMAGE_TYPES = {"image/jpeg", "image/jpg", "image/png", "image/webp"}
 MAX_IMAGE_DIM = int(os.getenv("SCN_MAX_IMAGE_DIM", "8192"))
+
+# Workshop login (auth real)
+WORKSHOP_LOGIN_EMAIL = (os.getenv("WORKSHOP_LOGIN_EMAIL") or "").strip()
+WORKSHOP_LOGIN_PASSWORD = (os.getenv("WORKSHOP_LOGIN_PASSWORD") or "").strip()
+WORKSHOP_TOKEN = (os.getenv("WORKSHOP_TOKEN") or "").strip()
 
 # CORS
 allowed = [o.strip() for o in (ALLOWED_ORIGINS_RAW or "").split(",") if o.strip()]
@@ -373,6 +378,37 @@ async def _motor_get(path: str, request_id: Optional[str] = None):
 @APP.get("/health")
 def health():
     return {"ok": True, "service": "gateway", "version": APP_VERSION}
+
+
+@APP.post("/api/auth/login")
+async def auth_login(req: Request):
+    """Valida credenciales contra ENV. No loggear password. Comparación segura."""
+    try:
+        body = await req.json()
+    except Exception:
+        raise HTTPException(400, "JSON inválido")
+    email = (body.get("email") or "").strip()
+    password = (body.get("password") or "")
+    if not WORKSHOP_LOGIN_EMAIL or not WORKSHOP_LOGIN_PASSWORD or not WORKSHOP_TOKEN:
+        raise HTTPException(503, "Login taller no configurado (WORKSHOP_* ENV)")
+    try:
+        email_ok = hmac.compare_digest(email, WORKSHOP_LOGIN_EMAIL)
+        password_ok = hmac.compare_digest(password, WORKSHOP_LOGIN_PASSWORD)
+    except (TypeError, ValueError):
+        email_ok = False
+        password_ok = False
+    if not (email_ok and password_ok):
+        return JSONResponse(
+            content={"ok": False, "error": "INVALID_CREDENTIALS"},
+            status_code=401,
+        )
+    return {
+        "ok": True,
+        "role": "taller",
+        "workshop_token": WORKSHOP_TOKEN,
+        "operator_label": "OPERADOR SENIOR",
+    }
+
 
 @APP.api_route("/motor/health", methods=["GET","POST"])
 @APP.api_route("/motor/health/", methods=["GET","POST"], include_in_schema=False)

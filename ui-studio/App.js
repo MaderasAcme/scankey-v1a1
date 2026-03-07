@@ -7,7 +7,9 @@ import { ResultsScreen } from './screens/ResultsScreen';
 import { HistoryScreen } from './screens/HistoryScreen';
 import { TallerScreen } from './screens/TallerScreen';
 import { GuideScreen } from './screens/GuideScreen';
+import { LoginScreen } from './screens/LoginScreen';
 import { ProfileModal } from './screens/ProfileModal';
+import { getWorkshopSession } from './services/auth';
 import { AlertBanner } from './components/ui/AlertBanner';
 import {
   analyzeKey,
@@ -17,7 +19,7 @@ import {
   getFeedbackQueue,
   flushFeedbackQueue,
 } from './services/api';
-import { safePushLimited, updateHistoryByInputId, loadJSON, incrementQualityGateStat } from './utils/storage';
+import { safePushLimited, updateHistoryByInputId, loadJSON, saveJSON, incrementQualityGateStat } from './utils/storage';
 
 const SETTINGS_KEY = 'scn_settings';
 
@@ -202,7 +204,17 @@ export default function App() {
             onConsumeOpenLast={() => setHistoryOpenLast(false)}
           />
         )}
-        {screen === 'Taller' && (
+        {screen === 'Taller' && !getWorkshopSession() && (
+          <LoginScreen
+            onSuccess={() => {
+              const s = loadJSON(SETTINGS_KEY, {});
+              saveJSON(SETTINGS_KEY, { ...s, modo: 'taller' });
+              setScreen('Home');
+            }}
+            onBack={() => setScreen('Home')}
+          />
+        )}
+        {screen === 'Taller' && getWorkshopSession() && (
           <TallerScreen
             onBack={() => setScreen('Home')}
             onNavigateToHistory={() => setScreen('History')}

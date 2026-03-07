@@ -5,6 +5,7 @@
  * Uses VITE_* env at build, __SCN_CONFIG__/localStorage for runtime override.
  */
 import { storage, loadJSON, saveJSON } from '../utils/storage';
+import { getWorkshopSession } from './workshopSession';
 
 const KEY_BASE = 'scankey_api_base';
 const KEY_API_KEY = 'scankey_api_key';
@@ -279,6 +280,8 @@ export async function analyzeKey(photos, { modo, qualityOverride, onAttempt } = 
     const headers = { 'X-Request-ID': requestId };
     if (apiKey) headers['X-API-Key'] = apiKey;
     if (qualityOverride) headers['X-Quality-Override'] = '1';
+    const ws = getWorkshopSession();
+    if (ws?.token) headers['X-Workshop-Token'] = ws.token;
     const ac = new AbortController();
     const t = setTimeout(() => ac.abort(), ANALYZE_TIMEOUT_MS);
     return fetch(url, { method: 'POST', headers, body: form, signal: ac.signal })
@@ -361,6 +364,8 @@ export async function sendFeedback(payload, { timeoutMs = FEEDBACK_TIMEOUT_MS } 
     'X-Request-ID': requestId,
   };
   if (apiKey) headers['X-API-Key'] = apiKey;
+  const ws = getWorkshopSession();
+  if (ws?.token) headers['X-Workshop-Token'] = ws.token;
 
   const ac = new AbortController();
   const t = setTimeout(() => ac.abort(), timeoutMs);
