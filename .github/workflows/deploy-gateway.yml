@@ -1,0 +1,45 @@
+# Despliega el gateway (scankey-gateway) a Cloud Run
+# Requiere: GCP_PROJECT_ID, GCP_WIF_PROVIDER, GCP_WIF_SERVICE_ACCOUNT
+# Env vars login (configurar manualmente en Cloud Run o Secret Manager):
+#   WORKSHOP_LOGIN_EMAIL, WORKSHOP_LOGIN_PASSWORD, WORKSHOP_TOKEN
+name: Deploy Gateway to Cloud Run
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - 'gateway/**'
+      - 'common/**'
+      - 'cloudbuild-gateway.yaml'
+      - '.github/workflows/deploy-gateway.yml'
+  workflow_dispatch:
+
+env:
+  PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
+  REGION: europe-southwest1
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Google Auth
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ secrets.GCP_WIF_PROVIDER }}
+          service_account: ${{ secrets.GCP_WIF_SERVICE_ACCOUNT }}
+
+      - name: Set up Cloud SDK
+        uses: google-github-actions/setup-gcloud@v2
+
+      - name: Deploy Gateway (Cloud Build)
+        run: |
+          gcloud builds submit --config=cloudbuild-gateway.yaml . \
+            --project=${{ env.PROJECT_ID }} \
+            --substitutions=SHORT_SHA=${{ github.sha }}

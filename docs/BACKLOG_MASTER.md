@@ -2,6 +2,15 @@
 
 ---
 
+## BLOQUE 5 — Single Source of Truth (common/) ✅
+
+**Regla de arquitectura:**
+- `common/` = helpers compartidos estables (size_class, quality_gate, risk_engine, policy_engine)
+- `gateway/normalize.py` = **normalización oficial** del contrato ScanKey
+- `ui-studio/backend/utils/normalize.py` = **adaptador mock dev** — delega en gateway, sin duplicar lógica
+
+---
+
 ## ROADMAP TALLER (B) — PRIORIDADES
 
 ### P0
@@ -109,6 +118,7 @@ Antes de mergear cada PR:
 ---
 
 ## P0 — Multi-clase / Multi-label (mantener y enriquecer)
+- [x] **Fase 2** Taxonomía oficial multi-label (oblig/recomend/experimental) — `docs/MULTILABEL_FIELDS.md`
 - [ ] Definir N labels v2 (lista cerrada) y congelarla (DoD: archivo `refs/v2_labels.txt`)
 - [ ] Dataset v2 mínimo por clase (DoD: >= 30 A/B por label en `~/WORK/scankey/datasets/v2/<LABEL>/{A,B}`)
 - [ ] Entrenar + exportar ONNX v2 (DoD: `modelo_llaves.onnx` + `.data` si aplica + `labels.json` con N>1)

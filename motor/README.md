@@ -150,7 +150,9 @@ Una lista de variables de entorno importantes que el servicio Motor utiliza:
 | `ENABLE_CURATED_BY_REF` | `1` para habilitar copias curadas por referencia en GCS. | `1` |
 | `GCS_BY_REF_BUCKET` | Bucket de GCS para copias curadas por referencia. | (igual que `GCS_BUCKET`) |
 | `GCS_BY_REF_PREFIX` | Prefijo de GCS para copias curadas por referencia. | `by_ref` |
-| `MAX_SAMPLES_PER_REF_SIDE` | Número máximo de muestras por referencia y lado. | `30` |
+| `GCS_SAMPLES_COUNT_FROM` | Origen del conteo de muestras: `samples` (mismo que store) o `by_ref`. | `samples` |
+| `SCN_LOCAL_SAMPLES_DIR` | (Local/dev) Directorio local para conteo de muestras si GCS no está disponible. | |
+| `MAX_SAMPLES_PER_REF_SIDE` | Número máximo de muestras por referencia y lado (bloque 4.2). | `30` |
 | `CURATED_STORE_ONLY_IF_MODO_TALLER` | `1` para curar solo si `modo` es "taller". | `1` |
 | `SCN_REF_DB_PATH` | Ruta a la base de datos de referencias ricas. | |
 | `SCN_CATALOG_CANON` | Ruta de anulación para el archivo de canon del catálogo. | |

@@ -131,6 +131,24 @@ def test_high_confidence_consensus_baja():
     assert out["risk_score"] < 40
 
 
+def test_consistency_conflicts_add_risk():
+    """Multi-label Fase 3: consistency_conflicts en debug suben risk_score."""
+    from common.risk_engine import compute_risk
+
+    debug = {}
+    resp = {
+        "results": [{"brand": "X", "confidence": 0.90}],
+        "low_confidence": False,
+        "high_confidence": True,
+        "manufacturer_hint": {"found": False},
+    }
+    out1 = compute_risk(debug, resp)
+    debug2 = {"consistency_conflicts": ["orientation_conflict", "brand_conflict"]}
+    out2 = compute_risk(debug2, resp)
+    assert out2["risk_score"] > out1["risk_score"]
+    assert "orientation_conflict" in out2["risk_reasons"] or "brand_conflict" in out2["risk_reasons"]
+
+
 def test_clamp_0_100():
     """risk_score siempre en [0, 100]."""
     for low_conf, high_conf in [(True, False), (False, True)]:

@@ -77,6 +77,12 @@ App.js.bak.*
 # local trash
 _SANDBOX_TRASH/
 
+# BLOQUE 4.1: registro idempotencia local (gateway)
+.idempotency_keys/
+
+# BLOQUE 6: auditoría local (gateway)
+gateway/.audit_logs/
+
 # secrets
 .env.local
 .env.*

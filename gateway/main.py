@@ -1,5 +1,5 @@
 import io
-import os, json, time, uuid, hashlib, logging
+import os, json, time, uuid, hashlib, hmac, logging
 from datetime import datetime, timezone, timedelta
 from typing import Optional, Dict, Any, Set
 
@@ -9,6 +9,9 @@ from PIL import Image
 _log = logging.getLogger(__name__)
 from normalize import normalize_contract
 from quality_gate_active import check_quality_gate
+from policy_actions import execute_policy_actions
+from rate_limit import check_rate_limit, get_identifier, is_enabled as rate_limit_enabled
+from audit import audit_analyze, audit_feedback, audit_login
 from fastapi import FastAPI, UploadFile, File, Form, HTTPException, Depends, Request
 from fastapi.responses import Response, JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
@@ -20,7 +23,7 @@ from google.cloud import storage
 APP_VERSION = "0.5.0"
 
 SCHEMA_VERSION = "2026-02-17"
-POLICY_VERSION = "none"
+POLICY_VERSION = "v1"  # BLOQUE 3: policy engine
 
 _cached_id_token = None
 _cached_id_token_expiry = 0
@@ -34,6 +37,14 @@ APP = FastAPI(title="ScanKey Gateway", version=APP_VERSION, redirect_slashes=Fal
 def _get_request_id(req: Request) -> str:
     rid = (req.headers.get("x-request-id") or "").strip()
     return rid or uuid.uuid4().hex
+
+
+def _client_ip(req: Request) -> str:
+    """IP del cliente para auditoría."""
+    forwarded = (req.headers.get("x-forwarded-for") or "").strip()
+    if forwarded:
+        return forwarded.split(",")[0].strip()
+    return (req.client.host if req.client else None) or "127.0.0.1"
 
 
 def _ensure_contract_v2(data: dict) -> dict:
@@ -65,8 +76,15 @@ def _ensure_contract_v2(data: dict) -> dict:
         rr.setdefault("brand", None)
         rr.setdefault("model", rr.get("model") or rr.get("id_model_ref"))
         rr.setdefault("confidence", 0.0)
-        if not isinstance(rr.get("compatibility_tags"), list):
-            rr["compatibility_tags"] = []
+        ct = rr.get("compatibility_tags")
+        if not isinstance(ct, list):
+            ct = [ct] if isinstance(ct, str) else []
+        rr["compatibility_tags"] = ct
+        # Multi-label: tags oficial, compatibility_tags legacy
+        tags = rr.get("tags")
+        if not isinstance(tags, list):
+            tags = ct  # fallback desde compatibility_tags
+        rr["tags"] = tags
         out.append(rr)
 
     while len(out) < 3:
@@ -77,7 +95,8 @@ def _ensure_contract_v2(data: dict) -> dict:
             "model": None,
             "id_model_ref": None,
             "confidence": 0.0,
-            "compatibility_tags": []
+            "compatibility_tags": [],
+            "tags": [],
         })
 
     d["results"] = out
@@ -115,7 +134,7 @@ def _proxy_httpx_json(r: httpx.Response, request_id: str):
     if ct == "application/json":
         try:
             payload = r.json()
-            # SCN_PATCH_FIX_COMPAT_TAGS
+            # SCN_PATCH_FIX_COMPAT_TAGS + Multi-label tags
             if isinstance(payload, dict):
                 payload.setdefault('manufacturer_hint', {'found': False, 'name': None, 'confidence': 0.0})
                 for _k in ('results','candidates'):
@@ -125,13 +144,19 @@ def _proxy_httpx_json(r: httpx.Response, request_id: str):
                             if isinstance(_it, dict):
                                 _ct = _it.get('compatibility_tags')
                                 if _ct is None:
-                                    _it['compatibility_tags'] = []
+                                    _ct = []
                                 elif isinstance(_ct, list):
                                     pass
                                 elif isinstance(_ct, str):
-                                    _it['compatibility_tags'] = [_ct]
+                                    _ct = [_ct]
                                 else:
-                                    _it['compatibility_tags'] = []
+                                    _ct = []
+                                _it['compatibility_tags'] = _ct
+                                _tags = _it.get('tags')
+                                if not isinstance(_tags, list):
+                                    _it['tags'] = _ct
+                                else:
+                                    _it['tags'] = _tags
 
             # SCN_PATCH_MANUFACTURER_HINT_DEFAULT
             if isinstance(payload, dict) and "manufacturer_hint" not in payload:
@@ -153,6 +178,44 @@ async def _mw_request_id(request: Request, call_next):
     return resp
 
 
+# BLOQUE 6: Rate limit por endpoint
+_RATE_LIMIT_PATHS = {
+    "/api/auth/login": "login",
+    "/api/analyze-key": "analyze",
+    "/api/feedback": "feedback",
+}
+
+
+@APP.middleware("http")
+async def _mw_rate_limit(request: Request, call_next):
+    if not rate_limit_enabled():
+        return await call_next(request)
+    path = (request.scope.get("path") or "").split("?")[0]
+    endpoint = _RATE_LIMIT_PATHS.get(path)
+    if not endpoint:
+        return await call_next(request)
+    ident = get_identifier(request)
+    limited, limit, remaining, retry_after = check_rate_limit(ident, endpoint)
+    if limited:
+        rid = getattr(request.state, "request_id", _get_request_id(request))
+        body = {
+            "ok": False,
+            "error": "RATE_LIMITED",
+            "message": "Demasiadas solicitudes. Intenta de nuevo más tarde.",
+        }
+        resp = JSONResponse(content=body, status_code=429)
+        resp.headers["x-request-id"] = rid
+        if retry_after > 0:
+            resp.headers["Retry-After"] = str(retry_after)
+        resp.headers["X-RateLimit-Limit"] = str(limit)
+        resp.headers["X-RateLimit-Remaining"] = "0"
+        return resp
+    resp = await call_next(request)
+    resp.headers["X-RateLimit-Limit"] = str(limit)
+    resp.headers["X-RateLimit-Remaining"] = str(remaining)
+    return resp
+
+
 # -----------------------------
 # Config
 # -----------------------------
@@ -169,15 +232,24 @@ KEY_BUCKET = os.getenv("KEY_BUCKET", "scankey-dc007-keys")
 KEY_PREFIX = os.getenv("KEY_PREFIX", "ingest").strip("/")
 JOB_PREFIX = os.getenv("JOB_PREFIX", "jobs").strip("/")
 FEEDBACK_PREFIX = os.getenv("FEEDBACK_PREFIX", "feedback").strip("/")
+IDEMPOTENCY_KEYS_PREFIX = os.getenv("IDEMPOTENCY_KEYS_PREFIX", "idempotency_keys").strip("/")
+IDEMPOTENCY_TTL_SECONDS = int(os.getenv("IDEMPOTENCY_TTL_SECONDS", "86400"))  # 24h ventana
 
 # P1.1: QualityGate (soft-block)
 SCN_FEATURE_QUALITY_GATE_ACTIVE = os.getenv("SCN_FEATURE_QUALITY_GATE_ACTIVE", "false").lower() in ("1", "true", "yes")
+# BLOQUE 3.1: PolicyEngine operativo (BLOCK 422, RUN_OCR, ALLOW_WITH_OVERRIDE)
+SCN_FEATURE_POLICY_ENGINE_ACTIVE = os.getenv("SCN_FEATURE_POLICY_ENGINE_ACTIVE", "false").lower() in ("1", "true", "yes")
 
 # P0.5: Input validation
 MAX_PAYLOAD_MB = float(os.getenv("SCN_MAX_PAYLOAD_MB", "10"))
 MAX_PAYLOAD_BYTES = int(MAX_PAYLOAD_MB * 1024 * 1024)
 ALLOWED_IMAGE_TYPES = {"image/jpeg", "image/jpg", "image/png", "image/webp"}
 MAX_IMAGE_DIM = int(os.getenv("SCN_MAX_IMAGE_DIM", "8192"))
+
+# Workshop login (auth real)
+WORKSHOP_LOGIN_EMAIL = (os.getenv("WORKSHOP_LOGIN_EMAIL") or "").strip()
+WORKSHOP_LOGIN_PASSWORD = (os.getenv("WORKSHOP_LOGIN_PASSWORD") or "").strip()
+WORKSHOP_TOKEN = (os.getenv("WORKSHOP_TOKEN") or "").strip()
 
 # CORS
 allowed = [o.strip() for o in (ALLOWED_ORIGINS_RAW or "").split(",") if o.strip()]
@@ -374,6 +446,48 @@ async def _motor_get(path: str, request_id: Optional[str] = None):
 def health():
     return {"ok": True, "service": "gateway", "version": APP_VERSION}
 
+
+@APP.post("/api/auth/login")
+async def auth_login(req: Request):
+    """Valida credenciales contra ENV. No loggear password. Comparación segura."""
+    rid = getattr(req.state, "request_id", _get_request_id(req))
+    ip = _client_ip(req)
+    try:
+        body = await req.json()
+    except Exception:
+        raise HTTPException(400, "JSON inválido")
+    email_raw = (body.get("email") or "").strip()
+    email = (email_raw.lower() if email_raw else "")
+    password = str(body.get("password") or "")
+    if not WORKSHOP_LOGIN_EMAIL or not WORKSHOP_LOGIN_PASSWORD or not WORKSHOP_TOKEN:
+        audit_login(rid, "/api/auth/login", 503, "not_configured", ip=ip)
+        return JSONResponse(
+            content={"ok": False, "error": "LOGIN_NOT_CONFIGURED"},
+            status_code=503,
+        )
+    expected_email = WORKSHOP_LOGIN_EMAIL.strip().lower()
+    try:
+        email_ok = hmac.compare_digest(email, expected_email)
+        password_ok = hmac.compare_digest(password, WORKSHOP_LOGIN_PASSWORD)
+    except (TypeError, ValueError):
+        email_ok = False
+        password_ok = False
+    if not (email_ok and password_ok):
+        audit_login(rid, "/api/auth/login", 401, "invalid_credentials", ip=ip)
+        return JSONResponse(
+            content={"ok": False, "error": "INVALID_CREDENTIALS"},
+            status_code=401,
+        )
+    audit_login(rid, "/api/auth/login", 200, "success", ip=ip)
+    return {
+        "ok": True,
+        "role": "taller",
+        "workshop_token": WORKSHOP_TOKEN,
+        "operator_label": "OPERADOR SENIOR",
+        "expires_in_days": 7,
+    }
+
+
 @APP.api_route("/motor/health", methods=["GET","POST"])
 @APP.api_route("/motor/health/", methods=["GET","POST"], include_in_schema=False)
 async def motor_health(req: Request, _: bool = Depends(require_apikey)):
@@ -451,8 +565,14 @@ async def proxy_analyze_key(
         data["modo"] = "taller"
 
     rid = getattr(req.state, "request_id", _get_request_id(req))
+    api_key = (req.headers.get("x-api-key") or "").strip()
+    ip = _client_ip(req)
+    role = "taller" if mt in ("1", "true", "yes", "y") or (req.headers.get("X-Workshop-Token") or "").strip() else "cliente"
     t0 = time.time()
     r = await _motor_post("/api/analyze-key", files=files, data=data, request_id=rid, req=req)
+
+    def _audit_analyze_exit(status: int, top1=None, confidence=None, policy_action=None):
+        audit_analyze(rid, "/api/analyze-key", status, role=role, ip=ip, api_key=api_key or None, top1=top1, confidence=confidence, policy_action=policy_action)
 
     if r.status_code == 200:
         ct = (r.headers.get("content-type") or "").split(";")[0]
@@ -464,20 +584,38 @@ async def proxy_analyze_key(
                 proc_ms = int((time.time() - t0) * 1000)
                 _log_analyze(rid, proc_ms, payload)
 
-                # P1.1: QualityGate (soft-block)
-                if SCN_FEATURE_QUALITY_GATE_ACTIVE:
-                    override = (req.headers.get("X-Quality-Override") or "").strip() == "1"
+                # BLOQUE 3.1: PolicyEngine operativo o QualityGate legacy
+                override = (req.headers.get("X-Quality-Override") or "").strip() == "1"
+                is_workshop = bool((req.headers.get("X-Workshop-Token") or "").strip()) or mt in ("1", "true", "yes", "y")
+
+                if SCN_FEATURE_POLICY_ENGINE_ACTIVE:
+                    block_resp, modified = await execute_policy_actions(payload, f_bytes, override, is_workshop)
+                    if block_resp is not None:
+                        _inject_meta(block_resp, rid)
+                        _audit_analyze_exit(422, policy_action=block_resp.get("policy_action"))
+                        return JSONResponse(content=block_resp, status_code=422)
+                    if modified is not None:
+                        payload = modified
+                elif SCN_FEATURE_QUALITY_GATE_ACTIVE:
                     block_resp, modified = check_quality_gate(payload, override)
                     if block_resp is not None:
                         _inject_meta(block_resp, rid)
+                        _audit_analyze_exit(422, policy_action=block_resp.get("policy_action"))
                         return JSONResponse(content=block_resp, status_code=422)
                     if modified is not None:
                         payload = modified
 
+                res0 = (payload.get("results") or [{}])[0] if isinstance(payload.get("results"), list) else {}
+                top1 = res0.get("model") or res0.get("id_model_ref")
+                conf = res0.get("confidence")
+                pa = (payload.get("debug") or {}).get("policy_action")
+                _audit_analyze_exit(200, top1=top1, confidence=conf, policy_action=pa)
                 return JSONResponse(content=payload, status_code=200)
             except Exception:
                 pass
-    return _proxy_httpx_json(r, rid)
+    final = _proxy_httpx_json(r, rid)
+    _audit_analyze_exit(r.status_code)
+    return final
 @APP.post("/api/ingest-key")
 async def ingest_key(
     req: Request,
@@ -599,15 +737,143 @@ async def _job_status_impl(req: Request, job_id: str, process: str = "1"):
         _gcs_put_json(KEY_BUCKET, job_path, job)
         return {"ok": True, **job}
 
+
+# -----------------------------
+# BLOQUE 4.1: Idempotencia feedback
+# -----------------------------
+def _normalize_manual_for_key(payload: Dict[str, Any]) -> Dict[str, str]:
+    """Extrae y normaliza manual_data/manual para hash determinista."""
+    manual = payload.get("manual_data") or payload.get("manual")
+    if not isinstance(manual, dict):
+        return {}
+    out = {}
+    for k, v in sorted(manual.items()):
+        if v is None:
+            out[k] = ""
+        elif isinstance(v, (str, int, float, bool)):
+            out[k] = str(v).strip()
+        else:
+            out[k] = json.dumps(v, sort_keys=True, ensure_ascii=False)
+    return out
+
+
+def _compute_feedback_idempotency_key(payload: Dict[str, Any]) -> str:
+    """
+    Clave determinista para un feedback lógico.
+    Hash de: input_id, selected_id/correction target, correction, manual_data normalizado, fecha truncada.
+    """
+    dt = datetime.now(timezone.utc)
+    date_str = f"{dt.year:04d}-{dt.month:02d}-{dt.day:02d}"
+    input_id = (payload.get("input_id") or payload.get("job_id") or "").strip()
+    selected = (
+        payload.get("selected_id")
+        or payload.get("selected_id_model_ref")
+        or payload.get("id_model_ref")
+        or ""
+    )
+    if not selected and isinstance(payload.get("choice"), dict):
+        selected = payload.get("choice", {}).get("id_model_ref") or payload.get("choice", {}).get("selected_id") or ""
+    correction = bool(payload.get("correction", False))
+    manual_norm = _normalize_manual_for_key(payload)
+    manual_str = json.dumps(manual_norm, sort_keys=True, ensure_ascii=False)
+    chosen_rank = payload.get("chosen_rank") or payload.get("selected_rank")
+    rank_str = str(chosen_rank) if chosen_rank is not None else ""
+    canonical = f"{input_id}|{selected}|{correction}|{rank_str}|{manual_str}|{date_str}"
+    return hashlib.sha256(canonical.encode("utf-8")).hexdigest()
+
+
+def _get_feedback_idempotency_key(req: Request, payload: Dict[str, Any]) -> str:
+    """Obtiene clave: Idempotency-Key header o fallback determinista desde payload."""
+    header_key = (req.headers.get("Idempotency-Key") or req.headers.get("idempotency-key") or "").strip()
+    if header_key and len(header_key) <= 128:
+        return header_key
+    return _compute_feedback_idempotency_key(payload)
+
+
+def _idempotency_registry_path(key: str, date_prefix: str) -> str:
+    return f"{IDEMPOTENCY_KEYS_PREFIX}/{date_prefix}/{key}.json"
+
+
+def _idempotency_local_dir() -> str:
+    """Directorio local para registro idempotencia cuando GCS no está disponible."""
+    base = os.getenv("IDEMPOTENCY_LOCAL_DIR", "").strip() or os.path.join(os.path.dirname(__file__), ".idempotency_keys")
+    os.makedirs(base, exist_ok=True)
+    return base
+
+
+def _check_idempotency_seen(key: str) -> tuple[bool, Optional[Dict[str, Any]]]:
+    """Devuelve (visto, respuesta_cacheada). GCS o fichero local según disponibilidad."""
+    dp = _date_prefix(datetime.now(timezone.utc))
+    if _gcs_ok():
+        path = _idempotency_registry_path(key, dp)
+        try:
+            rec = _gcs_get_json(KEY_BUCKET, path)
+        except FileNotFoundError:
+            return False, None
+    else:
+        local_dir = _idempotency_local_dir()
+        subdir = os.path.join(local_dir, dp.replace("/", os.sep))
+        os.makedirs(subdir, exist_ok=True)
+        fpath = os.path.join(subdir, f"{key}.json")
+        try:
+            with open(fpath, "r", encoding="utf-8") as f:
+                rec = json.load(f)
+        except FileNotFoundError:
+            return False, None
+        except (json.JSONDecodeError, OSError):
+            return False, None
+    first_seen = rec.get("first_seen_unix", 0)
+    if time.time() - first_seen > IDEMPOTENCY_TTL_SECONDS:
+        return False, None
+    return True, rec.get("response")
+
+
+def _store_idempotency(key: str, response: Dict[str, Any]) -> None:
+    """Registra clave idempotente con respuesta cacheada. GCS o fichero local."""
+    dp = _date_prefix(datetime.now(timezone.utc))
+    rec = {"first_seen_unix": int(time.time()), "first_seen_iso": _now_iso(), "response": response}
+    if _gcs_ok():
+        path = _idempotency_registry_path(key, dp)
+        _gcs_put_json(KEY_BUCKET, path, rec)
+    else:
+        local_dir = _idempotency_local_dir()
+        subdir = os.path.join(local_dir, dp.replace("/", os.sep))
+        os.makedirs(subdir, exist_ok=True)
+        fpath = os.path.join(subdir, f"{key}.json")
+        try:
+            with open(fpath, "w", encoding="utf-8") as f:
+                json.dump(rec, f, ensure_ascii=False, indent=None)
+        except OSError:
+            _log.warning("No se pudo guardar idempotency key local: %s", fpath)
+
+
 @APP.post("/api/feedback")
 async def feedback(req: Request, _: bool = Depends(require_apikey)):
+    rid = getattr(req.state, "request_id", _get_request_id(req))
+    api_key = (req.headers.get("x-api-key") or "").strip()
+    ip = _client_ip(req)
     try:
         payload = await req.json()
     except Exception:
         raise HTTPException(400, "JSON inválido")
+    if not isinstance(payload, dict):
+        payload = {}
+
+    idem_key = _get_feedback_idempotency_key(req, payload)
+    seen, cached = _check_idempotency_seen(idem_key)
+    if seen and cached is not None:
+        _log.info("feedback_idempotent", extra={"idempotency_key": idem_key[:16] + "..."})
+        out = dict(cached) if isinstance(cached, dict) else {"ok": True}
+        out["deduped"] = True
+        audit_feedback(rid, "/api/feedback", 200, role="cliente", ip=ip, api_key=api_key or None, deduped=True)
+        return JSONResponse(content=out)
 
     if not _gcs_ok():
-        return {"ok": True, "stored": "local"}
+        resp = {"ok": True, "stored": "local"}
+        _store_idempotency(idem_key, resp)
+        top1 = payload.get("selected_id") or (payload.get("choice") or {}).get("id_model_ref")
+        audit_feedback(rid, "/api/feedback", 200, role="cliente", ip=ip, api_key=api_key or None, top1=top1, deduped=False)
+        return resp
 
     dp = _date_prefix(datetime.now(timezone.utc))
     ts = int(time.time())
@@ -615,4 +881,8 @@ async def feedback(req: Request, _: bool = Depends(require_apikey)):
 
     path = f"{FEEDBACK_PREFIX}/{dp}/{input_id}_{ts}.json"
     _gcs_put_json(KEY_BUCKET, path, {"received_at": _now_iso(), **payload})
-    return {"ok": True, "stored": path}
+    resp = {"ok": True, "stored": path}
+    _store_idempotency(idem_key, resp)
+    top1 = payload.get("selected_id") or (payload.get("choice") or {}).get("id_model_ref")
+    audit_feedback(rid, "/api/feedback", 200, role="cliente", ip=ip, api_key=api_key or None, top1=top1, deduped=False)
+    return resp

@@ -17,6 +17,8 @@ function getErrorMessage(code, isDev) {
       return 'Credenciales incorrectas';
     case 'LOGIN_NOT_CONFIGURED':
       return 'Login no configurado en el servidor';
+    case 'SERVER_ERROR':
+      return 'Error del servidor. Intenta más tarde.';
     case 'API_NOT_CONFIGURED':
       return isDev
         ? 'API no configurada. Indica VITE_GATEWAY_BASE_URL en .env.local'

@@ -90,7 +90,7 @@ function enrichResultFromCatalog(r) {
     type: (r?.type ?? c.type ?? "KEY"),
     orientation: (r?.orientation ?? c.orientation ?? null),
     head_color: (r?.head_color ?? c.head_color ?? null),
-    compatibility_tags: (r?.compatibility_tags ?? c.compatibility_tags ?? c.tags ?? []),
+    compatibility_tags: (r?.compatibility_tags ?? r?.tags ?? c.compatibility_tags ?? c.tags ?? []),
     _catalog_found: true,
     _id_model_ref: (c.id_model_ref ?? c.ref ?? ref ?? null),
   };
@@ -1801,9 +1801,10 @@ function CandidateCard({ rank, result, previewUri, previewSize, onPickCorrect, s
             {result?.orientation ? <Tag text={`ORIENTACIÓN: ${result.orientation.toUpperCase()}`} /> : null}
             {result?.head_color ? <Tag text={`CABEZAL: ${result.head_color.toUpperCase()}`} /> : null}
             {result?.visual_state ? <Tag text={`ESTADO: ${result.visual_state.toUpperCase()}`} /> : null}
-            {Array.isArray(result?.compatibility_tags)
-              ? result.compatibility_tags.slice(0, 3).map((t) => <Tag key={t} text={t.toUpperCase()} />)
-              : null}
+            {(() => {
+              const arr = Array.isArray(result?.tags) ? result.tags : (Array.isArray(result?.compatibility_tags) ? result.compatibility_tags : []);
+              return arr.length > 0 ? arr.slice(0, 3).map((t) => <Tag key={t} text={String(t).toUpperCase()} />) : null;
+            })()}
           </Row>
 
           <View style={{ marginTop: 10 }}>

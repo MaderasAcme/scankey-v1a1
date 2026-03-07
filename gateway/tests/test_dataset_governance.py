@@ -33,10 +33,26 @@ def test_should_not_store_when_below_threshold():
 
 
 def test_should_not_store_when_at_or_above_max():
-    """current >= 30 -> no store."""
+    """current >= 30 -> no store (bloque 4.2)."""
     assert should_store_sample_by_rules(0.95, 30) is False
     assert should_store_sample_by_rules(0.80, 31) is False
     assert should_store_sample_by_rules(0.75, 30) is False
+
+
+def test_bloque_42_exact_cap_cases():
+    """Bloque 4.2: casos exactos del cap de 30."""
+    # current 29 => puede guardar
+    assert should_store_sample_by_rules(0.75, 29) is True
+    assert should_store_sample_by_rules(0.80, 29) is True
+    # current 30 => no guarda
+    assert should_store_sample_by_rules(0.95, 30) is False
+    assert should_store_sample_by_rules(0.75, 30) is False
+    # current 31 => no guarda
+    assert should_store_sample_by_rules(0.99, 31) is False
+    # confidence < 0.75 => no guarda aunque haya hueco
+    assert should_store_sample_by_rules(0.74, 0) is False
+    assert should_store_sample_by_rules(0.74, 29) is False
+    assert should_store_sample_by_rules(0.50, 10) is False
 
 
 def test_clamp_current_samples():
