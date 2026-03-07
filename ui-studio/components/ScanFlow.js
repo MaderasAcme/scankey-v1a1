@@ -75,7 +75,7 @@ function SideBlock({
         photo ? 'aspect-square min-h-[100px]' : 'min-h-[140px]'
       }`}>
         {photo ? (
-          <div className="relative w-full h-full group">
+          <div className="relative w-full h-full">
             <img
               src={photo.optimizedDataUrl}
               alt={copy.scan.captured}
@@ -83,7 +83,7 @@ function SideBlock({
             />
             <button
               type="button"
-              className="absolute top-1 right-1 rounded bg-black/70 text-white text-xs px-2 py-1 opacity-0 group-hover:opacity-100 transition"
+              className="absolute top-1 right-1 rounded bg-black/70 text-white text-xs px-2 py-1 opacity-90 hover:opacity-100 transition touch-manipulation"
               onClick={() => onClear(side)}
               aria-label={copy.scan.repeat}
             >
@@ -93,6 +93,7 @@ function SideBlock({
         ) : hasCamera && isActive ? (
           <div className="w-full p-2">
             <WebCameraCapture
+              captureLabel={side === 'A' ? copy.scan.captureA : copy.scan.captureB}
               onCapture={async (dataUrl) => {
                 const optimizedDataUrl = await resizeDataUrl(dataUrl, MAX_OPTIMIZED_DIM);
                 onCapture(side, { optimizedDataUrl, originalDataUrl: dataUrl });
@@ -113,7 +114,7 @@ function SideBlock({
               {copy.scan.uploadPhoto}
             </Button>
             {!isActive && isDimmed && (
-              <span className="text-[10px] text-[var(--muted)]">Después</span>
+              <span className="text-[10px] text-[var(--muted)]">Primero completa A</span>
             )}
           </div>
         )}

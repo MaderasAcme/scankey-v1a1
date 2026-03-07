@@ -7,7 +7,7 @@ import { Button } from './ui/Button';
 
 const MAX_DIM = 1920;
 
-export function WebCameraCapture({ onCapture, onError, onUploadFallback, disabled }) {
+export function WebCameraCapture({ onCapture, onError, onUploadFallback, disabled, captureLabel = 'Capturar' }) {
   const videoRef = useRef(null);
   const streamRef = useRef(null);
   const [ready, setReady] = useState(false);
@@ -121,9 +121,9 @@ export function WebCameraCapture({ onCapture, onError, onUploadFallback, disable
           className="flex-1"
           onClick={handleCapture}
           disabled={!ready || disabled}
-          aria-label="Capturar"
+          aria-label={captureLabel}
         >
-          Capturar
+          {captureLabel}
         </Button>
         {hasMultipleCameras && (
           <Button variant="secondary" onClick={switchCamera} aria-label="Cambiar cámara">
