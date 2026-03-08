@@ -2,22 +2,10 @@ import React, { useRef, useState, useEffect } from 'react';
 import { Button } from './ui/Button';
 import { copy } from '../utils/copy';
 import { resizeDataUrl } from '../utils/imageResize';
+import { EMPTY_SNAPSHOTS } from '../utils/keyTracking';
 import { WebCameraCapture } from './WebCameraCapture';
 
 const MAX_OPTIMIZED_DIM = 1024;
-
-const EMPTY_SNAPSHOTS = {
-  tracking: null,
-  glare: null,
-  shape: null,
-  topdown: null,
-  contrast: null,
-  dissection: null,
-  textZones: null,
-  damage: null,
-  qualityGate: null,
-  featureFusion: null,
-};
 
 function fileToDataUrl(file) {
   return new Promise((resolve, reject) => {

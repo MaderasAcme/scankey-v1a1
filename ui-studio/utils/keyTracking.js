@@ -6,6 +6,21 @@
  * Diseñado para alimentar en el futuro: quality_score, roi_score, reasons[], auto_capture, quality_gate_vision.
  */
 
+/** Contrato de snapshots de visión pasiva. Orden estable, una sola fuente de verdad. */
+export const EMPTY_SNAPSHOTS = {
+  tracking: null,
+  glare: null,
+  shape: null,
+  topdown: null,
+  contrast: null,
+  dissection: null,
+  textZones: null,
+  damage: null,
+  qualityGate: null,
+  featureFusion: null,
+  brandReconstruction: null,
+};
+
 const ANALYZE_WIDTH = 120;
 const ANALYZE_HEIGHT = 90;
 const HISTORY_LEN = 8;

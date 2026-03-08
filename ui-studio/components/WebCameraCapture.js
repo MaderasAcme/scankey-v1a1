@@ -5,7 +5,7 @@
  */
 import React, { useEffect, useRef, useState } from 'react';
 import { Button } from './ui/Button';
-import { analyzeFrame, getGuidanceMessage, makeTrackingSnapshot } from '../utils/keyTracking';
+import { analyzeFrame, getGuidanceMessage, makeTrackingSnapshot, EMPTY_SNAPSHOTS } from '../utils/keyTracking';
 import { analyzeGlare, getGlareGuidanceMessage, makeGlareSnapshot } from '../utils/glareSense';
 import { analyzeShapeMask, getShapeGuidanceMessage, makeShapeSnapshot } from '../utils/shapeMask';
 import { analyzeTopdownNormalizer, makeTopdownSnapshot } from '../utils/topdownNormalizer';
@@ -15,6 +15,7 @@ import { analyzeTextZones, makeTextZonesSnapshot } from '../utils/textZones';
 import { analyzeDamageSense, makeDamageSnapshot } from '../utils/damageSense';
 import { analyzeQualityGateVision, makeQualityGateSnapshot } from '../utils/qualityGateVision';
 import { analyzeFeatureFusion, makeFeatureFusionSnapshot } from '../utils/featureFusion';
+import { analyzeBrandReconstruction, makeBrandReconstructionSnapshot } from '../utils/brandReconstruction';
 
 const MAX_DIM = 1920;
 const TRACKING_FPS = 8;
@@ -33,6 +34,7 @@ export function WebCameraCapture({ onCapture, onError, onUploadFallback, disable
   const damageResultRef = useRef(null);
   const qualityGateResultRef = useRef(null);
   const featureFusionResultRef = useRef(null);
+  const brandReconstructionResultRef = useRef(null);
   const trackingIntervalRef = useRef(null);
   const lastLogRef = useRef(0);
   const [ready, setReady] = useState(false);
@@ -56,6 +58,7 @@ export function WebCameraCapture({ onCapture, onError, onUploadFallback, disable
     damageResultRef.current = null;
     qualityGateResultRef.current = null;
     featureFusionResultRef.current = null;
+    brandReconstructionResultRef.current = null;
     const stream = streamRef.current;
     if (!stream) return;
     stream.getTracks().forEach((t) => t.stop());
@@ -128,6 +131,19 @@ export function WebCameraCapture({ onCapture, onError, onUploadFallback, disable
         qualityGate: qualityGateRes,
       });
       featureFusionResultRef.current = featureFusionRes;
+
+      const brandReconstructionRes = analyzeBrandReconstruction({
+        textZones: textZonesRes,
+        dissection: dissectionRes,
+        contrast: contrastRes,
+        featureFusion: featureFusionRes,
+        qualityGate: qualityGateRes,
+        topdown: topdownRes,
+        shape: shapeRes,
+        glare: glareRes,
+        damage: damageRes,
+      });
+      brandReconstructionResultRef.current = brandReconstructionRes;
 
       if (process.env.NODE_ENV === 'development') {
         const now = Date.now();
@@ -286,22 +302,21 @@ export function WebCameraCapture({ onCapture, onError, onUploadFallback, disable
     const damageSnapshot = makeDamageSnapshot(damageResultRef.current);
     const qualityGateSnapshot = makeQualityGateSnapshot(qualityGateResultRef.current);
     const featureFusionSnapshot = makeFeatureFusionSnapshot(featureFusionResultRef.current);
+    const brandReconstructionSnapshot = makeBrandReconstructionSnapshot(brandReconstructionResultRef.current);
 
-    if (onCapture) onCapture({
-      dataUrl,
-      snapshots: {
-        tracking: trackingSnapshot || null,
-        glare: glareSnapshot || null,
-        shape: shapeSnapshot || null,
-        topdown: topdownSnapshot || null,
-        contrast: contrastSnapshot || null,
-        dissection: dissectionSnapshot || null,
-        textZones: textZonesSnapshot || null,
-        damage: damageSnapshot || null,
-        qualityGate: qualityGateSnapshot || null,
-        featureFusion: featureFusionSnapshot || null,
-      },
-    });
+    const snapshots = { ...EMPTY_SNAPSHOTS };
+    snapshots.tracking = trackingSnapshot || null;
+    snapshots.glare = glareSnapshot || null;
+    snapshots.shape = shapeSnapshot || null;
+    snapshots.topdown = topdownSnapshot || null;
+    snapshots.contrast = contrastSnapshot || null;
+    snapshots.dissection = dissectionSnapshot || null;
+    snapshots.textZones = textZonesSnapshot || null;
+    snapshots.damage = damageSnapshot || null;
+    snapshots.qualityGate = qualityGateSnapshot || null;
+    snapshots.featureFusion = featureFusionSnapshot || null;
+    snapshots.brandReconstruction = brandReconstructionSnapshot || null;
+    if (onCapture) onCapture({ dataUrl, snapshots });
   };
 
   const switchCamera = () => {
