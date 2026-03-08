@@ -1,11 +1,14 @@
 /**
  * rankingActive — capa que aplica señales de visión al ranking de candidatos.
  * Usa: shape, topdown, text_zones, ocrReal, brand_reconstruction, damage,
- *      quality_gate, feature_fusion.
+ *      quality_gate, feature_fusion. Opcionalmente geo-aware (país/zona/tienda).
  *
  * Empuja candidatos buenos, penaliza malos, mantiene trazabilidad.
  * No reescribe el motor: añade delta sobre confidence base.
+ * La visión sigue mandando; el bonus geo es pequeño.
  */
+
+import { applyGeoAwareRanking, getGeoContext } from './geoAwareRanking';
 
 const DELTA_CAP = 0.08;
 const BOOST_BRAND_MATCH = 0.05;
@@ -39,13 +42,14 @@ function _brandsConflict(a, b) {
 }
 
 /**
- * Calcula delta y ajustes por candidato.
+ * Calcula delta y ajustes por candidato (visión + geo).
  *
  * @param {Object[]} results - candidatos del API
  * @param {Object} capturedPhotos - { A: { snapshots } }
- * @returns {Object} { ranking_ready, ranking_adjustments, ranking_supports, ranking_conflicts, ranking_delta_score, sortedResults }
+ * @param {Object} [geoContext] - contexto geo opcional (si no se pasa, usa getGeoContext())
+ * @returns {Object} { ranking_ready, ranking_adjustments, ranking_supports, ranking_conflicts, ranking_delta_score, sortedResults, geo_ranking_ready?, geo_bonus?, geo_reasoning?, geo_context_used? }
  */
-export function applyVisionRanking(results, capturedPhotos) {
+export function applyVisionRanking(results, capturedPhotos, geoContext) {
   const snapshots = capturedPhotos?.A?.snapshots || {};
   const ff = snapshots.featureFusion;
   const br = snapshots.brandReconstruction;
@@ -143,22 +147,29 @@ export function applyVisionRanking(results, capturedPhotos) {
 
   const ranking_delta_score = adjustments.map((a) => a.delta);
 
+  const geoResult = applyGeoAwareRanking(results, geoContext ?? getGeoContext());
+  const geoBonuses = geoResult.geo_bonus || results.map(() => 0);
+
   const baseConf = (c) => clamp01(c.confidence ?? c.conf ?? c.score ?? 0);
   const sortedResults = [...results].map((c, i) => ({ ...c, _rankIdx: i })).sort((a, b) => {
     const adjA = adjustments[a._rankIdx];
     const adjB = adjustments[b._rankIdx];
-    const scoreA = baseConf(a) + (adjA?.delta ?? 0);
-    const scoreB = baseConf(b) + (adjB?.delta ?? 0);
+    const geoA = geoBonuses[a._rankIdx] ?? 0;
+    const geoB = geoBonuses[b._rankIdx] ?? 0;
+    const scoreA = baseConf(a) + (adjA?.delta ?? 0) + geoA;
+    const scoreB = baseConf(b) + (adjB?.delta ?? 0) + geoB;
     return scoreB - scoreA;
   }).map((c, i) => {
     const { _rankIdx, ...rest } = c;
     const adj = adjustments[_rankIdx];
+    const geoBonus = geoBonuses[_rankIdx] ?? 0;
     return {
       ...rest,
       rank: i + 1,
       ranking_delta: adj?.delta,
       ranking_supports: adj?.supports || [],
       ranking_conflicts: adj?.conflicts || [],
+      ...(geoResult.geo_ranking_ready && geoBonus > 0 ? { ranking_geo_bonus: geoBonus } : {}),
     };
   });
 
@@ -169,5 +180,9 @@ export function applyVisionRanking(results, capturedPhotos) {
     ranking_conflicts,
     ranking_delta_score,
     sortedResults,
+    geo_ranking_ready: geoResult.geo_ranking_ready,
+    geo_bonus: geoBonuses,
+    geo_reasoning: geoResult.geo_reasoning,
+    geo_context_used: geoResult.geo_context_used,
   };
 }
