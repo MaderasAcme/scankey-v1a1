@@ -102,11 +102,10 @@ function getBrandSignalForResult(result, modoTaller, capturedPhotos) {
   const ready = source.brand_reconstruction_ready === true;
 
   const hasMatch = !!match;
-  const hasCandidates = candidates.length > 0;
-  const firstBrand = hasCandidates
+  const firstBrand = candidates.length > 0
     ? (typeof candidates[0] === 'string' ? candidates[0] : candidates[0]?.brand)
     : null;
-  const hasValidCandidate = !!firstBrand;
+  const hasValidCandidate = Boolean(firstBrand) || candidates.some((c) => typeof c === 'string' ? c : c?.brand);
   const meetsThreshold = conf >= BRAND_SIGNAL_THRESHOLD;
 
   if (!modoTaller) {
@@ -117,7 +116,9 @@ function getBrandSignalForResult(result, modoTaller, capturedPhotos) {
   }
 
   if (hasMatch || hasValidCandidate) {
-    const label = hasMatch ? `Marca probable: ${match}` : `Marca probable: ${firstBrand}`;
+    const displayBrand = firstBrand || candidates.map((c) => (typeof c === 'string' ? c : c?.brand)).find(Boolean);
+    const label = hasMatch ? `Marca probable: ${match}` : (displayBrand ? `Marca probable: ${displayBrand}` : null);
+    if (!label) return { show: false, label: null, detail: null };
     const zoneMap = { head: 'head', blade: 'blade', both: 'head+blade', none: '—' };
     const modeMap = { combined: 'combined', partial_text: 'partial_text', partial_logo: 'partial_logo', metadata_assisted: 'metadata', none: '—' };
     const zoneStr = zoneMap[zone] || zone || '—';
