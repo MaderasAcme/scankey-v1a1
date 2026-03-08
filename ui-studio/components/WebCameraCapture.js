@@ -10,6 +10,7 @@ import { analyzeGlare, getGlareGuidanceMessage, makeGlareSnapshot } from '../uti
 import { analyzeShapeMask, getShapeGuidanceMessage, makeShapeSnapshot } from '../utils/shapeMask';
 import { analyzeTopdownNormalizer, makeTopdownSnapshot } from '../utils/topdownNormalizer';
 import { analyzeContrast, makeContrastSnapshot } from '../utils/contrastSense';
+import { analyzeKeyDissection, makeDissectionSnapshot } from '../utils/keyDissection';
 
 const MAX_DIM = 1920;
 const TRACKING_FPS = 8;
@@ -23,6 +24,7 @@ export function WebCameraCapture({ onCapture, onError, onUploadFallback, disable
   const shapeResultRef = useRef(null);
   const topdownResultRef = useRef(null);
   const contrastResultRef = useRef(null);
+  const dissectionResultRef = useRef(null);
   const trackingIntervalRef = useRef(null);
   const lastLogRef = useRef(0);
   const [ready, setReady] = useState(false);
@@ -41,6 +43,7 @@ export function WebCameraCapture({ onCapture, onError, onUploadFallback, disable
     setGlareResult(null);
     setShapeResult(null);
     contrastResultRef.current = null;
+    dissectionResultRef.current = null;
     const stream = streamRef.current;
     if (!stream) return;
     stream.getTracks().forEach((t) => t.stop());
@@ -70,6 +73,12 @@ export function WebCameraCapture({ onCapture, onError, onUploadFallback, disable
 
       const contrastRes = analyzeContrast(video, { roiBbox: result.bbox || null });
       contrastResultRef.current = contrastRes;
+
+      const dissectionRes = analyzeKeyDissection(video, {
+        shapeResult: shapeRes,
+        topdownResult: topdownRes,
+      });
+      dissectionResultRef.current = dissectionRes;
 
       if (process.env.NODE_ENV === 'development') {
         const now = Date.now();
@@ -113,6 +122,15 @@ export function WebCameraCapture({ onCapture, onError, onUploadFallback, disable
             background_separation_score: contrastRes.background_separation_score?.toFixed(2),
             ocr_contrast_score: contrastRes.ocr_contrast_score?.toFixed(2),
             contour_contrast_score: contrastRes.contour_contrast_score?.toFixed(2),
+          });
+          console.debug('[keyDissection]', {
+            dissection_ready: dissectionRes.dissection_ready,
+            dissection_confidence: dissectionRes.dissection_confidence?.toFixed(2),
+            head_blade_ratio: dissectionRes.head_blade_ratio?.toFixed(2),
+            tip_visible: dissectionRes.tip_visible,
+            cuts_visible: dissectionRes.cuts_visible,
+            text_zone_head_visible: dissectionRes.text_zone_head_visible,
+            text_zone_blade_visible: dissectionRes.text_zone_blade_visible,
           });
         }
       }
@@ -183,8 +201,9 @@ export function WebCameraCapture({ onCapture, onError, onUploadFallback, disable
     const shapeSnapshot = makeShapeSnapshot(shapeResultRef.current, w, h);
     const topdownSnapshot = makeTopdownSnapshot(topdownResultRef.current, w, h);
     const contrastSnapshot = makeContrastSnapshot(contrastResultRef.current);
+    const dissectionSnapshot = makeDissectionSnapshot(dissectionResultRef.current, w, h);
 
-    if (onCapture) onCapture(dataUrl, trackingSnapshot, glareSnapshot, shapeSnapshot, topdownSnapshot, contrastSnapshot);
+    if (onCapture) onCapture(dataUrl, trackingSnapshot, glareSnapshot, shapeSnapshot, topdownSnapshot, contrastSnapshot, dissectionSnapshot);
   };
 
   const switchCamera = () => {
