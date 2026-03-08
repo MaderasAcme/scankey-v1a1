@@ -62,6 +62,47 @@ function ConsistencyBadge({ result, modoTaller }) {
   );
 }
 
+const BRAND_SIGNAL_THRESHOLD = 0.6;
+
+/**
+ * Señal pasiva de brandReconstruction en Top 3.
+ * - Cliente: "Marca probable: X" solo si confidence >= 0.60.
+ * - Taller: detalle técnico (zona, modo, razones).
+ * No presenta certeza absoluta.
+ */
+function BrandSignalBadge({ capturedPhotos, modoTaller }) {
+  const br = capturedPhotos?.A?.snapshots?.brandReconstruction;
+  if (!br) return null;
+  const conf = br.brand_match_confidence ?? 0;
+  const match = br.brand_partial_match;
+  const zone = br.brand_evidence_zone;
+  const mode = br.brand_reconstruction_mode;
+  const reasons = Array.isArray(br.brand_reconstruction_reason) ? br.brand_reconstruction_reason : [];
+
+  if (conf < BRAND_SIGNAL_THRESHOLD) return null;
+  if (!match) return null;
+
+  const zoneLabels = { head: 'head', blade: 'blade', both: 'head+blade', none: '—' };
+  const modeLabels = { combined: 'combined', partial_text: 'partial_text', partial_logo: 'partial_logo', metadata_assisted: 'metadata', none: '—' };
+
+  return (
+    <div className="flex flex-col gap-1 text-xs text-[var(--text-secondary)]">
+      <span>
+        Marca probable: <strong className="text-[var(--text)]">{match}</strong>
+        {modoTaller && conf > 0 && (
+          <span className="opacity-80 ml-1">({Math.round(conf * 100)}%)</span>
+        )}
+      </span>
+      {modoTaller && (zone || mode || reasons.length > 0) && (
+        <span className="text-[10px] opacity-75 font-mono">
+          {[zoneLabels[zone] || zone, modeLabels[mode] || mode].filter(Boolean).join(' · ')}
+          {reasons.length > 0 && ` · ${reasons.slice(0, 2).join(', ')}`}
+        </span>
+      )}
+    </div>
+  );
+}
+
 /**
  * Multi-label Fase 4: línea corta opcional en modo taller cuando multi_label activo.
  * No saturar UI. Solo si multi_label_enabled y hay campos present.
@@ -250,6 +291,7 @@ export function ResultsScreen({
 
         <ConsistencyBadge result={result} modoTaller={modoTaller} />
         <MultilabelDebugLine result={result} modoTaller={modoTaller} />
+        <BrandSignalBadge capturedPhotos={capturedPhotos} modoTaller={modoTaller} />
 
         {feedbackPending && (
           <AlertBanner variant="info">Feedback pendiente. Se enviará al sincronizar.</AlertBanner>
