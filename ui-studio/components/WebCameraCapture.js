@@ -17,6 +17,7 @@ import { analyzeQualityGateVision, makeQualityGateSnapshot } from '../utils/qual
 import { analyzeFeatureFusion, makeFeatureFusionSnapshot } from '../utils/featureFusion';
 import { analyzeBrandReconstruction, makeBrandReconstructionSnapshot } from '../utils/brandReconstruction';
 import { runZonedOCR, makeOcrRealSnapshot } from '../utils/ocrReal';
+import { runCatalogMatching, makeCatalogMatchingSnapshot } from '../utils/catalogMatchingActive';
 import { evaluateAutoCapture, AUTO_CAPTURE_ENABLED_KEY } from '../utils/autoCapture';
 import { loadJSON } from '../utils/storage';
 
@@ -362,6 +363,18 @@ export function WebCameraCapture({ onCapture, onError, onUploadFallback, disable
     snapshots.featureFusion = featureFusionSnapshot || null;
     snapshots.brandReconstruction = brandReconstructionSnapshot || null;
     snapshots.ocrReal = ocrRealSnapshot || null;
+
+    const catalogMatchResult = runCatalogMatching({
+      shape: shapeSnapshot,
+      topdown: topdownSnapshot,
+      dissection: dissectionSnapshot,
+      textZones: textZonesSnapshot,
+      ocrReal: ocrRealSnapshot,
+      brandReconstruction: brandReconstructionSnapshot,
+      featureFusion: featureFusionSnapshot,
+    });
+    snapshots.catalogMatching = makeCatalogMatchingSnapshot(catalogMatchResult) || null;
+
     if (onCapture) onCapture({ dataUrl, snapshots });
   };
 
