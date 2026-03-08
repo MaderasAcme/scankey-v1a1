@@ -14,6 +14,7 @@ const EMPTY_SNAPSHOTS = {
   contrast: null,
   dissection: null,
   textZones: null,
+  damage: null,
 };
 
 function fileToDataUrl(file) {

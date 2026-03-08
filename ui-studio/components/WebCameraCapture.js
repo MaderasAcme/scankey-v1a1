@@ -12,6 +12,7 @@ import { analyzeTopdownNormalizer, makeTopdownSnapshot } from '../utils/topdownN
 import { analyzeContrast, makeContrastSnapshot } from '../utils/contrastSense';
 import { analyzeKeyDissection, makeDissectionSnapshot } from '../utils/keyDissection';
 import { analyzeTextZones, makeTextZonesSnapshot } from '../utils/textZones';
+import { analyzeDamageSense, makeDamageSnapshot } from '../utils/damageSense';
 
 const MAX_DIM = 1920;
 const TRACKING_FPS = 8;
@@ -27,6 +28,7 @@ export function WebCameraCapture({ onCapture, onError, onUploadFallback, disable
   const contrastResultRef = useRef(null);
   const dissectionResultRef = useRef(null);
   const textZonesResultRef = useRef(null);
+  const damageResultRef = useRef(null);
   const trackingIntervalRef = useRef(null);
   const lastLogRef = useRef(0);
   const [ready, setReady] = useState(false);
@@ -47,6 +49,7 @@ export function WebCameraCapture({ onCapture, onError, onUploadFallback, disable
     contrastResultRef.current = null;
     dissectionResultRef.current = null;
     textZonesResultRef.current = null;
+    damageResultRef.current = null;
     const stream = streamRef.current;
     if (!stream) return;
     stream.getTracks().forEach((t) => t.stop());
@@ -88,6 +91,12 @@ export function WebCameraCapture({ onCapture, onError, onUploadFallback, disable
         contrastResult: contrastRes,
       });
       textZonesResultRef.current = textZonesRes;
+
+      const damageRes = analyzeDamageSense(video, {
+        shapeResult: shapeRes,
+        dissectionResult: dissectionRes,
+      });
+      damageResultRef.current = damageRes;
 
       if (process.env.NODE_ENV === 'development') {
         const now = Date.now();
@@ -147,6 +156,14 @@ export function WebCameraCapture({ onCapture, onError, onUploadFallback, disable
             text_present_blade: textZonesRes.text_present_blade,
             ocr_visibility_score: textZonesRes.ocr_visibility_score?.toFixed(2),
             text_contrast_score: textZonesRes.text_contrast_score?.toFixed(2),
+          });
+          console.debug('[damageSense]', {
+            damage_ready: damageRes.damage_ready,
+            wear_level: damageRes.wear_level,
+            wear_score: damageRes.wear_score?.toFixed(2),
+            oxidation_present: damageRes.oxidation_present,
+            surface_damage: damageRes.surface_damage,
+            damage_confidence: damageRes.damage_confidence?.toFixed(2),
           });
         }
       }
@@ -219,6 +236,7 @@ export function WebCameraCapture({ onCapture, onError, onUploadFallback, disable
     const contrastSnapshot = makeContrastSnapshot(contrastResultRef.current);
     const dissectionSnapshot = makeDissectionSnapshot(dissectionResultRef.current, w, h);
     const textZonesSnapshot = makeTextZonesSnapshot(textZonesResultRef.current, w, h);
+    const damageSnapshot = makeDamageSnapshot(damageResultRef.current);
 
     if (onCapture) onCapture({
       dataUrl,
@@ -230,6 +248,7 @@ export function WebCameraCapture({ onCapture, onError, onUploadFallback, disable
         contrast: contrastSnapshot || null,
         dissection: dissectionSnapshot || null,
         textZones: textZonesSnapshot || null,
+        damage: damageSnapshot || null,
       },
     });
   };
