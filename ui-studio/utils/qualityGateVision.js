@@ -277,10 +277,84 @@ export function makeQualityGateSnapshot(result) {
 /** Flag para activar bloqueo real. Default false = no bloquear. */
 export const QUALITY_GATE_ACTIVE_ENABLED_KEY = 'quality_gate_active_enabled';
 
+/** Prioridad de block_reason (más crítico primero). */
+const BLOCK_REASON_PRIORITY = [
+  'critical_glare',
+  'key_not_detected',
+  'poor_mask',
+  'key_incomplete',
+  'low_coverage',
+  'low_stability',
+  'poor_pose',
+  'low_topdown_confidence',
+  'low_text_visibility',
+  'high_wear',
+  'oxidation_present',
+  'surface_damage_detected',
+];
+
+/**
+ * Elige la razón de bloqueo más crítica según prioridad.
+ * @param {string[]} reasons - array de reasons
+ * @returns {string|null}
+ */
+export function pickPriorityBlockReason(reasons) {
+  if (!Array.isArray(reasons) || reasons.length === 0) return null;
+  for (const r of BLOCK_REASON_PRIORITY) {
+    if (reasons.includes(r)) return r;
+  }
+  return reasons[0];
+}
+
+/**
+ * Fusiona snapshots de qualityGate (A y B) con peor caso.
+ * - block si cualquiera bloquea
+ * - allow_with_override si ninguno bloquea pero uno pide override
+ * - allow si ambos ok
+ * @param {Object} qgA - qualityGate de A
+ * @param {Object} qgB - qualityGate de B (opcional)
+ * @returns {Object|null} snapshot fusionado
+ */
+export function mergeQualityGateSnapshots(qgA, qgB) {
+  if (!qgA && !qgB) return null;
+  if (!qgB) return qgA;
+  if (!qgA) return qgB;
+
+  const decisionA = qgA.quality_decision || qgA.recommended_action;
+  const decisionB = qgB.quality_decision || qgB.recommended_action;
+  const isBlockA = decisionA === 'block' || decisionA === 'block_recommended';
+  const isBlockB = decisionB === 'block' || decisionB === 'block_recommended';
+  const isOverrideA = decisionA === 'allow_with_override';
+  const isOverrideB = decisionB === 'allow_with_override';
+
+  let mergedDecision = 'allow';
+  if (isBlockA || isBlockB) {
+    mergedDecision = 'block';
+  } else if (isOverrideA || isOverrideB) {
+    mergedDecision = 'allow_with_override';
+  }
+
+  const reasonsA = qgA.reasons || (qgA.block_reason ? [qgA.block_reason] : []);
+  const reasonsB = qgB.reasons || (qgB.block_reason ? [qgB.block_reason] : []);
+  const allReasons = [...new Set([...reasonsA, ...reasonsB])];
+  const block_reason = pickPriorityBlockReason(allReasons)
+    || qgA.block_reason
+    || qgB.block_reason
+    || (allReasons.length ? allReasons[0] : null);
+
+  return {
+    ...qgA,
+    quality_decision: mergedDecision,
+    recommended_action: mergedDecision === 'block' ? 'block_recommended' : mergedDecision,
+    block_reason,
+    reasons: allReasons,
+  };
+}
+
 /**
  * Decide si aplicar bloqueo activo y si override está permitido.
- * @param {Object} qualitySnapshot - snapshot de qualityGate
- * @param {boolean} canOverride - modo taller + sesión + debug
+ * @param {Object} qualitySnapshot - snapshot de qualityGate (puede ser fusión A+B)
+ * @param {boolean} canOverride - modo taller + sesión válida (NO mostrar_debug)
  * @returns {{ shouldBlock: boolean, override_allowed: boolean, block_reason: string|null }}
  */
 export function computeQualityGateActiveDecision(qualitySnapshot, canOverride) {
@@ -289,9 +363,14 @@ export function computeQualityGateActiveDecision(qualitySnapshot, canOverride) {
   const isBlock = decision === 'block' || decision === 'block_recommended';
   const isOverride = decision === 'allow_with_override';
   const override_allowed = (isBlock || isOverride) && canOverride;
+  const reasons = qualitySnapshot.reasons || (qualitySnapshot.block_reason ? [qualitySnapshot.block_reason] : []);
+  const block_reason = pickPriorityBlockReason(reasons)
+    || qualitySnapshot.block_reason
+    || reasons[0]
+    || null;
   return {
     shouldBlock: isBlock,
     override_allowed,
-    block_reason: qualitySnapshot.block_reason || qualitySnapshot.reasons?.[0] || null,
+    block_reason,
   };
 }

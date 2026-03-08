@@ -20,7 +20,7 @@ import {
   flushFeedbackQueue,
 } from './services/api';
 import { safePushLimited, updateHistoryByInputId, loadJSON, saveJSON, incrementQualityGateStat } from './utils/storage';
-import { computeQualityGateActiveDecision, QUALITY_GATE_ACTIVE_ENABLED_KEY } from './utils/qualityGateVision';
+import { computeQualityGateActiveDecision, mergeQualityGateSnapshots, QUALITY_GATE_ACTIVE_ENABLED_KEY } from './utils/qualityGateVision';
 
 const SETTINGS_KEY = 'scn_settings';
 
@@ -69,8 +69,10 @@ export default function App() {
     const settings = loadJSON(SETTINGS_KEY, {});
     const modo = settings.modo || 'cliente';
     const qualityGateActiveEnabled = Boolean(settings[QUALITY_GATE_ACTIVE_ENABLED_KEY]);
-    const qgSnapshot = photos?.A?.snapshots?.qualityGate;
-    const canOverride = modo === 'taller' && isWorkshopSessionValid() && settings.mostrar_debug;
+    const qgA = photos?.A?.snapshots?.qualityGate;
+    const qgB = photos?.B?.snapshots?.qualityGate;
+    const qgSnapshot = mergeQualityGateSnapshots(qgA, qgB);
+    const canOverride = modo === 'taller' && isWorkshopSessionValid();
 
     if (qualityGateActiveEnabled && qgSnapshot) {
       const { shouldBlock, block_reason } = computeQualityGateActiveDecision(qgSnapshot, canOverride);
