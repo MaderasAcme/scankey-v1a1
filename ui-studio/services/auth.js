@@ -67,15 +67,22 @@ export async function loginWorkshop(email, password) {
     throw err;
   }
 
+  const token = (data.workshop_token ?? '').toString().trim();
+  if (!token) {
+    const err = new Error('INVALID_LOGIN_PAYLOAD');
+    err.status = res.status;
+    throw err;
+  }
+
   const loggedAt = new Date().toISOString();
   const expiresInDays = Number(data.expires_in_days) || 7;
   const expiresAt = new Date();
   expiresAt.setDate(expiresAt.getDate() + expiresInDays);
 
   const payload = {
-    token: data.workshop_token || '',
-    role: data.role || 'taller',
-    operator_label: data.operator_label || 'OPERADOR SENIOR',
+    token,
+    role: (data.role ?? 'taller').toString().trim() || 'taller',
+    operator_label: (data.operator_label ?? 'OPERADOR SENIOR').toString().trim() || 'OPERADOR SENIOR',
     logged_at: loggedAt,
     expires_at: expiresAt.toISOString(),
   };

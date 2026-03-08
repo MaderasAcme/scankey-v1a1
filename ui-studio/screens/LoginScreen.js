@@ -15,6 +15,8 @@ function getErrorMessage(code, isDev) {
   switch (code) {
     case 'INVALID_CREDENTIALS':
       return 'Credenciales incorrectas';
+    case 'INVALID_LOGIN_PAYLOAD':
+      return 'Respuesta inválida del servidor';
     case 'LOGIN_NOT_CONFIGURED':
       return 'Login no configurado en el servidor';
     case 'SERVER_ERROR':
@@ -28,7 +30,7 @@ function getErrorMessage(code, isDev) {
     case 'NETWORK_ERROR':
       return 'Sin conexión o servidor no disponible';
     default:
-      return 'Credenciales incorrectas';
+      return 'No se pudo iniciar sesión';
   }
 }
 
