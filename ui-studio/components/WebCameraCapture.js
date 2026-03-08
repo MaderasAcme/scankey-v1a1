@@ -11,6 +11,7 @@ import { analyzeShapeMask, getShapeGuidanceMessage, makeShapeSnapshot } from '..
 import { analyzeTopdownNormalizer, makeTopdownSnapshot } from '../utils/topdownNormalizer';
 import { analyzeContrast, makeContrastSnapshot } from '../utils/contrastSense';
 import { analyzeKeyDissection, makeDissectionSnapshot } from '../utils/keyDissection';
+import { analyzeTextZones, makeTextZonesSnapshot } from '../utils/textZones';
 
 const MAX_DIM = 1920;
 const TRACKING_FPS = 8;
@@ -25,6 +26,7 @@ export function WebCameraCapture({ onCapture, onError, onUploadFallback, disable
   const topdownResultRef = useRef(null);
   const contrastResultRef = useRef(null);
   const dissectionResultRef = useRef(null);
+  const textZonesResultRef = useRef(null);
   const trackingIntervalRef = useRef(null);
   const lastLogRef = useRef(0);
   const [ready, setReady] = useState(false);
@@ -44,6 +46,7 @@ export function WebCameraCapture({ onCapture, onError, onUploadFallback, disable
     setShapeResult(null);
     contrastResultRef.current = null;
     dissectionResultRef.current = null;
+    textZonesResultRef.current = null;
     const stream = streamRef.current;
     if (!stream) return;
     stream.getTracks().forEach((t) => t.stop());
@@ -79,6 +82,12 @@ export function WebCameraCapture({ onCapture, onError, onUploadFallback, disable
         topdownResult: topdownRes,
       });
       dissectionResultRef.current = dissectionRes;
+
+      const textZonesRes = analyzeTextZones(video, {
+        dissectionResult: dissectionRes,
+        contrastResult: contrastRes,
+      });
+      textZonesResultRef.current = textZonesRes;
 
       if (process.env.NODE_ENV === 'development') {
         const now = Date.now();
@@ -131,6 +140,13 @@ export function WebCameraCapture({ onCapture, onError, onUploadFallback, disable
             cuts_visible: dissectionRes.cuts_visible,
             text_zone_head_visible: dissectionRes.text_zone_head_visible,
             text_zone_blade_visible: dissectionRes.text_zone_blade_visible,
+          });
+          console.debug('[textZones]', {
+            text_zones_ready: textZonesRes.text_zones_ready,
+            text_present_head: textZonesRes.text_present_head,
+            text_present_blade: textZonesRes.text_present_blade,
+            ocr_visibility_score: textZonesRes.ocr_visibility_score?.toFixed(2),
+            text_contrast_score: textZonesRes.text_contrast_score?.toFixed(2),
           });
         }
       }
@@ -202,6 +218,7 @@ export function WebCameraCapture({ onCapture, onError, onUploadFallback, disable
     const topdownSnapshot = makeTopdownSnapshot(topdownResultRef.current, w, h);
     const contrastSnapshot = makeContrastSnapshot(contrastResultRef.current);
     const dissectionSnapshot = makeDissectionSnapshot(dissectionResultRef.current, w, h);
+    const textZonesSnapshot = makeTextZonesSnapshot(textZonesResultRef.current, w, h);
 
     if (onCapture) onCapture({
       dataUrl,
@@ -212,6 +229,7 @@ export function WebCameraCapture({ onCapture, onError, onUploadFallback, disable
         topdown: topdownSnapshot || null,
         contrast: contrastSnapshot || null,
         dissection: dissectionSnapshot || null,
+        textZones: textZonesSnapshot || null,
       },
     });
   };
