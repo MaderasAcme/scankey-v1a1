@@ -78,6 +78,59 @@ function ConsistencyBadge({ result, capturedPhotos, modoTaller }) {
 const BRAND_SIGNAL_THRESHOLD = 0.6;
 
 /**
+ * Obtiene la señal de marca probable para un resultado.
+ * Fuente: result (si API adjunta) o snapshot brandReconstruction de la foto usada.
+ * @param {Object} result - resultado del Top 3
+ * @param {boolean} modoTaller
+ * @param {Object} capturedPhotos - fotos capturadas
+ * @returns {{ show: boolean, label: string|null, detail: string|null }}
+ */
+function getBrandSignalForResult(result, modoTaller, capturedPhotos) {
+  const sideHint = result?.roi_side ?? result?.side ?? result?.debug?.roi_side;
+  const side = sideHint === 'B' || sideHint === 'back' ? 'B' : 'A';
+  const snap = capturedPhotos?.[side]?.snapshots?.brandReconstruction;
+  const br = result?.brand_reconstruction || result?.brandReconstruction || result;
+  const fromResult = br?.brand_partial_match != null || (Array.isArray(br?.brand_candidates) && br.brand_candidates.length > 0);
+  const source = fromResult ? br : snap;
+  if (!source) return { show: false, label: null, detail: null };
+
+  const match = source.brand_partial_match;
+  const conf = source.brand_match_confidence ?? 0;
+  const zone = source.brand_evidence_zone;
+  const mode = source.brand_reconstruction_mode;
+  const candidates = Array.isArray(source.brand_candidates) ? source.brand_candidates : [];
+  const ready = source.brand_reconstruction_ready === true;
+
+  const hasMatch = !!match;
+  const hasCandidates = candidates.length > 0;
+  const meetsThreshold = conf >= BRAND_SIGNAL_THRESHOLD;
+
+  if (!modoTaller) {
+    if (hasMatch && meetsThreshold) {
+      return { show: true, label: `Marca probable: ${match}`, detail: null };
+    }
+    return { show: false, label: null, detail: null };
+  }
+
+  if (hasMatch || hasCandidates) {
+    const label = hasMatch ? `Marca probable: ${match}` : `Marca probable: ${candidates[0] || '?'}`;
+    const zoneMap = { head: 'head', blade: 'blade', both: 'head+blade', none: '—' };
+    const modeMap = { combined: 'combined', partial_text: 'partial_text', partial_logo: 'partial_logo', metadata_assisted: 'metadata', none: '—' };
+    const zoneStr = zoneMap[zone] || zone || '—';
+    const modeStr = modeMap[mode] || mode || '—';
+    const confStr = conf > 0 ? conf.toFixed(2) : '—';
+    const detail = `${confStr} · ${zoneStr} · ${modeStr}`;
+    return { show: true, label, detail };
+  }
+
+  if (ready && !hasMatch && !hasCandidates) {
+    return { show: true, label: 'Marca parcial débil', detail: null };
+  }
+
+  return { show: false, label: null, detail: null };
+}
+
+/**
  * Banner UNKNOWN / open-set: cuando la llave no encaja bien con lo conocido.
  */
 function UnknownBanner({ result, capturedPhotos, modoTaller }) {
@@ -102,45 +155,6 @@ function UnknownBanner({ result, capturedPhotos, modoTaller }) {
         )}
       </div>
     </AlertBanner>
-  );
-}
-
-/**
- * Señal pasiva de brandReconstruction en Top 3.
- * - Cliente: "Marca probable: X" solo si confidence >= 0.60.
- * - Taller: detalle técnico (zona, modo, razones).
- * No presenta certeza absoluta.
- */
-function BrandSignalBadge({ capturedPhotos, modoTaller }) {
-  const br = capturedPhotos?.A?.snapshots?.brandReconstruction;
-  if (!br) return null;
-  const conf = br.brand_match_confidence ?? 0;
-  const match = br.brand_partial_match;
-  const zone = br.brand_evidence_zone;
-  const mode = br.brand_reconstruction_mode;
-  const reasons = Array.isArray(br.brand_reconstruction_reason) ? br.brand_reconstruction_reason : [];
-
-  if (conf < BRAND_SIGNAL_THRESHOLD) return null;
-  if (!match) return null;
-
-  const zoneLabels = { head: 'head', blade: 'blade', both: 'head+blade', none: '—' };
-  const modeLabels = { combined: 'combined', partial_text: 'partial_text', partial_logo: 'partial_logo', metadata_assisted: 'metadata', none: '—' };
-
-  return (
-    <div className="flex flex-col gap-1 text-xs text-[var(--text-secondary)]">
-      <span>
-        Marca probable: <strong className="text-[var(--text)]">{match}</strong>
-        {modoTaller && conf > 0 && (
-          <span className="opacity-80 ml-1">({Math.round(conf * 100)}%)</span>
-        )}
-      </span>
-      {modoTaller && (zone || mode || reasons.length > 0) && (
-        <span className="text-[10px] opacity-75 font-mono">
-          {[zoneLabels[zone] || zone, modeLabels[mode] || mode].filter(Boolean).join(' · ')}
-          {reasons.length > 0 && ` · ${reasons.slice(0, 2).join(', ')}`}
-        </span>
-      )}
-    </div>
   );
 }
 
@@ -335,7 +349,6 @@ export function ResultsScreen({
         <ConsistencyBadge result={result} capturedPhotos={capturedPhotos} modoTaller={modoTaller} />
         <UnknownBanner result={result} capturedPhotos={capturedPhotos} modoTaller={modoTaller} />
         <MultilabelDebugLine result={result} modoTaller={modoTaller} />
-        <BrandSignalBadge capturedPhotos={capturedPhotos} modoTaller={modoTaller} />
 
         {feedbackPending && (
           <AlertBanner variant="info">Feedback pendiente. Se enviará al sincronizar.</AlertBanner>
@@ -369,6 +382,18 @@ export function ResultsScreen({
                 <h3 className="text-sm font-bold text-[var(--text)] uppercase tracking-wide">
                   {formatTitle(r)}
                 </h3>
+                {(() => {
+                  const brand = getBrandSignalForResult(r, modoTaller, capturedPhotos);
+                  if (!brand.show) return null;
+                  return (
+                    <div className="flex flex-col gap-0.5 text-xs text-[var(--text-secondary)]">
+                      <span className="opacity-90">{brand.label}</span>
+                      {brand.detail && (
+                        <span className="text-[10px] opacity-75 font-mono">{brand.detail}</span>
+                      )}
+                    </div>
+                  );
+                })()}
                 <MultilabelPills result={r} modoTaller={modoTaller} />
                 {r.explain_text && (
                   <p className="text-xs text-[var(--text-secondary)] line-clamp-2">{r.explain_text}</p>
