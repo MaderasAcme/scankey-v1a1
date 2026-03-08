@@ -10,6 +10,7 @@ import { ComparePanel } from '../components/ui/ComparePanel';
 import { CorrectionModal } from '../components/CorrectionModal';
 import { copy } from '../utils/copy';
 import { computeVisionAugmentedConsistency } from '../utils/consistencyActive';
+import { applyVisionRanking } from '../utils/rankingActive';
 
 /**
  * Obtiene dataURL de la foto a usar para el recorte. Por defecto A optimizada.
@@ -183,7 +184,9 @@ export function ResultsScreen({
   feedbackPending,
   modoTaller = false,
 }) {
-  const results = result?.results || [];
+  const rawResults = result?.results || [];
+  const ranking = applyVisionRanking(rawResults, capturedPhotos);
+  const results = ranking.ranking_ready ? ranking.sortedResults : rawResults;
   const lowConfidence = Boolean(result?.low_confidence);
   const highConfidence = Boolean(result?.high_confidence);
   const forceCorrection = lowConfidence;
@@ -320,10 +323,14 @@ export function ResultsScreen({
           const bbox = r.crop_bbox && r.crop_bbox.w > 0 && r.crop_bbox.h > 0 ? r.crop_bbox : { x: 0, y: 0, w: 1, h: 1 };
           const rank = r.rank ?? i + 1;
           const isSelected = selectedRank === rank;
+          const delta = r.ranking_delta;
+          const deltaLabel = delta != null && modoTaller && ranking.ranking_ready
+            ? (delta >= 0 ? `vision +${Math.round(delta * 100)}%` : `vision ${Math.round(delta * 100)}%`)
+            : null;
 
           return (
             <Card
-              key={r.rank ?? i}
+              key={r.id_model_ref ?? r.rank ?? i}
               onClick={() => handleCardClick(r, i)}
               className={isSelected ? 'ring-2 ring-[var(--accent)]' : ''}
             >
@@ -336,7 +343,14 @@ export function ResultsScreen({
                 {r.explain_text && (
                   <p className="text-xs text-[var(--text-secondary)] line-clamp-2">{r.explain_text}</p>
                 )}
-                <ConfidenceBar value={r.confidence ?? 0} />
+                <div className="flex items-center gap-2">
+                  <ConfidenceBar value={r.confidence ?? 0} />
+                  {deltaLabel && (
+                    <span className={`text-[10px] font-mono ${delta >= 0 ? 'text-[var(--success)]' : 'text-[var(--warning)]'}`}>
+                      {deltaLabel}
+                    </span>
+                  )}
+                </div>
               </div>
             </Card>
           );
