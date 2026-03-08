@@ -8,6 +8,7 @@ import { Button } from './ui/Button';
 import { analyzeFrame, getGuidanceMessage, makeTrackingSnapshot } from '../utils/keyTracking';
 import { analyzeGlare, getGlareGuidanceMessage, makeGlareSnapshot } from '../utils/glareSense';
 import { analyzeShapeMask, getShapeGuidanceMessage, makeShapeSnapshot } from '../utils/shapeMask';
+import { analyzeTopdownNormalizer, makeTopdownSnapshot } from '../utils/topdownNormalizer';
 
 const MAX_DIM = 1920;
 const TRACKING_FPS = 8;
@@ -19,6 +20,7 @@ export function WebCameraCapture({ onCapture, onError, onUploadFallback, disable
   const trackingStateRef = useRef({ history: [], lastResult: null });
   const glareResultRef = useRef(null);
   const shapeResultRef = useRef(null);
+  const topdownResultRef = useRef(null);
   const trackingIntervalRef = useRef(null);
   const lastLogRef = useRef(0);
   const [ready, setReady] = useState(false);
@@ -60,6 +62,9 @@ export function WebCameraCapture({ onCapture, onError, onUploadFallback, disable
       shapeResultRef.current = shapeRes;
       setShapeResult(shapeRes);
 
+      const topdownRes = analyzeTopdownNormalizer(video, { shapeResult: shapeRes });
+      topdownResultRef.current = topdownRes;
+
       if (process.env.NODE_ENV === 'development') {
         const now = Date.now();
         if (now - lastLogRef.current > 1000) {
@@ -87,6 +92,13 @@ export function WebCameraCapture({ onCapture, onError, onUploadFallback, disable
             key_complete: shapeRes.key_complete,
             shape_area_ratio: shapeRes.shape_area_ratio?.toFixed(3),
             edge_density: shapeRes.edge_density?.toFixed(3),
+          });
+          console.debug('[topdownNormalizer]', {
+            topdown_ready: topdownRes.topdown_ready,
+            alignment_score: topdownRes.alignment_score?.toFixed(2),
+            rotation_deg: topdownRes.rotation_deg,
+            topdown_confidence: topdownRes.topdown_confidence?.toFixed(2),
+            pose_quality: topdownRes.pose_quality?.toFixed(2),
           });
         }
       }
@@ -155,8 +167,9 @@ export function WebCameraCapture({ onCapture, onError, onUploadFallback, disable
     const trackingSnapshot = makeTrackingSnapshot(lastResult, w, h);
     const glareSnapshot = makeGlareSnapshot(glareResultRef.current);
     const shapeSnapshot = makeShapeSnapshot(shapeResultRef.current, w, h);
+    const topdownSnapshot = makeTopdownSnapshot(topdownResultRef.current, w, h);
 
-    if (onCapture) onCapture(dataUrl, trackingSnapshot, glareSnapshot, shapeSnapshot);
+    if (onCapture) onCapture(dataUrl, trackingSnapshot, glareSnapshot, shapeSnapshot, topdownSnapshot);
   };
 
   const switchCamera = () => {
