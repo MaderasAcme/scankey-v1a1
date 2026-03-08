@@ -20,6 +20,7 @@ import {
   flushFeedbackQueue,
 } from './services/api';
 import { safePushLimited, updateHistoryByInputId, loadJSON, saveJSON, incrementQualityGateStat } from './utils/storage';
+import { computeQualityGateActiveDecision, QUALITY_GATE_ACTIVE_ENABLED_KEY } from './utils/qualityGateVision';
 
 const SETTINGS_KEY = 'scn_settings';
 
@@ -64,11 +65,29 @@ export default function App() {
   const handleAnalyze = useCallback(async (photos, opts = {}) => {
     const { qualityOverride } = opts;
     setCapturedPhotos(photos);
-    setIsAnalyzing(true);
-    setAttemptCount(1);
     setAnalyzeError(null);
     const settings = loadJSON(SETTINGS_KEY, {});
     const modo = settings.modo || 'cliente';
+    const qualityGateActiveEnabled = Boolean(settings[QUALITY_GATE_ACTIVE_ENABLED_KEY]);
+    const qgSnapshot = photos?.A?.snapshots?.qualityGate;
+    const canOverride = modo === 'taller' && isWorkshopSessionValid() && settings.mostrar_debug;
+
+    if (qualityGateActiveEnabled && qgSnapshot) {
+      const { shouldBlock, block_reason } = computeQualityGateActiveDecision(qgSnapshot, canOverride);
+      if (shouldBlock && !qualityOverride) {
+        incrementQualityGateStat('block');
+        setAnalyzeError({
+          type: 'QUALITY_GATE',
+          message: 'Calidad insuficiente. Ajusta la llave o activa override.',
+          reasons: block_reason ? [block_reason] : [],
+          debug: { source: 'vision', block_reason },
+        });
+        return;
+      }
+    }
+
+    setIsAnalyzing(true);
+    setAttemptCount(1);
     try {
       const payload = await analyzeKey(photos, {
         modo: modo === 'taller' ? 'taller' : undefined,

@@ -230,6 +230,10 @@ export function analyzeQualityGateVision(opts = {}) {
     recommended_action = 'block_recommended';
   }
 
+  const block_reason = reasons[0] || (hasCritical ? 'critical_glare_or_key_not_detected' : 'quality_below_threshold');
+  const quality_decision = recommended_action === 'block_recommended' ? 'block' : recommended_action;
+  const quality_action = quality_decision;
+
   const modulesPresent =
     [opts.tracking, opts.glare, opts.shape].filter(Boolean).length;
   const quality_confidence = clamp01(0.3 + (modulesPresent / 8) * 0.7);
@@ -240,6 +244,9 @@ export function analyzeQualityGateVision(opts = {}) {
     quality_score,
     capture_ready,
     recommended_action,
+    quality_decision,
+    quality_action,
+    block_reason,
     reasons,
     positive_signals: positive,
     quality_breakdown: breakdown,
@@ -257,9 +264,34 @@ export function makeQualityGateSnapshot(result) {
     quality_score: result.quality_score,
     capture_ready: result.capture_ready,
     recommended_action: result.recommended_action,
+    quality_decision: result.quality_decision || (result.recommended_action === 'block_recommended' ? 'block' : result.recommended_action),
+    quality_action: result.quality_action || result.quality_decision || result.recommended_action,
+    block_reason: result.block_reason || null,
     reasons: result.reasons || [],
     positive_signals: result.positive_signals || [],
     quality_breakdown: result.quality_breakdown || {},
     quality_confidence: result.quality_confidence,
+  };
+}
+
+/** Flag para activar bloqueo real. Default false = no bloquear. */
+export const QUALITY_GATE_ACTIVE_ENABLED_KEY = 'quality_gate_active_enabled';
+
+/**
+ * Decide si aplicar bloqueo activo y si override está permitido.
+ * @param {Object} qualitySnapshot - snapshot de qualityGate
+ * @param {boolean} canOverride - modo taller + sesión + debug
+ * @returns {{ shouldBlock: boolean, override_allowed: boolean, block_reason: string|null }}
+ */
+export function computeQualityGateActiveDecision(qualitySnapshot, canOverride) {
+  if (!qualitySnapshot) return { shouldBlock: false, override_allowed: false, block_reason: null };
+  const decision = qualitySnapshot.quality_decision || qualitySnapshot.recommended_action;
+  const isBlock = decision === 'block' || decision === 'block_recommended';
+  const isOverride = decision === 'allow_with_override';
+  const override_allowed = (isBlock || isOverride) && canOverride;
+  return {
+    shouldBlock: isBlock,
+    override_allowed,
+    block_reason: qualitySnapshot.block_reason || qualitySnapshot.reasons?.[0] || null,
   };
 }

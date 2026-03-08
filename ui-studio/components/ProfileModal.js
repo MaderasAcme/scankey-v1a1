@@ -24,6 +24,7 @@ import {
   calcPercentiles,
 } from '../utils/storage';
 import { isWorkshopSessionValid } from '../services/auth';
+import { QUALITY_GATE_ACTIVE_ENABLED_KEY } from '../utils/qualityGateVision';
 import { Card } from './ui/Card';
 import { Pill } from './ui/Pill';
 import { AlertBanner } from './ui/AlertBanner';
@@ -63,6 +64,7 @@ export const ProfileModal = memo(({ isOpen, onClose, onLogout, onResetData, onFl
   const [motorHealth, setMotorHealth] = useState(null);
   const [modo, setModo] = useState('cliente');
   const [mostrarDebug, setMostrarDebug] = useState(false);
+  const [qualityGateActive, setQualityGateActive] = useState(false);
   const [showResetConfirm, setShowResetConfirm] = useState(false);
   const [flushStatus, setFlushStatus] = useState(null);
   const [flushResult, setFlushResult] = useState(null);
@@ -93,6 +95,7 @@ export const ProfileModal = memo(({ isOpen, onClose, onLogout, onResetData, onFl
       }
       setModo(modoVal);
       setMostrarDebug(Boolean(s.mostrar_debug));
+      setQualityGateActive(Boolean(s[QUALITY_GATE_ACTIVE_ENABLED_KEY]));
     }
   }, [isOpen, runHealthChecks]);
 
@@ -466,6 +469,19 @@ export const ProfileModal = memo(({ isOpen, onClose, onLogout, onResetData, onFl
                 const v = e.target.checked;
                 setMostrarDebug(v);
                 saveSettings({ mostrar_debug: v });
+              }}
+              className="rounded"
+            />
+          </div>
+          <div className="flex justify-between items-center">
+            <span className="text-sm text-zinc-400">Quality gate activo</span>
+            <input
+              type="checkbox"
+              checked={qualityGateActive}
+              onChange={(e) => {
+                const v = e.target.checked;
+                setQualityGateActive(v);
+                saveSettings({ [QUALITY_GATE_ACTIVE_ENABLED_KEY]: v });
               }}
               className="rounded"
             />
