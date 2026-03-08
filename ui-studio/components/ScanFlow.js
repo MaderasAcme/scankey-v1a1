@@ -6,6 +6,15 @@ import { WebCameraCapture } from './WebCameraCapture';
 
 const MAX_OPTIMIZED_DIM = 1024;
 
+const EMPTY_SNAPSHOTS = {
+  tracking: null,
+  glare: null,
+  shape: null,
+  topdown: null,
+  contrast: null,
+  dissection: null,
+};
+
 function fileToDataUrl(file) {
   return new Promise((resolve, reject) => {
     const r = new FileReader();
@@ -39,7 +48,7 @@ function SideBlock({
     try {
       const originalDataUrl = await fileToDataUrl(file);
       const optimizedDataUrl = await resizeDataUrl(originalDataUrl, MAX_OPTIMIZED_DIM);
-      onCapture(side, { optimizedDataUrl, originalDataUrl });
+      onCapture(side, { optimizedDataUrl, originalDataUrl, snapshots: { ...EMPTY_SNAPSHOTS } });
     } catch (err) {
       console.error('Error procesando imagen:', err);
     } finally {
@@ -94,17 +103,12 @@ function SideBlock({
           <div className="w-full p-2">
             <WebCameraCapture
               captureLabel={side === 'A' ? copy.scan.captureA : copy.scan.captureB}
-              onCapture={async (dataUrl, trackingSnapshot, glareSnapshot, shapeSnapshot, topdownSnapshot, contrastSnapshot, dissectionSnapshot) => {
+              onCapture={async ({ dataUrl, snapshots }) => {
                 const optimizedDataUrl = await resizeDataUrl(dataUrl, MAX_OPTIMIZED_DIM);
                 onCapture(side, {
                   optimizedDataUrl,
                   originalDataUrl: dataUrl,
-                  trackingSnapshot: trackingSnapshot || null,
-                  glareSnapshot: glareSnapshot || null,
-                  shapeSnapshot: shapeSnapshot || null,
-                  topdownSnapshot: topdownSnapshot || null,
-                  contrastSnapshot: contrastSnapshot || null,
-                  dissectionSnapshot: dissectionSnapshot || null,
+                  snapshots: { ...EMPTY_SNAPSHOTS, ...(snapshots || {}) },
                 });
               }}
               onError={() => {}}
@@ -134,7 +138,7 @@ function SideBlock({
 
 /**
  * ScanFlow — captura guiada A y B en la misma pantalla.
- * photos = { A: { optimizedDataUrl, originalDataUrl }, B?: { optimizedDataUrl, originalDataUrl } }
+ * photos = { A: { optimizedDataUrl, originalDataUrl, snapshots? }, B?: { optimizedDataUrl, originalDataUrl, snapshots? } }
  */
 export const ScanFlow = ({ onAnalyze }) => {
   const [photos, setPhotos] = useState({});

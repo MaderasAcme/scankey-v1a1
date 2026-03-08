@@ -203,7 +203,17 @@ export function WebCameraCapture({ onCapture, onError, onUploadFallback, disable
     const contrastSnapshot = makeContrastSnapshot(contrastResultRef.current);
     const dissectionSnapshot = makeDissectionSnapshot(dissectionResultRef.current, w, h);
 
-    if (onCapture) onCapture(dataUrl, trackingSnapshot, glareSnapshot, shapeSnapshot, topdownSnapshot, contrastSnapshot, dissectionSnapshot);
+    if (onCapture) onCapture({
+      dataUrl,
+      snapshots: {
+        tracking: trackingSnapshot || null,
+        glare: glareSnapshot || null,
+        shape: shapeSnapshot || null,
+        topdown: topdownSnapshot || null,
+        contrast: contrastSnapshot || null,
+        dissection: dissectionSnapshot || null,
+      },
+    });
   };
 
   const switchCamera = () => {
