@@ -11,6 +11,7 @@ import { CorrectionModal } from '../components/CorrectionModal';
 import { copy } from '../utils/copy';
 import { computeVisionAugmentedConsistency } from '../utils/consistencyActive';
 import { applyVisionRanking } from '../utils/rankingActive';
+import { computeUnknownDecision } from '../utils/unknownOpenSetActive';
 
 /**
  * Obtiene dataURL de la foto a usar para el recorte. Por defecto A optimizada.
@@ -75,6 +76,34 @@ function ConsistencyBadge({ result, capturedPhotos, modoTaller }) {
 }
 
 const BRAND_SIGNAL_THRESHOLD = 0.6;
+
+/**
+ * Banner UNKNOWN / open-set: cuando la llave no encaja bien con lo conocido.
+ */
+function UnknownBanner({ result, capturedPhotos, modoTaller }) {
+  const unknown = computeUnknownDecision(result, capturedPhotos);
+  if (!unknown.open_set_ready || unknown.unknown_decision === 'known') return null;
+
+  const isUnknown = unknown.unknown_decision === 'UNKNOWN';
+  const variant = isUnknown ? 'error' : 'warn';
+
+  const message = isUnknown
+    ? 'Llave posiblemente no identificable en catálogo. Revisa manualmente.'
+    : 'Identificación con baja confianza. Verifica el resultado.';
+
+  return (
+    <AlertBanner variant={variant}>
+      <div>
+        <div>{message}</div>
+        {modoTaller && unknown.unknown_reason?.length > 0 && (
+          <div className="text-xs mt-1 opacity-80 font-mono">
+            {unknown.unknown_reason.slice(0, 3).join(' · ')}
+          </div>
+        )}
+      </div>
+    </AlertBanner>
+  );
+}
 
 /**
  * Señal pasiva de brandReconstruction en Top 3.
@@ -304,6 +333,7 @@ export function ResultsScreen({
         )}
 
         <ConsistencyBadge result={result} capturedPhotos={capturedPhotos} modoTaller={modoTaller} />
+        <UnknownBanner result={result} capturedPhotos={capturedPhotos} modoTaller={modoTaller} />
         <MultilabelDebugLine result={result} modoTaller={modoTaller} />
         <BrandSignalBadge capturedPhotos={capturedPhotos} modoTaller={modoTaller} />
 
