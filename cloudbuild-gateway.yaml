@@ -1,6 +1,10 @@
 # Build y deploy del gateway (requiere contexto repo root por common/)
 # Uso: gcloud builds submit --config=cloudbuild-gateway.yaml .
 # O desde scripts: ./scripts/deploy_gateway.sh
+#
+# LOGIN en prod: /api/auth/login existe en el gateway. 404 = gateway desactualizado
+# (redeploy workflow "Deploy Gateway to Cloud Run"). 503 = faltan WORKSHOP_LOGIN_EMAIL,
+# WORKSHOP_LOGIN_PASSWORD, WORKSHOP_TOKEN en Cloud Run.
 steps:
   - name: "gcr.io/cloud-builders/docker"
     args:

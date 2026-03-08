@@ -49,5 +49,14 @@ curl -X POST "https://scankey-gateway-2apb4vvlhq-no.a.run.app/api/auth/login" \
 
 - **200** → OK (login configurado y credenciales válidas)
 - **401** → credenciales incorrectas
-- **503** → login no configurado (falta WORKSHOP_*)
-- **404** → gateway viejo sin endpoint (redeployar)
+- **503** → login no configurado (ver sección siguiente)
+- **404** → gateway desplegado desactualizado (ver sección siguiente)
+
+## Troubleshooting: login devuelve 404 o 503
+
+`POST /api/auth/login` existe en el gateway actual. Si en producción falla:
+
+| Código | Causa | Fix |
+|--------|-------|-----|
+| **404** | Gateway desplegado desactualizado (no expone la ruta). **No es un bug del frontend.** | Redeploy del workflow **Deploy Gateway to Cloud Run** (Actions → Deploy Gateway to Cloud Run → Run workflow) |
+| **503** | Faltan variables de entorno | Configurar en Cloud Run: `WORKSHOP_LOGIN_EMAIL`, `WORKSHOP_LOGIN_PASSWORD`, `WORKSHOP_TOKEN` |

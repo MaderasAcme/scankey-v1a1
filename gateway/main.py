@@ -447,6 +447,11 @@ def health():
     return {"ok": True, "service": "gateway", "version": APP_VERSION}
 
 
+# NOTA OPERATIVA (login en producción):
+# - /api/auth/login EXISTE en el gateway actual. Si en producción devuelve 404, el gateway
+#   desplegado está desactualizado. FIX: redeploy del workflow "Deploy Gateway to Cloud Run".
+# - Si tras redeploy devuelve 503, faltan ENV: WORKSHOP_LOGIN_EMAIL, WORKSHOP_LOGIN_PASSWORD,
+#   WORKSHOP_TOKEN. Configurarlos en Cloud Run.
 @APP.post("/api/auth/login")
 async def auth_login(req: Request):
     """Valida credenciales contra ENV. No loggear password. Comparación segura."""
