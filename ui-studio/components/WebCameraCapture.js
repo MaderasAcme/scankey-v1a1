@@ -13,6 +13,7 @@ import { analyzeContrast, makeContrastSnapshot } from '../utils/contrastSense';
 import { analyzeKeyDissection, makeDissectionSnapshot } from '../utils/keyDissection';
 import { analyzeTextZones, makeTextZonesSnapshot } from '../utils/textZones';
 import { analyzeDamageSense, makeDamageSnapshot } from '../utils/damageSense';
+import { analyzeQualityGateVision, makeQualityGateSnapshot } from '../utils/qualityGateVision';
 
 const MAX_DIM = 1920;
 const TRACKING_FPS = 8;
@@ -29,6 +30,7 @@ export function WebCameraCapture({ onCapture, onError, onUploadFallback, disable
   const dissectionResultRef = useRef(null);
   const textZonesResultRef = useRef(null);
   const damageResultRef = useRef(null);
+  const qualityGateResultRef = useRef(null);
   const trackingIntervalRef = useRef(null);
   const lastLogRef = useRef(0);
   const [ready, setReady] = useState(false);
@@ -50,6 +52,7 @@ export function WebCameraCapture({ onCapture, onError, onUploadFallback, disable
     dissectionResultRef.current = null;
     textZonesResultRef.current = null;
     damageResultRef.current = null;
+    qualityGateResultRef.current = null;
     const stream = streamRef.current;
     if (!stream) return;
     stream.getTracks().forEach((t) => t.stop());
@@ -97,6 +100,18 @@ export function WebCameraCapture({ onCapture, onError, onUploadFallback, disable
         dissectionResult: dissectionRes,
       });
       damageResultRef.current = damageRes;
+
+      const qualityGateRes = analyzeQualityGateVision({
+        tracking: result,
+        glare: glareRes,
+        shape: shapeRes,
+        topdown: topdownRes,
+        contrast: contrastRes,
+        dissection: dissectionRes,
+        textZones: textZonesRes,
+        damage: damageRes,
+      });
+      qualityGateResultRef.current = qualityGateRes;
 
       if (process.env.NODE_ENV === 'development') {
         const now = Date.now();
@@ -164,6 +179,14 @@ export function WebCameraCapture({ onCapture, onError, onUploadFallback, disable
             oxidation_present: damageRes.oxidation_present,
             surface_damage: damageRes.surface_damage,
             damage_confidence: damageRes.damage_confidence?.toFixed(2),
+          });
+          console.debug('[qualityGateVision]', {
+            quality_ready: qualityGateRes.quality_ready,
+            quality_score: qualityGateRes.quality_score?.toFixed(2),
+            capture_ready: qualityGateRes.capture_ready,
+            recommended_action: qualityGateRes.recommended_action,
+            reasons: qualityGateRes.reasons,
+            positive_signals: qualityGateRes.positive_signals,
           });
         }
       }
@@ -237,6 +260,7 @@ export function WebCameraCapture({ onCapture, onError, onUploadFallback, disable
     const dissectionSnapshot = makeDissectionSnapshot(dissectionResultRef.current, w, h);
     const textZonesSnapshot = makeTextZonesSnapshot(textZonesResultRef.current, w, h);
     const damageSnapshot = makeDamageSnapshot(damageResultRef.current);
+    const qualityGateSnapshot = makeQualityGateSnapshot(qualityGateResultRef.current);
 
     if (onCapture) onCapture({
       dataUrl,
@@ -249,6 +273,7 @@ export function WebCameraCapture({ onCapture, onError, onUploadFallback, disable
         dissection: dissectionSnapshot || null,
         textZones: textZonesSnapshot || null,
         damage: damageSnapshot || null,
+        qualityGate: qualityGateSnapshot || null,
       },
     });
   };
