@@ -17,10 +17,13 @@ import { analyzeQualityGateVision, makeQualityGateSnapshot } from '../utils/qual
 import { analyzeFeatureFusion, makeFeatureFusionSnapshot } from '../utils/featureFusion';
 import { analyzeBrandReconstruction, makeBrandReconstructionSnapshot } from '../utils/brandReconstruction';
 import { runZonedOCR, makeOcrRealSnapshot } from '../utils/ocrReal';
+import { evaluateAutoCapture, AUTO_CAPTURE_ENABLED_KEY } from '../utils/autoCapture';
+import { loadJSON } from '../utils/storage';
 
 const MAX_DIM = 1920;
 const TRACKING_FPS = 8;
 const TRACK_INTERVAL_MS = 1000 / TRACKING_FPS;
+const SETTINGS_KEY = 'scn_settings';
 
 export function WebCameraCapture({ onCapture, onError, onUploadFallback, disabled, captureLabel = 'Capturar' }) {
   const videoRef = useRef(null);
@@ -38,6 +41,8 @@ export function WebCameraCapture({ onCapture, onError, onUploadFallback, disable
   const brandReconstructionResultRef = useRef(null);
   const trackingIntervalRef = useRef(null);
   const lastLogRef = useRef(0);
+  const autoCaptureStateRef = useRef({ goodFramesCount: 0 });
+  const autoCaptureTriggeredRef = useRef(false);
   const [ready, setReady] = useState(false);
   const [error, setError] = useState(null);
   const [facingMode, setFacingMode] = useState('environment');
@@ -51,6 +56,8 @@ export function WebCameraCapture({ onCapture, onError, onUploadFallback, disable
       clearInterval(trackingIntervalRef.current);
       trackingIntervalRef.current = null;
     }
+    autoCaptureStateRef.current = { goodFramesCount: 0 };
+    autoCaptureTriggeredRef.current = false;
     setTrackingResult(null);
     setGlareResult(null);
     setShapeResult(null);
@@ -146,6 +153,24 @@ export function WebCameraCapture({ onCapture, onError, onUploadFallback, disable
         damage: damageRes,
       });
       brandReconstructionResultRef.current = brandReconstructionRes;
+
+      const autoCaptureRes = evaluateAutoCapture(
+        { tracking: result, glare: glareRes, shape: shapeRes, qualityGate: qualityGateRes },
+        autoCaptureStateRef.current
+      );
+      autoCaptureStateRef.current = autoCaptureRes.nextState;
+
+      const autoCaptureEnabled = Boolean(loadJSON(SETTINGS_KEY, {})[AUTO_CAPTURE_ENABLED_KEY]);
+      if (
+        autoCaptureEnabled &&
+        autoCaptureRes.auto_capture_ready &&
+        !autoCaptureTriggeredRef.current &&
+        !ocrRunning &&
+        !disabled
+      ) {
+        autoCaptureTriggeredRef.current = true;
+        handleCapture();
+      }
 
       if (process.env.NODE_ENV === 'development') {
         const now = Date.now();

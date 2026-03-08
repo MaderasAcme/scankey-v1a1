@@ -25,6 +25,7 @@ import {
 } from '../utils/storage';
 import { isWorkshopSessionValid } from '../services/auth';
 import { QUALITY_GATE_ACTIVE_ENABLED_KEY } from '../utils/qualityGateVision';
+import { AUTO_CAPTURE_ENABLED_KEY } from '../utils/autoCapture';
 import { Card } from './ui/Card';
 import { Pill } from './ui/Pill';
 import { AlertBanner } from './ui/AlertBanner';
@@ -65,6 +66,7 @@ export const ProfileModal = memo(({ isOpen, onClose, onLogout, onResetData, onFl
   const [modo, setModo] = useState('cliente');
   const [mostrarDebug, setMostrarDebug] = useState(false);
   const [qualityGateActive, setQualityGateActive] = useState(false);
+  const [autoCaptureEnabled, setAutoCaptureEnabled] = useState(false);
   const [showResetConfirm, setShowResetConfirm] = useState(false);
   const [flushStatus, setFlushStatus] = useState(null);
   const [flushResult, setFlushResult] = useState(null);
@@ -96,6 +98,7 @@ export const ProfileModal = memo(({ isOpen, onClose, onLogout, onResetData, onFl
       setModo(modoVal);
       setMostrarDebug(Boolean(s.mostrar_debug));
       setQualityGateActive(Boolean(s[QUALITY_GATE_ACTIVE_ENABLED_KEY]));
+      setAutoCaptureEnabled(Boolean(s[AUTO_CAPTURE_ENABLED_KEY]));
     }
   }, [isOpen, runHealthChecks]);
 
@@ -482,6 +485,19 @@ export const ProfileModal = memo(({ isOpen, onClose, onLogout, onResetData, onFl
                 const v = e.target.checked;
                 setQualityGateActive(v);
                 saveSettings({ [QUALITY_GATE_ACTIVE_ENABLED_KEY]: v });
+              }}
+              className="rounded"
+            />
+          </div>
+          <div className="flex justify-between items-center">
+            <span className="text-sm text-zinc-400">Auto-captura</span>
+            <input
+              type="checkbox"
+              checked={autoCaptureEnabled}
+              onChange={(e) => {
+                const v = e.target.checked;
+                setAutoCaptureEnabled(v);
+                saveSettings({ [AUTO_CAPTURE_ENABLED_KEY]: v });
               }}
               className="rounded"
             />
