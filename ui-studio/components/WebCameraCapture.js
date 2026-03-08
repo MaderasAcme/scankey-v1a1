@@ -16,6 +16,7 @@ import { analyzeDamageSense, makeDamageSnapshot } from '../utils/damageSense';
 import { analyzeQualityGateVision, makeQualityGateSnapshot } from '../utils/qualityGateVision';
 import { analyzeFeatureFusion, makeFeatureFusionSnapshot } from '../utils/featureFusion';
 import { analyzeBrandReconstruction, makeBrandReconstructionSnapshot } from '../utils/brandReconstruction';
+import { runZonedOCR, makeOcrRealSnapshot } from '../utils/ocrReal';
 
 const MAX_DIM = 1920;
 const TRACKING_FPS = 8;
@@ -43,6 +44,7 @@ export function WebCameraCapture({ onCapture, onError, onUploadFallback, disable
   const [trackingResult, setTrackingResult] = useState(null);
   const [glareResult, setGlareResult] = useState(null);
   const [shapeResult, setShapeResult] = useState(null);
+  const [ocrRunning, setOcrRunning] = useState(false);
 
   const stopStream = () => {
     if (trackingIntervalRef.current) {
@@ -273,13 +275,14 @@ export function WebCameraCapture({ onCapture, onError, onUploadFallback, disable
     return () => stopStream();
   }, [facingMode]);
 
-  const handleCapture = () => {
+  const handleCapture = async () => {
     const video = videoRef.current;
-    if (!video || !ready || disabled) return;
+    if (!video || !ready || disabled || ocrRunning) return;
     const w = video.videoWidth;
     const h = video.videoHeight;
     if (!w || !h) return;
 
+    setOcrRunning(true);
     const scale = Math.min(1, MAX_DIM / Math.max(w, h));
     const cw = Math.round(w * scale);
     const ch = Math.round(h * scale);
@@ -287,7 +290,10 @@ export function WebCameraCapture({ onCapture, onError, onUploadFallback, disable
     canvas.width = cw;
     canvas.height = ch;
     const ctx = canvas.getContext('2d');
-    if (!ctx) return;
+    if (!ctx) {
+      setOcrRunning(false);
+      return;
+    }
     ctx.drawImage(video, 0, 0, cw, ch);
     const dataUrl = canvas.toDataURL('image/jpeg', 0.9);
 
@@ -304,6 +310,20 @@ export function WebCameraCapture({ onCapture, onError, onUploadFallback, disable
     const featureFusionSnapshot = makeFeatureFusionSnapshot(featureFusionResultRef.current);
     const brandReconstructionSnapshot = makeBrandReconstructionSnapshot(brandReconstructionResultRef.current);
 
+    let ocrRealSnapshot = null;
+    try {
+      const ocrResult = await runZonedOCR(canvas, cw, ch, {
+        dissectionResult: dissectionResultRef.current,
+        textZonesResult: textZonesResultRef.current,
+        contrastResult: contrastResultRef.current,
+      });
+      ocrRealSnapshot = makeOcrRealSnapshot(ocrResult);
+    } catch (_) {
+      ocrRealSnapshot = makeOcrRealSnapshot({ ocr_ready: false, ocr_reasons: ['error'] });
+    } finally {
+      setOcrRunning(false);
+    }
+
     const snapshots = { ...EMPTY_SNAPSHOTS };
     snapshots.tracking = trackingSnapshot || null;
     snapshots.glare = glareSnapshot || null;
@@ -316,6 +336,7 @@ export function WebCameraCapture({ onCapture, onError, onUploadFallback, disable
     snapshots.qualityGate = qualityGateSnapshot || null;
     snapshots.featureFusion = featureFusionSnapshot || null;
     snapshots.brandReconstruction = brandReconstructionSnapshot || null;
+    snapshots.ocrReal = ocrRealSnapshot || null;
     if (onCapture) onCapture({ dataUrl, snapshots });
   };
 
@@ -401,10 +422,10 @@ export function WebCameraCapture({ onCapture, onError, onUploadFallback, disable
           variant="primary"
           className="flex-1"
           onClick={handleCapture}
-          disabled={!ready || disabled}
+          disabled={!ready || disabled || ocrRunning}
           aria-label={captureLabel}
         >
-          {captureLabel}
+          {ocrRunning ? 'Procesando…' : captureLabel}
         </Button>
         {hasMultipleCameras && (
           <Button variant="secondary" onClick={switchCamera} aria-label="Cambiar cámara">

@@ -19,6 +19,7 @@ export const EMPTY_SNAPSHOTS = {
   qualityGate: null,
   featureFusion: null,
   brandReconstruction: null,
+  ocrReal: null,
 };
 
 const ANALYZE_WIDTH = 120;
