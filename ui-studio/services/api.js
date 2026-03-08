@@ -246,14 +246,18 @@ const ANALYZE_TIMEOUT_MS = 30000;
  * @param {function(number, number): void} [opts.onAttempt] - (attempt, total)
  * @returns {Promise<Object>} respuesta normalizada (TOP3, contrato)
  */
+const _isDev = typeof import.meta !== 'undefined' && import.meta.env?.DEV;
+
 export async function analyzeKey(photos, { modo, qualityOverride, onAttempt } = {}) {
   const { base, hasBase } = getApiConfig();
   if (!hasBase) {
+    if (_isDev) console.warn('[scankey] API no configurada. Configure VITE_GATEWAY_BASE_URL en .env.local');
     throw new Error('API no configurada. Indica VITE_GATEWAY_BASE_URL o configura en Perfil.');
   }
   const apiKey = getApiKey();
   const url = `${base}/api/analyze-key`;
   const requestId = simpleUuid();
+  if (_isDev) console.log('[scankey] analyze-key', { base, request_id: requestId, hasB: Boolean(photos?.B) });
 
   const getDataUrl = (side, useOriginal) => {
     const s = photos?.[side];
@@ -296,6 +300,7 @@ export async function analyzeKey(photos, { modo, qualityOverride, onAttempt } = 
     let res = await doRequest(false);
     const needsRetry = res.status >= 500 || res.status === 504 || res.status === 0;
     if (needsRetry) {
+      if (_isDev) console.log('[scankey] analyze-key retry with original');
       if (onAttempt) onAttempt(2, 2);
       res = await doRequest(true);
     }
@@ -314,13 +319,34 @@ export async function analyzeKey(photos, { modo, qualityOverride, onAttempt } = 
       }
       throw new Error(`analyze-key ${res.status}: ${text || res.statusText}`);
     }
-    return res.json();
+    const data = await res.json();
+    if (_isDev) {
+      const top1 = data?.results?.[0];
+      console.log('[scankey] analyze-key ok', {
+        request_id: data?.request_id,
+        results: data?.results?.length,
+        top1: top1 ? `${top1.brand || '?'} ${top1.model || ''}`.trim() : null,
+      });
+    }
+    return data;
   } catch (e) {
     if (e.name === 'AbortError') {
       try {
+        if (_isDev) console.log('[scankey] analyze-key retry with original (timeout)');
         if (onAttempt) onAttempt(2, 2);
         const res2 = await doRequest(true);
-        if (res2.ok) return res2.json();
+        if (res2.ok) {
+          const data2 = await res2.json();
+          if (_isDev) {
+            const top1 = data2?.results?.[0];
+            console.log('[scankey] analyze-key ok (retry)', {
+              request_id: data2?.request_id,
+              results: data2?.results?.length,
+              top1: top1 ? `${top1.brand || '?'} ${top1.model || ''}`.trim() : null,
+            });
+          }
+          return data2;
+        }
         const text = await res2.text();
         throw new Error(`analyze-key ${res2.status}: ${text || res2.statusText}`);
       } catch (e2) {

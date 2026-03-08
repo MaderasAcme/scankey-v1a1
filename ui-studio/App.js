@@ -77,6 +77,9 @@ export default function App() {
     if (qualityGateActiveEnabled && qgSnapshot) {
       const { shouldBlock, block_reason } = computeQualityGateActiveDecision(qgSnapshot, canOverride);
       if (shouldBlock && !qualityOverride) {
+        if (typeof import.meta !== 'undefined' && import.meta.env?.DEV) {
+          console.log('[scankey] quality-gate blocked before fetch', { block_reason });
+        }
         incrementQualityGateStat('block');
         setAnalyzeError({
           type: 'QUALITY_GATE',
@@ -179,6 +182,17 @@ export default function App() {
     setProfileOpen(false);
     setScreen('Home');
     setRefreshKey((k) => k + 1);
+  }, []);
+
+  useEffect(() => {
+    if (typeof import.meta !== 'undefined' && import.meta.env?.DEV) {
+      const cfg = getApiConfig();
+      if (!cfg.hasBase) {
+        console.warn('[scankey] Base URL vacía. Configure VITE_GATEWAY_BASE_URL en .env.local');
+      } else {
+        console.info('[scankey] Smoke test: 1) solo A  2) A+B  3) captura mala → quality gate');
+      }
+    }
   }, []);
 
   useEffect(() => {
