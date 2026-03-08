@@ -9,6 +9,7 @@ import { CropThumbnail } from '../components/ui/CropThumbnail';
 import { ComparePanel } from '../components/ui/ComparePanel';
 import { CorrectionModal } from '../components/CorrectionModal';
 import { copy } from '../utils/copy';
+import { computeVisionAugmentedConsistency } from '../utils/consistencyActive';
 
 /**
  * Obtiene dataURL de la foto a usar para el recorte. Por defecto A optimizada.
@@ -27,15 +28,25 @@ function getSourceDataUrl(capturedPhotos, result, resultIndex) {
 const POLICY_BANNER_ACTIONS = ['BLOCK', 'REQUIRE_MANUAL_REVIEW', 'ALLOW_WITH_OVERRIDE', 'RUN_OCR', 'WARN'];
 
 /**
- * Badge de consistencia (Fase 3 + Fase 6): Alta / Media / Baja.
- * En modo taller: supports/conflicts; si hay strong/weak, etiquetas cortas (ej. "conflicto débil OCR").
+ * Badge de consistencia (Fase 3 + Fase 6 + visión): Alta / Media / Baja.
+ * Usa consistencia aumentada con visión si hay snapshots.
+ * En modo taller: supports/conflicts; si hay strong/weak, etiquetas cortas.
  */
-function ConsistencyBadge({ result, modoTaller }) {
-  const level = result?.debug?.consistency_level;
-  const conflicts = Array.isArray(result?.debug?.consistency_conflicts) ? result.debug.consistency_conflicts : [];
+function ConsistencyBadge({ result, capturedPhotos, modoTaller }) {
+  const augmented = capturedPhotos?.A?.snapshots
+    ? computeVisionAugmentedConsistency(result, capturedPhotos)
+    : null;
+  const level = augmented?.consistency_level ?? result?.debug?.consistency_level;
+  const conflicts = Array.isArray(augmented?.consistency_conflicts)
+    ? augmented.consistency_conflicts
+    : (Array.isArray(result?.debug?.consistency_conflicts) ? result.debug.consistency_conflicts : []);
   const weakConflicts = Array.isArray(result?.debug?.consistency_weak_conflicts) ? result.debug.consistency_weak_conflicts : [];
-  const supports = Array.isArray(result?.debug?.consistency_supports) ? result.debug.consistency_supports : [];
-  const evidenceNotes = Array.isArray(result?.debug?.evidence_notes) ? result.debug.evidence_notes : [];
+  const supports = Array.isArray(augmented?.consistency_supports)
+    ? augmented.consistency_supports
+    : (Array.isArray(result?.debug?.consistency_supports) ? result.debug.consistency_supports : []);
+  const evidenceNotes = Array.isArray(augmented?.consistency_reasoning)
+    ? augmented.consistency_reasoning
+    : (Array.isArray(result?.debug?.evidence_notes) ? result.debug.evidence_notes : []);
   if (!level) return null;
   const labels = { high: 'Alta', medium: 'Media', low: 'Baja' };
   const label = labels[level];
@@ -289,7 +300,7 @@ export function ResultsScreen({
           </AlertBanner>
         )}
 
-        <ConsistencyBadge result={result} modoTaller={modoTaller} />
+        <ConsistencyBadge result={result} capturedPhotos={capturedPhotos} modoTaller={modoTaller} />
         <MultilabelDebugLine result={result} modoTaller={modoTaller} />
         <BrandSignalBadge capturedPhotos={capturedPhotos} modoTaller={modoTaller} />
 
