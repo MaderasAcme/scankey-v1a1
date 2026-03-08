@@ -103,6 +103,10 @@ function getBrandSignalForResult(result, modoTaller, capturedPhotos) {
 
   const hasMatch = !!match;
   const hasCandidates = candidates.length > 0;
+  const firstBrand = hasCandidates
+    ? (typeof candidates[0] === 'string' ? candidates[0] : candidates[0]?.brand)
+    : null;
+  const hasValidCandidate = !!firstBrand;
   const meetsThreshold = conf >= BRAND_SIGNAL_THRESHOLD;
 
   if (!modoTaller) {
@@ -112,18 +116,21 @@ function getBrandSignalForResult(result, modoTaller, capturedPhotos) {
     return { show: false, label: null, detail: null };
   }
 
-  if (hasMatch || hasCandidates) {
-    const label = hasMatch ? `Marca probable: ${match}` : `Marca probable: ${candidates[0] || '?'}`;
+  if (hasMatch || hasValidCandidate) {
+    const label = hasMatch ? `Marca probable: ${match}` : `Marca probable: ${firstBrand}`;
     const zoneMap = { head: 'head', blade: 'blade', both: 'head+blade', none: '—' };
     const modeMap = { combined: 'combined', partial_text: 'partial_text', partial_logo: 'partial_logo', metadata_assisted: 'metadata', none: '—' };
     const zoneStr = zoneMap[zone] || zone || '—';
     const modeStr = modeMap[mode] || mode || '—';
     const confStr = conf > 0 ? conf.toFixed(2) : '—';
-    const detail = `${confStr} · ${zoneStr} · ${modeStr}`;
+    let detail = `${confStr} · ${zoneStr} · ${modeStr}`;
+    const reasons = Array.isArray(source.brand_reconstruction_reason) ? source.brand_reconstruction_reason : [];
+    const shortReason = reasons[0] && typeof reasons[0] === 'string' && reasons[0].length <= 18 ? reasons[0] : null;
+    if (shortReason) detail += ` · ${shortReason}`;
     return { show: true, label, detail };
   }
 
-  if (ready && !hasMatch && !hasCandidates) {
+  if (ready && !hasMatch && !hasValidCandidate) {
     return { show: true, label: 'Marca parcial débil', detail: null };
   }
 
