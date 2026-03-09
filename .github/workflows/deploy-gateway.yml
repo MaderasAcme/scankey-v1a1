@@ -43,3 +43,27 @@ jobs:
           gcloud builds submit --config=cloudbuild-gateway.yaml . \
             --project=${{ env.PROJECT_ID }} \
             --substitutions=SHORT_SHA=${{ github.sha }}
+
+      - name: Smoke test (post-deploy)
+        run: |
+          set -eux
+          GW_URL="$(gcloud run services describe scankey-gateway --region=${{ env.REGION }} --project=${{ env.PROJECT_ID }} --format='value(status.url)')"
+          echo "Gateway URL: $GW_URL"
+
+          echo "--- GET /health ---"
+          HEALTH_STATUS=$(curl -s -o /dev/null -w "%{http_code}" --max-time 15 "$GW_URL/health")
+          echo "Health status: $HEALTH_STATUS"
+          if [ "$HEALTH_STATUS" != "200" ]; then
+            echo "ERROR: GET /health returned $HEALTH_STATUS, expected 200"
+            exit 1
+          fi
+
+          echo "--- POST /api/auth/login (route exists) ---"
+          AUTH_STATUS=$(curl -s -o /dev/null -w "%{http_code}" --max-time 15 -X POST -H "Content-Type: application/json" -d '{"email":"","password":""}' "$GW_URL/api/auth/login")
+          echo "Auth status: $AUTH_STATUS"
+          # 404 = ruta no existe (gateway desactualizado). 401/503/400 = ruta existe
+          if [ "$AUTH_STATUS" = "404" ]; then
+            echo "ERROR: POST /api/auth/login returned 404 — route not found. Gateway may be outdated."
+            exit 1
+          fi
+          echo "OK: Auth route exists (status $AUTH_STATUS is acceptable: 401=invalid, 503=not configured, 400=invalid JSON)"
