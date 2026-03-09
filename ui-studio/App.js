@@ -11,16 +11,10 @@ import { LoginScreen } from './screens/LoginScreen';
 import { ProfileModal } from './screens/ProfileModal';
 import { isWorkshopSessionValid, clearWorkshopSession } from './services/auth';
 import { AlertBanner } from './components/ui/AlertBanner';
-import {
-  analyzeKey,
-  getApiConfig,
-  sendFeedback,
-  enqueueFeedback,
-  getFeedbackQueue,
-  flushFeedbackQueue,
-} from './services/api';
-import { safePushLimited, updateHistoryByInputId, loadJSON, saveJSON, incrementQualityGateStat } from './utils/storage';
-import { computeQualityGateActiveDecision, mergeQualityGateSnapshots, QUALITY_GATE_ACTIVE_ENABLED_KEY } from './utils/qualityGateVision';
+import { getApiConfig } from './services/api';
+import { loadJSON, saveJSON } from './utils/storage';
+import { useAnalyzeFlow } from './hooks/useAnalyzeFlow';
+import { useFeedbackFlow } from './hooks/useFeedbackFlow';
 
 const SETTINGS_KEY = 'scn_settings';
 
@@ -44,136 +38,32 @@ export default function App() {
 
   const [screen, setScreen] = useState('Home');
   const [profileOpen, setProfileOpen] = useState(false);
-  const [isAnalyzing, setIsAnalyzing] = useState(false);
-  const [attemptCount, setAttemptCount] = useState(1);
-  const [result, setResult] = useState(null);
-  const [capturedPhotos, setCapturedPhotos] = useState(null);
-  const [analyzeError, setAnalyzeError] = useState(null);
-  const [feedbackPendingCount, setFeedbackPendingCount] = useState(0);
   const [historyOpenLast, setHistoryOpenLast] = useState(false);
 
-  const refreshFeedbackCount = useCallback(() => {
-    setFeedbackPendingCount(getFeedbackQueue().length);
-  }, []);
+  const handleNavigateToResults = useCallback(() => setScreen('Results'), []);
+
+  const {
+    handleAnalyze,
+    isAnalyzing,
+    attemptCount,
+    result,
+    capturedPhotos,
+    analyzeError,
+    clearAnalyzeError,
+  } = useAnalyzeFlow(handleNavigateToResults);
+
+  const {
+    handleSendFeedback,
+    handleQueueFeedback,
+    handleFlushQueue,
+    feedbackPendingCount,
+    refreshFeedbackCount,
+  } = useFeedbackFlow();
 
   const handleNavigate = useCallback((target) => {
     setScreen(target);
-    if (target === 'Results' && !result) setResult(null);
-    if (target !== 'Scan') setAnalyzeError(null);
-  }, [result]);
-
-  const handleAnalyze = useCallback(async (photos, opts = {}) => {
-    const { qualityOverride } = opts;
-    setCapturedPhotos(photos);
-    setAnalyzeError(null);
-    const settings = loadJSON(SETTINGS_KEY, {});
-    const modo = settings.modo || 'cliente';
-    const qualityGateActiveEnabled = Boolean(settings[QUALITY_GATE_ACTIVE_ENABLED_KEY]);
-    const qgA = photos?.A?.snapshots?.qualityGate;
-    const qgB = photos?.B?.snapshots?.qualityGate;
-    const qgSnapshot = mergeQualityGateSnapshots(qgA, qgB);
-    const canOverride = modo === 'taller' && isWorkshopSessionValid();
-
-    if (qualityGateActiveEnabled && qgSnapshot) {
-      const { shouldBlock, block_reason } = computeQualityGateActiveDecision(qgSnapshot, canOverride);
-      if (shouldBlock && !qualityOverride) {
-        if (typeof import.meta !== 'undefined' && import.meta.env?.DEV) {
-          console.log('[scankey] quality-gate blocked before fetch', { block_reason });
-        }
-        incrementQualityGateStat('block');
-        setAnalyzeError({
-          type: 'QUALITY_GATE',
-          message: 'Calidad insuficiente. Ajusta la llave o activa override.',
-          reasons: block_reason ? [block_reason] : [],
-          debug: { source: 'vision', block_reason },
-        });
-        return;
-      }
-    }
-
-    setIsAnalyzing(true);
-    setAttemptCount(1);
-    try {
-      const payload = await analyzeKey(photos, {
-        modo: modo === 'taller' ? 'taller' : undefined,
-        qualityOverride: Boolean(qualityOverride),
-        onAttempt: (attempt, total) => setAttemptCount(attempt),
-      });
-      setResult(payload);
-      setScreen('Results');
-      const top1 = payload?.results?.[0];
-      const historyItem = {
-        input_id: payload?.input_id,
-        timestamp: payload?.timestamp,
-        request_id: payload?.request_id,
-        top1: top1
-          ? {
-              id_model_ref: top1.id_model_ref,
-              brand: top1.brand,
-              model: top1.model,
-              type: top1.type,
-              confidence: top1.confidence,
-            }
-          : null,
-        low_confidence: payload?.low_confidence,
-        high_confidence: payload?.high_confidence,
-        manufacturer_hint: payload?.manufacturer_hint,
-        debug: payload?.debug,
-        results: payload?.results?.slice(0, 3),
-      };
-      safePushLimited('scn_history', historyItem, 100);
-      if (payload?.debug?.override_used) incrementQualityGateStat('override');
-      if (payload?.debug?.quality_warning) incrementQualityGateStat('warning');
-    } catch (e) {
-      if (e.code === 'QUALITY_GATE') {
-        incrementQualityGateStat('block');
-        setAnalyzeError({
-          type: 'QUALITY_GATE',
-          message: e.message || 'Calidad insuficiente',
-          reasons: e.reasons || [],
-          debug: e.debug || {},
-        });
-      } else {
-        setAnalyzeError(e.message || 'Error al analizar');
-      }
-    } finally {
-      setIsAnalyzing(false);
-      setAttemptCount(1);
-    }
-  }, []);
-
-  const handleSendFeedback = useCallback(async (payload) => {
-    await sendFeedback(payload);
-    const inputId = payload.input_id;
-    updateHistoryByInputId(inputId, {
-      selected_rank: payload.selected_rank,
-      correction_used: Boolean(payload.correction),
-    });
-  }, []);
-
-  const handleQueueFeedback = useCallback(async (payload) => {
-    await enqueueFeedback({
-      ...payload,
-      created_at: new Date().toISOString(),
-    });
-    updateHistoryByInputId(payload.input_id, {
-      selected_rank: payload.selected_rank,
-      correction_used: Boolean(payload.correction),
-    });
-    setFeedbackPendingCount(getFeedbackQueue().length);
-  }, []);
-
-  const handleFlushQueue = useCallback(async (opts = {}) => {
-    const res = await flushFeedbackQueue({
-      onProgress: (sent, remaining) => {
-        setFeedbackPendingCount(getFeedbackQueue().length);
-        opts.onProgress?.(sent, remaining);
-      },
-      onSent: (p) => updateHistoryByInputId(p.input_id, { selected_rank: p.selected_rank, correction_used: Boolean(p.correction) }),
-    });
-    setFeedbackPendingCount(getFeedbackQueue().length);
-    return res;
-  }, []);
+    if (target !== 'Scan') clearAnalyzeError();
+  }, [clearAnalyzeError]);
 
   const handleLogout = useCallback(() => {
     clearWorkshopSession();
