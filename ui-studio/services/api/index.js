@@ -1,6 +1,5 @@
 /**
- * API Service — reexport para compatibilidad.
- * Los módulos reales están en services/api/ (config, health, analyze, feedback).
+ * Barrel export — mantiene compatibilidad con imports desde services/api
  */
 export {
   getApiConfig,
@@ -8,15 +7,22 @@ export {
   setApiBase,
   getApiKey,
   setApiKey,
+} from './config.js';
+
+export {
   getDeployPing,
   getBuildInfo,
   getHealth,
   getMotorHealth,
-  analyzeKey,
+} from './health.js';
+
+export { analyzeKey } from './analyze.js';
+
+export {
   sendFeedback,
   enqueueFeedback,
   flushFeedbackQueue,
   getFeedbackQueue,
   computeFeedbackIdempotencyKey,
   isRetryableError,
-} from './api/index.js';
+} from './feedback.js';
