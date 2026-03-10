@@ -4,6 +4,7 @@
  */
 import { getApiConfig } from './api';
 import { setWorkshopSession, clearWorkshopSession } from './workshopSession';
+import { TEMP_LOGIN_EMAIL, TEMP_LOGIN_PASSWORD } from '../config/tempWebLogin';
 
 const LOGIN_TIMEOUT_MS = 15000;
 
@@ -87,6 +88,33 @@ export async function loginWorkshop(email, password) {
     expires_at: expiresAt.toISOString(),
   };
 
+  setWorkshopSession(payload);
+  return payload;
+}
+
+/**
+ * Temporal web testing login; replace with backend auth when gateway auth is restored.
+ * Valida credenciales en frontend sin llamar a /api/auth/login.
+ * Lanza Error('INVALID_CREDENTIALS') si no coinciden.
+ */
+export function loginWorkshopTemporary(email, password) {
+  const e = String(email || '').trim();
+  const p = String(password || '');
+  if (e !== TEMP_LOGIN_EMAIL || p !== TEMP_LOGIN_PASSWORD) {
+    const err = new Error('INVALID_CREDENTIALS');
+    err.status = 401;
+    throw err;
+  }
+  const loggedAt = new Date().toISOString();
+  const expiresAt = new Date();
+  expiresAt.setDate(expiresAt.getDate() + 7);
+  const payload = {
+    token: 'temp-web-login',
+    role: 'taller',
+    operator_label: 'OPERADOR SENIOR',
+    logged_at: loggedAt,
+    expires_at: expiresAt.toISOString(),
+  };
   setWorkshopSession(payload);
   return payload;
 }

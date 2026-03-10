@@ -1,10 +1,12 @@
 /**
  * LoginScreen — Acceso técnico taller 1:1 con referencia
  * Fondo negro, card blanca con escudo, inputs grandes oscuros, botón ENTRAR
+ * Temporal web testing login; replace with backend auth when gateway auth is restored.
  */
 import React, { useState, useCallback } from 'react';
 import { Shield } from 'lucide-react';
-import { loginWorkshop } from '../services/auth';
+import { loginWorkshop, loginWorkshopTemporary } from '../services/auth';
+import { TEMP_SIMPLE_WEB_LOGIN } from '../config/tempWebLogin';
 
 const DEFAULT_EMAIL_PLACEHOLDER = 'scankey@scankey.com';
 
@@ -50,7 +52,11 @@ export function LoginScreen({ onLoginSuccess, onSuccess }) {
       setError(null);
       setLoading(true);
       try {
-        await loginWorkshop(email.trim(), password);
+        if (TEMP_SIMPLE_WEB_LOGIN) {
+          await loginWorkshopTemporary(email.trim(), password);
+        } else {
+          await loginWorkshop(email.trim(), password);
+        }
         (onLoginSuccess || onSuccess)?.();
       } catch (err) {
         const code = err?.message || 'INVALID_CREDENTIALS';
