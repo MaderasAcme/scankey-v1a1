@@ -19,6 +19,7 @@ import { analyzeBrandReconstruction, makeBrandReconstructionSnapshot } from '../
 import { runZonedOCR, makeOcrRealSnapshot } from '../utils/ocrReal';
 import { runCatalogMatching, makeCatalogMatchingSnapshot } from '../utils/catalogMatchingActive';
 import { evaluateAutoCapture, AUTO_CAPTURE_ENABLED_KEY } from '../utils/autoCapture';
+import { analyzeLight, makeLightSnapshot } from '../utils/lightSense';
 import { loadJSON } from '../utils/storage';
 
 const MAX_DIM = 1920;
@@ -40,6 +41,8 @@ export function WebCameraCapture({ onCapture, onError, onUploadFallback, disable
   const qualityGateResultRef = useRef(null);
   const featureFusionResultRef = useRef(null);
   const brandReconstructionResultRef = useRef(null);
+  const lightResultRef = useRef(null);
+  const torchStateRef = useRef({ supported: false, requested: false, active: false });
   const trackingIntervalRef = useRef(null);
   const lastLogRef = useRef(0);
   const autoCaptureStateRef = useRef({ goodFramesCount: 0 });
@@ -51,6 +54,7 @@ export function WebCameraCapture({ onCapture, onError, onUploadFallback, disable
   const [glareResult, setGlareResult] = useState(null);
   const [shapeResult, setShapeResult] = useState(null);
   const [ocrRunning, setOcrRunning] = useState(false);
+  const [lightStatus, setLightStatus] = useState(null);
 
   const stopStream = () => {
     if (trackingIntervalRef.current) {
@@ -62,6 +66,7 @@ export function WebCameraCapture({ onCapture, onError, onUploadFallback, disable
     setTrackingResult(null);
     setGlareResult(null);
     setShapeResult(null);
+    setLightStatus(null);
     contrastResultRef.current = null;
     dissectionResultRef.current = null;
     textZonesResultRef.current = null;
@@ -69,6 +74,8 @@ export function WebCameraCapture({ onCapture, onError, onUploadFallback, disable
     qualityGateResultRef.current = null;
     featureFusionResultRef.current = null;
     brandReconstructionResultRef.current = null;
+    lightResultRef.current = null;
+    torchStateRef.current = { supported: false, requested: false, active: false };
     const stream = streamRef.current;
     if (!stream) return;
     stream.getTracks().forEach((t) => t.stop());
@@ -88,6 +95,36 @@ export function WebCameraCapture({ onCapture, onError, onUploadFallback, disable
       const glareRes = analyzeGlare(video, { roiBbox: result.bbox || null });
       glareResultRef.current = glareRes;
       setGlareResult(glareRes);
+
+      const lightRes = analyzeLight(video, { roiBbox: result.bbox || null });
+      const torchState = torchStateRef.current;
+      lightRes.torch_supported = torchState.supported;
+      lightRes.torch_requested = torchState.requested;
+      lightRes.torch_active = torchState.active;
+      lightResultRef.current = lightRes;
+
+      if (lightRes.low_light_detected && torchState.supported && !torchState.requested) {
+        const track = streamRef.current?.getVideoTracks?.()[0];
+        if (track) {
+          torchStateRef.current = { ...torchState, requested: true };
+          track.applyConstraints({ advanced: [{ torch: true }] }).then(() => {
+            torchStateRef.current = { ...torchStateRef.current, active: true };
+          }).catch(() => {
+            torchStateRef.current = { ...torchStateRef.current, requested: false, active: false };
+          });
+        }
+      } else if (!lightRes.low_light_detected && torchState.active) {
+        const track = streamRef.current?.getVideoTracks?.()[0];
+        if (track) {
+          torchStateRef.current = { supported: torchState.supported, requested: false, active: false };
+          track.applyConstraints({ advanced: [{ torch: false }] }).catch(() => {});
+        }
+      }
+
+      let lightStatusMsg = null;
+      if (lightRes.light_level === 'very_low_light' && !torchState.supported) lightStatusMsg = 'Más luz, por favor';
+      else if (lightRes.low_light_detected && torchState.active) lightStatusMsg = 'Linterna activada';
+      else if (lightRes.low_light_detected) lightStatusMsg = 'Poca luz';
 
       const shapeRes = analyzeShapeMask(video, { roiBbox: result.bbox || null });
       shapeResultRef.current = shapeRes;
@@ -156,21 +193,22 @@ export function WebCameraCapture({ onCapture, onError, onUploadFallback, disable
       brandReconstructionResultRef.current = brandReconstructionRes;
 
       const autoCaptureRes = evaluateAutoCapture(
-        { tracking: result, glare: glareRes, shape: shapeRes, qualityGate: qualityGateRes },
+        { tracking: result, glare: glareRes, shape: shapeRes, qualityGate: qualityGateRes, light: lightRes },
         autoCaptureStateRef.current
       );
       autoCaptureStateRef.current = autoCaptureRes.nextState;
 
       const autoCaptureEnabled = Boolean(loadJSON(SETTINGS_KEY, {})[AUTO_CAPTURE_ENABLED_KEY]);
-      if (
-        autoCaptureEnabled &&
-        autoCaptureRes.auto_capture_ready &&
-        !autoCaptureTriggeredRef.current &&
-        !ocrRunning &&
-        !disabled
-      ) {
+      const aboutToAutoCapture = autoCaptureEnabled && autoCaptureRes.auto_capture_ready &&
+        !autoCaptureTriggeredRef.current && !ocrRunning && !disabled;
+      if (aboutToAutoCapture) {
+        setLightStatus('Llave lista, capturando...');
         autoCaptureTriggeredRef.current = true;
         handleCapture();
+      } else if (!lightStatusMsg) {
+        setLightStatus(null);
+      } else {
+        setLightStatus(lightStatusMsg);
       }
 
       if (process.env.NODE_ENV === 'development') {
@@ -283,6 +321,16 @@ export function WebCameraCapture({ onCapture, onError, onUploadFallback, disable
         audio: false,
       });
       streamRef.current = stream;
+      const track = stream.getVideoTracks()[0];
+      if (track) {
+        try {
+          const caps = track.getCapabilities?.();
+          const hasTorch = caps && caps.torch === true;
+          torchStateRef.current = { ...torchStateRef.current, supported: !!hasTorch };
+        } catch (_) {
+          torchStateRef.current = { ...torchStateRef.current, supported: false };
+        }
+      }
       if (videoRef.current) {
         videoRef.current.srcObject = stream;
       }
@@ -335,6 +383,7 @@ export function WebCameraCapture({ onCapture, onError, onUploadFallback, disable
     const qualityGateSnapshot = makeQualityGateSnapshot(qualityGateResultRef.current);
     const featureFusionSnapshot = makeFeatureFusionSnapshot(featureFusionResultRef.current);
     const brandReconstructionSnapshot = makeBrandReconstructionSnapshot(brandReconstructionResultRef.current);
+    const lightSnapshot = makeLightSnapshot(lightResultRef.current);
 
     let ocrRealSnapshot = null;
     try {
@@ -362,6 +411,7 @@ export function WebCameraCapture({ onCapture, onError, onUploadFallback, disable
     snapshots.qualityGate = qualityGateSnapshot || null;
     snapshots.featureFusion = featureFusionSnapshot || null;
     snapshots.brandReconstruction = brandReconstructionSnapshot || null;
+    snapshots.light = lightSnapshot || null;
     snapshots.ocrReal = ocrRealSnapshot || null;
 
     const catalogMatchResult = runCatalogMatching({
@@ -407,7 +457,7 @@ export function WebCameraCapture({ onCapture, onError, onUploadFallback, disable
   const glareMsg = getGlareGuidanceMessage(glareResult);
   const trackingMsg = r ? getGuidanceMessage(r) : null;
   const shapeMsg = getShapeGuidanceMessage(shapeResult);
-  const displayMessage = glareMsg || trackingMsg || shapeMsg;
+  const displayMessage = lightStatus || glareMsg || trackingMsg || shapeMsg;
   // bbox en keyTracking está en coords de análisis 120x90; convertir a % para overlay
   const bboxPercent = r?.bbox && r.key_detected ? {
     left: (r.bbox.x / 120) * 100,

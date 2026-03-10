@@ -21,6 +21,7 @@ export const EMPTY_SNAPSHOTS = {
   brandReconstruction: null,
   ocrReal: null,
   catalogMatching: null,
+  light: null,
 };
 
 const ANALYZE_WIDTH = 120;
