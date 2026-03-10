@@ -4,6 +4,11 @@ import { copy } from '../utils/copy';
 import { resizeDataUrl } from '../utils/imageResize';
 import { EMPTY_SNAPSHOTS } from '../utils/keyTracking';
 import { WebCameraCapture } from './WebCameraCapture';
+import { ScanStatusBadge } from './scan/ScanStatusBadge';
+import { DetectedKeyPreview } from './scan/DetectedKeyPreview';
+import { ScanActionPanel } from './scan/ScanActionPanel';
+import { OptionalSideBCollapse } from './scan/OptionalSideBCollapse';
+import { ScanHelpTip } from './scan/ScanHelpTip';
 
 const MAX_OPTIMIZED_DIM = 1024;
 
@@ -17,22 +22,11 @@ function fileToDataUrl(file) {
 }
 
 /**
- * Bloque individual A o B: preview, repetir, indicador completado.
+ * Bloque de cámara para lado B (dentro del acordeón).
  */
-function SideBlock({
-  side,
-  label,
-  photo,
-  isActive,
-  isDimmed,
-  onCapture,
-  onClear,
-  hasCamera,
-  capturing,
-}) {
+function SideBCameraBlock({ onCapture, onUploadFallback }) {
   const inputRef = useRef(null);
-
-  const triggerFileInput = () => inputRef.current?.click();
+  const captureRef = useRef(null);
 
   const handleFile = async (e) => {
     const file = e?.target?.files?.[0];
@@ -40,7 +34,11 @@ function SideBlock({
     try {
       const originalDataUrl = await fileToDataUrl(file);
       const optimizedDataUrl = await resizeDataUrl(originalDataUrl, MAX_OPTIMIZED_DIM);
-      onCapture(side, { optimizedDataUrl, originalDataUrl, snapshots: { ...EMPTY_SNAPSHOTS } });
+      onCapture('B', {
+        optimizedDataUrl,
+        originalDataUrl,
+        snapshots: { ...EMPTY_SNAPSHOTS },
+      });
     } catch (err) {
       console.error('Error procesando imagen:', err);
     } finally {
@@ -48,23 +46,8 @@ function SideBlock({
     }
   };
 
-  const borderClass = isActive
-    ? 'border-[var(--accent)] ring-1 ring-[var(--accent)]/30'
-    : isDimmed
-      ? 'border-[var(--border)] opacity-60'
-      : 'border-[var(--border)]';
-
   return (
-    <div
-      className={`flex flex-col gap-2 rounded-lg p-3 bg-[var(--bg-secondary)] border-2 transition-all ${borderClass}`}
-    >
-      <div className="flex items-center justify-between">
-        <span className="text-xs font-medium text-[var(--muted)]">{label}</span>
-        {photo && (
-          <span className="text-[10px] text-[var(--success)] font-medium">Completado</span>
-        )}
-      </div>
-
+    <div className="space-y-3">
       <input
         ref={inputRef}
         type="file"
@@ -72,71 +55,36 @@ function SideBlock({
         className="hidden"
         onChange={handleFile}
       />
-      <div className={`rounded-lg overflow-hidden bg-black/40 flex items-center justify-center ${
-        photo ? 'aspect-square min-h-[100px]' : 'min-h-[140px]'
-      }`}>
-        {photo ? (
-          <div className="relative w-full h-full">
-            <img
-              src={photo.optimizedDataUrl}
-              alt={copy.scan.captured}
-              className="w-full h-full object-contain"
-            />
-            <button
-              type="button"
-              className="absolute top-1 right-1 rounded bg-black/70 text-white text-xs px-2 py-1 opacity-90 hover:opacity-100 transition touch-manipulation"
-              onClick={() => onClear(side)}
-              aria-label={copy.scan.repeat}
-            >
-              {copy.scan.repeat}
-            </button>
-          </div>
-        ) : hasCamera && isActive ? (
-          <div className="w-full p-2">
-            <WebCameraCapture
-              captureLabel={side === 'A' ? copy.scan.captureA : copy.scan.captureB}
-              onCapture={async ({ dataUrl, snapshots }) => {
-                const optimizedDataUrl = await resizeDataUrl(dataUrl, MAX_OPTIMIZED_DIM);
-                onCapture(side, {
-                  optimizedDataUrl,
-                  originalDataUrl: dataUrl,
-                  snapshots: { ...EMPTY_SNAPSHOTS, ...(snapshots || {}) },
-                });
-              }}
-              onError={() => {}}
-              onUploadFallback={triggerFileInput}
-              disabled={capturing === side}
-            />
-          </div>
-        ) : (
-          <div className="flex flex-col gap-2 items-center p-4">
-            <Button
-              variant="secondary"
-              className="w-full text-sm py-2"
-              onClick={() => inputRef.current?.click()}
-              disabled={!isActive}
-            >
-              {copy.scan.uploadPhoto}
-            </Button>
-            {!isActive && isDimmed && (
-              <span className="text-[10px] text-[var(--muted)]">Primero completa A</span>
-            )}
-          </div>
-        )}
-      </div>
+      <WebCameraCapture
+        mode="standalone"
+        captureLabel={copy.scan.captureB}
+        onCapture={async ({ dataUrl, snapshots }) => {
+          const optimizedDataUrl = await resizeDataUrl(dataUrl, MAX_OPTIMIZED_DIM);
+          onCapture('B', {
+            optimizedDataUrl,
+            originalDataUrl: dataUrl,
+            snapshots: { ...EMPTY_SNAPSHOTS, ...(snapshots || {}) },
+          });
+        }}
+        onError={() => {}}
+        onUploadFallback={() => inputRef.current?.click()}
+      />
     </div>
   );
 }
 
 /**
- * ScanFlow — captura guiada A y B en la misma pantalla.
- * photos = { A: { optimizedDataUrl, originalDataUrl, snapshots? }, B?: { optimizedDataUrl, originalDataUrl, snapshots? } }
+ * ScanFlow — flujo guiado A -> B.
+ * Móvil: columna única. Web: dos columnas (preview | panel).
  */
 export const ScanFlow = ({ onAnalyze }) => {
   const [photos, setPhotos] = useState({});
-  const [capturing, setCapturing] = useState(null);
   const [hasCamera, setHasCamera] = useState(true);
   const [cameraChecked, setCameraChecked] = useState(false);
+  const [scanState, setScanState] = useState(null);
+  const [sideBExpanded, setSideBExpanded] = useState(false);
+  const captureRef = useRef(null);
+  const inputRef = useRef(null);
 
   useEffect(() => {
     if (typeof navigator === 'undefined' || !navigator.mediaDevices?.getUserMedia) {
@@ -162,7 +110,6 @@ export const ScanFlow = ({ onAnalyze }) => {
 
   const handleCapture = (side, data) => {
     setPhotos((p) => ({ ...p, [side]: data }));
-    setCapturing(null);
   };
 
   const handleClear = (side) => {
@@ -177,77 +124,206 @@ export const ScanFlow = ({ onAnalyze }) => {
     if (photos.A && onAnalyze) onAnalyze(photos);
   };
 
+  const handleCaptureA = () => {
+    captureRef.current?.();
+  };
+
+  const handleFileA = async (e) => {
+    const file = e?.target?.files?.[0];
+    if (!file || !file.type.startsWith('image/')) return;
+    try {
+      const originalDataUrl = await fileToDataUrl(file);
+      const optimizedDataUrl = await resizeDataUrl(originalDataUrl, MAX_OPTIMIZED_DIM);
+      handleCapture('A', {
+        optimizedDataUrl,
+        originalDataUrl,
+        snapshots: { ...EMPTY_SNAPSHOTS },
+      });
+    } catch (err) {
+      console.error('Error procesando imagen:', err);
+    } finally {
+      e.target.value = '';
+    }
+  };
+
   const hasA = Boolean(photos.A);
   const hasB = Boolean(photos.B);
   const canAnalyze = hasA;
 
-  // ESTADO 1 — sin A
-  // ESTADO 2 — A capturada
-  // ESTADO 3 — A y B capturadas
+  const status = scanState?.status || 'searching';
+  const previewDataUrl = scanState?.previewDataUrl;
+  const canCapture = scanState?.canCapture ?? false;
+  const showDetectedPreview = Boolean(previewDataUrl) && (status === 'detected' || status === 'ready');
 
-  const mainText =
-    !hasA
-      ? copy.scan.stepA
-      : !hasB
-        ? copy.scan.stepAAfter
-        : null;
+  const helpTip =
+    scanState?.displayMessage ||
+    (status === 'low_light' ? 'Usa más luz si hace falta' : 'Alinea y centra la llave');
+
+  if (!cameraChecked) {
+    return (
+      <div className="flex-1 flex items-center justify-center py-12">
+        <span className="text-[var(--muted)] text-sm">Comprobando cámara…</span>
+      </div>
+    );
+  }
+
+  if (!hasCamera) {
+    return (
+      <div className="flex-1 flex flex-col p-4 md:p-6 gap-4">
+        <div className="p-4 rounded-xl bg-[var(--bg-secondary)] border border-[var(--border)]">
+          <p className="text-[var(--danger)] text-sm font-medium">{copy.scan.noCamera}</p>
+          <p className="text-[var(--text-muted)] text-xs mt-1">{copy.scan.noCameraHint}</p>
+        </div>
+        <input
+          ref={inputRef}
+          type="file"
+          accept="image/*"
+          className="hidden"
+          onChange={handleFileA}
+        />
+        <Button variant="primary" className="w-full" onClick={() => inputRef.current?.click()}>
+          {copy.scan.uploadPhoto}
+        </Button>
+      </div>
+    );
+  }
+
+  const rightPanel = (
+    <div className="flex flex-col gap-4">
+      <div className="flex flex-col gap-3">
+        <ScanStatusBadge status={!hasA ? status : (canAnalyze ? 'ready' : status)} />
+        <ScanHelpTip tip={helpTip} />
+      </div>
+      {hasA ? (
+        <div className="rounded-xl bg-[var(--bg-secondary)] border border-[var(--border)] overflow-hidden">
+          <div className="px-3 py-2 border-b border-[var(--border)]">
+            <h4 className="text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wide">
+              {copy.scan.sideA} — {copy.scan.captured}
+            </h4>
+          </div>
+          <div className="relative aspect-[4/3] bg-black/40 flex items-center justify-center p-2">
+            <img
+              src={photos.A.optimizedDataUrl}
+              alt={copy.scan.captured}
+              className="max-w-full max-h-full object-contain rounded"
+            />
+            <button
+              type="button"
+              className="absolute top-2 right-2 rounded-lg bg-black/70 text-white text-xs px-2 py-1"
+              onClick={() => handleClear('A')}
+            >
+              {copy.scan.repeat}
+            </button>
+          </div>
+        </div>
+      ) : showDetectedPreview ? (
+        <DetectedKeyPreview previewDataUrl={previewDataUrl} visible />
+      ) : null}
+      <ScanActionPanel
+        primaryLabel={hasA ? copy.scan.analyzeKey : copy.scan.captureA}
+        primaryDisabled={!hasA && !canCapture}
+        primaryLoading={false}
+        onPrimary={hasA ? handleAnalyze : handleCaptureA}
+        secondaryLabel="Capturar lado B (opcional)"
+        secondaryVisible={hasA && !hasB}
+        onSecondary={() => setSideBExpanded(true)}
+      />
+        <OptionalSideBCollapse
+          isExpanded={sideBExpanded}
+          onToggle={setSideBExpanded}
+          photo={photos.B}
+          onCapture={handleCapture}
+          onClear={handleClear}
+          hasA={hasA}
+        >
+          <SideBCameraBlock onCapture={handleCapture} />
+        </OptionalSideBCollapse>
+    </div>
+  );
+
+  const mainPreview = !hasA ? (
+    <div className="w-full">
+      <input
+        ref={inputRef}
+        type="file"
+        accept="image/*"
+        className="hidden"
+        onChange={handleFileA}
+      />
+      <WebCameraCapture
+        mode="guided"
+        captureRef={captureRef}
+        onScanState={setScanState}
+        onCapture={async ({ dataUrl, snapshots }) => {
+          const optimizedDataUrl = await resizeDataUrl(dataUrl, MAX_OPTIMIZED_DIM);
+          handleCapture('A', {
+            optimizedDataUrl,
+            originalDataUrl: dataUrl,
+            snapshots: { ...EMPTY_SNAPSHOTS, ...(snapshots || {}) },
+          });
+        }}
+        onError={() => {}}
+        onUploadFallback={() => inputRef.current?.click()}
+      />
+    </div>
+  ) : (
+    <div className="relative w-full aspect-[4/3] rounded-xl overflow-hidden bg-black">
+      <img
+        src={photos.A.optimizedDataUrl}
+        alt={copy.scan.captured}
+        className="w-full h-full object-contain"
+      />
+      <button
+        type="button"
+        className="absolute top-2 right-2 rounded-lg bg-black/70 text-white text-xs px-2 py-1"
+        onClick={() => handleClear('A')}
+        aria-label={copy.scan.repeat}
+      >
+        {copy.scan.repeat}
+      </button>
+    </div>
+  );
 
   return (
-    <div className="flex-1 flex flex-col p-6 gap-4">
-      {mainText && (
-        <p className="text-[var(--text)] text-center font-medium">
-          {mainText}
-        </p>
-      )}
-
-      {!cameraChecked ? (
-        <div className="flex items-center justify-center py-12">
-          <span className="text-[var(--muted)] text-sm">Comprobando cámara…</span>
+    <div className="flex-1 flex flex-col p-4 md:p-6 gap-4 md:gap-6">
+      {/* MÓVIL: columna única */}
+      <div className="flex flex-col gap-4 md:hidden">
+        <div className="flex justify-center">
+          <ScanStatusBadge status={!hasA ? status : 'ready'} />
         </div>
-      ) : !hasCamera ? (
-        <div className="flex flex-col gap-1 p-3 rounded-lg bg-[var(--bg-secondary)] border border-[var(--border)] mb-2">
-          <p className="text-[var(--danger)] text-sm font-medium">{copy.scan.noCamera}</p>
-          <p className="text-[var(--muted)] text-xs">{copy.scan.noCameraHint}</p>
-        </div>
-      ) : null}
-
-      {cameraChecked && (
-      <div className="grid grid-cols-2 gap-4">
-        <SideBlock
-          side="A"
-          label={copy.scan.sideA}
-          photo={photos.A}
-          isActive={!hasA || hasB}
-          isDimmed={hasA && !hasB}
-          onCapture={handleCapture}
-          onClear={handleClear}
-          hasCamera={hasCamera}
-          capturing={capturing}
+        <div className="flex-1 min-h-0">{mainPreview}</div>
+        {!hasA && showDetectedPreview && (
+          <DetectedKeyPreview previewDataUrl={previewDataUrl} visible />
+        )}
+        <ScanHelpTip tip={helpTip} />
+        <ScanActionPanel
+          primaryLabel={hasA ? copy.scan.analyzeKey : copy.scan.captureA}
+          primaryDisabled={!hasA && !canCapture}
+          primaryLoading={false}
+          onPrimary={hasA ? handleAnalyze : handleCaptureA}
+          secondaryLabel="Capturar lado B (opcional)"
+          secondaryVisible={hasA && !hasB}
+          onSecondary={() => setSideBExpanded(true)}
         />
-        <SideBlock
-          side="B"
-          label={`${copy.scan.sideB} (${copy.scan.stepBOptional})`}
+        <OptionalSideBCollapse
+          isExpanded={sideBExpanded}
+          onToggle={setSideBExpanded}
           photo={photos.B}
-          isActive={hasA}
-          isDimmed={!hasA}
           onCapture={handleCapture}
           onClear={handleClear}
-          hasCamera={hasCamera}
-          capturing={capturing}
-        />
-      </div>
-      )}
-
-      {canAnalyze && (
-        <Button
-          variant="primary"
-          className="w-full mt-4"
-          onClick={handleAnalyze}
-          aria-label={copy.scan.analyzeKey}
+          hasA={hasA}
         >
-          {copy.scan.analyzeKey}
-        </Button>
-      )}
+          <SideBCameraBlock onCapture={handleCapture} />
+        </OptionalSideBCollapse>
+      </div>
+
+      {/* WEB: dos columnas */}
+      <div className="hidden md:grid md:grid-cols-[1fr,340px] md:gap-6 md:flex-1 md:min-h-0">
+        <div className="flex flex-col min-h-0">
+          <div className="flex-1 flex items-center justify-center min-h-[280px]">{mainPreview}</div>
+        </div>
+        <div className="flex flex-col gap-4 overflow-y-auto max-h-[calc(100vh-180px)]">{rightPanel}</div>
+      </div>
     </div>
   );
 };

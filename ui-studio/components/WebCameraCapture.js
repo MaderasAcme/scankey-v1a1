@@ -2,6 +2,7 @@
  * WebCameraCapture — captura real desde webcam vía getUserMedia.
  * Usa video + canvas para generar dataURL. Cierra tracks en unmount.
  * Integra key tracking pasivo (mide, guía, NO bloquea).
+ * Modo guided: expone estado vía onScanState para UI guiada (ScanFlow).
  */
 import React, { useEffect, useRef, useState } from 'react';
 import { Button } from './ui/Button';
@@ -25,9 +26,30 @@ import { loadJSON } from '../utils/storage';
 const MAX_DIM = 1920;
 const TRACKING_FPS = 8;
 const TRACK_INTERVAL_MS = 1000 / TRACKING_FPS;
+const PREVIEW_UPDATE_MS = 250;
 const SETTINGS_KEY = 'scn_settings';
 
-export function WebCameraCapture({ onCapture, onError, onUploadFallback, disabled, captureLabel = 'Capturar' }) {
+const ANALYZE_W = 120;
+const ANALYZE_H = 90;
+
+function deriveScanStatus({ ocrRunning, lightStatusMsg, qualityGate, tracking }) {
+  if (ocrRunning) return 'capturing';
+  if (lightStatusMsg === 'Poca luz' || lightStatusMsg === 'Más luz, por favor') return 'low_light';
+  if (qualityGate?.capture_ready) return 'ready';
+  if (tracking?.key_detected) return 'detected';
+  return 'searching';
+}
+
+export function WebCameraCapture({
+  onCapture,
+  onError,
+  onUploadFallback,
+  disabled,
+  captureLabel = 'Capturar',
+  mode = 'standalone',
+  onScanState,
+  captureRef,
+}) {
   const videoRef = useRef(null);
   const streamRef = useRef(null);
   const trackingStateRef = useRef({ history: [], lastResult: null });
@@ -47,6 +69,9 @@ export function WebCameraCapture({ onCapture, onError, onUploadFallback, disable
   const lastLogRef = useRef(0);
   const autoCaptureStateRef = useRef({ goodFramesCount: 0 });
   const autoCaptureTriggeredRef = useRef(false);
+  const previewCanvasRef = useRef(null);
+  const lastPreviewUpdateRef = useRef(0);
+  const previewDataUrlRef = useRef(null);
   const [ready, setReady] = useState(false);
   const [error, setError] = useState(null);
   const [facingMode, setFacingMode] = useState('environment');
@@ -54,6 +79,8 @@ export function WebCameraCapture({ onCapture, onError, onUploadFallback, disable
   const [glareResult, setGlareResult] = useState(null);
   const [shapeResult, setShapeResult] = useState(null);
   const [ocrRunning, setOcrRunning] = useState(false);
+  const ocrRunningRef = useRef(false);
+  ocrRunningRef.current = ocrRunning;
   const [lightStatus, setLightStatus] = useState(null);
 
   const stopStream = () => {
@@ -63,6 +90,7 @@ export function WebCameraCapture({ onCapture, onError, onUploadFallback, disable
     }
     autoCaptureStateRef.current = { goodFramesCount: 0 };
     autoCaptureTriggeredRef.current = false;
+    previewDataUrlRef.current = null;
     setTrackingResult(null);
     setGlareResult(null);
     setShapeResult(null);
@@ -199,8 +227,9 @@ export function WebCameraCapture({ onCapture, onError, onUploadFallback, disable
       autoCaptureStateRef.current = autoCaptureRes.nextState;
 
       const autoCaptureEnabled = Boolean(loadJSON(SETTINGS_KEY, {})[AUTO_CAPTURE_ENABLED_KEY]);
+      const ocrRunningNow = ocrRunningRef.current;
       const aboutToAutoCapture = autoCaptureEnabled && autoCaptureRes.auto_capture_ready &&
-        !autoCaptureTriggeredRef.current && !ocrRunning && !disabled;
+        !autoCaptureTriggeredRef.current && !ocrRunningNow && !disabled;
       if (aboutToAutoCapture) {
         setLightStatus('Llave lista, capturando...');
         autoCaptureTriggeredRef.current = true;
@@ -209,6 +238,63 @@ export function WebCameraCapture({ onCapture, onError, onUploadFallback, disable
         setLightStatus(null);
       } else {
         setLightStatus(lightStatusMsg);
+      }
+
+      const scanStatus = deriveScanStatus({
+        ocrRunning: ocrRunningNow,
+        lightStatusMsg: lightStatusMsg || null,
+        qualityGate: qualityGateRes,
+        tracking: result,
+      });
+      const canCapture = ready && !disabled && !ocrRunningNow;
+      let displayMsg = lightStatus || glareRes?.reflection_state === 'critical' ? getGlareGuidanceMessage(glareRes) : null;
+      if (!displayMsg && result) displayMsg = getGuidanceMessage(result);
+      if (!displayMsg && shapeRes) displayMsg = getShapeGuidanceMessage(shapeRes);
+
+      if (scanStatus === 'searching') {
+        previewDataUrlRef.current = null;
+      } else if (result?.key_detected && (shapeRes?.shape_bbox || result?.bbox)) {
+        const now = Date.now();
+        if (now - lastPreviewUpdateRef.current >= PREVIEW_UPDATE_MS) {
+          lastPreviewUpdateRef.current = now;
+          const bbox = shapeRes?.shape_bbox || result.bbox;
+          const vw = video.videoWidth;
+          const vh = video.videoHeight;
+          const scaleX = vw / ANALYZE_W;
+          const scaleY = vh / ANALYZE_H;
+          const pad = 4;
+          const sx = Math.max(0, Math.round(bbox.x * scaleX) - pad);
+          const sy = Math.max(0, Math.round(bbox.y * scaleY) - pad);
+          const sw = Math.min(vw - sx, Math.round(bbox.w * scaleX) + pad * 2);
+          const sh = Math.min(vh - sy, Math.round(bbox.h * scaleY) + pad * 2);
+          if (sw > 8 && sh > 8) {
+            let prevCanv = previewCanvasRef.current;
+            if (!prevCanv) {
+              prevCanv = document.createElement('canvas');
+              previewCanvasRef.current = prevCanv;
+            }
+            const outSize = 160;
+            prevCanv.width = outSize;
+            prevCanv.height = Math.round(outSize * (sh / sw));
+            const pctx = prevCanv.getContext('2d');
+            if (pctx) {
+              pctx.fillStyle = '#fafafa';
+              pctx.fillRect(0, 0, prevCanv.width, prevCanv.height);
+              pctx.drawImage(video, sx, sy, sw, sh, 0, 0, prevCanv.width, prevCanv.height);
+              previewDataUrlRef.current = prevCanv.toDataURL('image/jpeg', 0.85);
+            }
+          }
+        }
+      }
+
+      if (onScanState) {
+        onScanState({
+          status: scanStatus,
+          displayMessage: displayMsg || lightStatusMsg || null,
+          canCapture,
+          qualityGate: qualityGateRes,
+          previewDataUrl: previewDataUrlRef.current,
+        });
       }
 
       if (process.env.NODE_ENV === 'development') {
@@ -466,9 +552,13 @@ export function WebCameraCapture({ onCapture, onError, onUploadFallback, disable
     height: (r.bbox.h / 90) * 100,
   } : null;
 
+  if (captureRef) captureRef.current = handleCapture;
+
+  const isGuided = mode === 'guided';
+
   return (
     <div className="flex flex-col gap-2">
-      <div className="relative aspect-[4/3] rounded-lg overflow-hidden bg-black">
+      <div className="relative aspect-[4/3] min-h-[200px] rounded-xl overflow-hidden bg-black">
         <video
           ref={videoRef}
           autoPlay
@@ -485,7 +575,7 @@ export function WebCameraCapture({ onCapture, onError, onUploadFallback, disable
           <>
             {bboxPercent && r.key_detected && (
               <div
-                className="absolute border-2 border-[var(--accent)]/60 rounded pointer-events-none"
+                className="absolute border-2 border-[var(--accent)]/50 rounded-lg pointer-events-none transition-opacity"
                 style={{
                   left: `${bboxPercent.left}%`,
                   top: `${bboxPercent.top}%`,
@@ -497,7 +587,7 @@ export function WebCameraCapture({ onCapture, onError, onUploadFallback, disable
             )}
             {displayMessage && (
               <div className="absolute bottom-2 left-2 right-2 flex justify-center">
-                <span className="text-xs px-2 py-1 rounded bg-black/60 text-white">
+                <span className="text-xs px-3 py-1.5 rounded-lg bg-black/70 text-white backdrop-blur-sm">
                   {displayMessage}
                 </span>
               </div>
@@ -505,22 +595,24 @@ export function WebCameraCapture({ onCapture, onError, onUploadFallback, disable
           </>
         )}
       </div>
-      <div className="flex gap-2">
-        <Button
-          variant="primary"
-          className="flex-1"
-          onClick={handleCapture}
-          disabled={!ready || disabled || ocrRunning}
-          aria-label={captureLabel}
-        >
-          {ocrRunning ? 'Procesando…' : captureLabel}
-        </Button>
-        {hasMultipleCameras && (
-          <Button variant="secondary" onClick={switchCamera} aria-label="Cambiar cámara">
-            Cambiar cámara
+      {!isGuided && (
+        <div className="flex gap-2">
+          <Button
+            variant="primary"
+            className="flex-1"
+            onClick={handleCapture}
+            disabled={!ready || disabled || ocrRunning}
+            aria-label={captureLabel}
+          >
+            {ocrRunning ? 'Procesando…' : captureLabel}
           </Button>
-        )}
-      </div>
+          {hasMultipleCameras && (
+            <Button variant="secondary" onClick={switchCamera} aria-label="Cambiar cámara">
+              Cambiar cámara
+            </Button>
+          )}
+        </div>
+      )}
     </div>
   );
 }
