@@ -17,6 +17,7 @@ export function ScanFlowScreen({
   onAnalyze,
   onRetryWithOverride,
   analyzeError,
+  softAnalyzeWarning,
   capturedPhotos,
 }) {
   const settings = loadJSON(SETTINGS_KEY, {});
@@ -37,6 +38,11 @@ export function ScanFlowScreen({
   return (
     <div className="flex flex-col flex-1">
       <ScreenHeader title="Escanear" onBack={onBack} />
+      {softAnalyzeWarning && (
+        <div className="px-4 pb-2">
+          <AlertBanner variant="info">{softAnalyzeWarning}</AlertBanner>
+        </div>
+      )}
       {errorMessage && (
         <div className="px-4 pb-2">
           <AlertBanner variant="error">{errorMessage}</AlertBanner>

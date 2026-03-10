@@ -49,6 +49,7 @@ export default function App() {
     result,
     capturedPhotos,
     analyzeError,
+    softAnalyzeWarning,
     clearAnalyzeError,
   } = useAnalyzeFlow(handleNavigateToResults);
 
@@ -138,6 +139,7 @@ export default function App() {
                 : undefined
             }
             analyzeError={analyzeError}
+            softAnalyzeWarning={softAnalyzeWarning}
             capturedPhotos={capturedPhotos}
           />
         )}

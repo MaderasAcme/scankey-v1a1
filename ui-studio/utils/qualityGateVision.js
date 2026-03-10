@@ -215,22 +215,33 @@ export function analyzeQualityGateVision(opts = {}) {
   }
   quality_score = clamp01(weightSum > 0 ? quality_score / weightSum : 0.5);
 
-  const hasCritical = reasons.some((r) =>
-    ['critical_glare', 'key_not_detected'].includes(r)
-  );
+  // Solo critical_glare bloquea duro. key_not_detected se degrada a soft (allow_with_override)
+  // cuando no hay problemas serios adicionales (poor_mask, key_incomplete, etc.).
+  const hasCriticalGlare = reasons.includes('critical_glare');
+  const hasKeyNotDetected = reasons.includes('key_not_detected');
+  const SERIOUS_REASONS = ['critical_glare', 'poor_mask', 'key_incomplete'];
+  const hasSeriousCombo = hasKeyNotDetected && reasons.some((r) => SERIOUS_REASONS.includes(r));
+  const keyNotDetectedOnly = hasKeyNotDetected && !hasSeriousCombo;
+
+  const hasCritical = hasCriticalGlare;
   const capture_ready =
     quality_score >= QUALITY_CAPTURE_READY && !hasCritical;
 
   let recommended_action = 'allow';
-  if (quality_score >= QUALITY_ALLOW && !hasCritical) {
-    recommended_action = 'allow';
-  } else if (quality_score >= QUALITY_OVERRIDE) {
+  if (keyNotDetectedOnly) {
+    // key_not_detected solo (p. ej. llave pequeña en frame): permitir con override implícito
     recommended_action = 'allow_with_override';
+  } else if (quality_score >= QUALITY_ALLOW && !hasCritical) {
+    recommended_action = 'allow';
+  } else if (quality_score >= QUALITY_OVERRIDE && !hasSeriousCombo) {
+    recommended_action = 'allow_with_override';
+  } else if (hasSeriousCombo || hasCritical) {
+    recommended_action = 'block_recommended';
   } else {
     recommended_action = 'block_recommended';
   }
 
-  const block_reason = reasons[0] || (hasCritical ? 'critical_glare_or_key_not_detected' : 'quality_below_threshold');
+  const block_reason = reasons[0] || (hasCritical ? 'critical_glare' : 'quality_below_threshold');
   const quality_decision = recommended_action === 'block_recommended' ? 'block' : recommended_action;
   const quality_action = quality_decision;
 
@@ -251,6 +262,7 @@ export function analyzeQualityGateVision(opts = {}) {
     positive_signals: positive,
     quality_breakdown: breakdown,
     quality_confidence,
+    soft_warning_message: keyNotDetectedOnly ? 'La llave se ve pequeña; intentaremos analizar igualmente.' : null,
   };
 }
 
@@ -271,6 +283,7 @@ export function makeQualityGateSnapshot(result) {
     positive_signals: result.positive_signals || [],
     quality_breakdown: result.quality_breakdown || {},
     quality_confidence: result.quality_confidence,
+    soft_warning_message: result.soft_warning_message || null,
   };
 }
 
@@ -348,6 +361,7 @@ export function mergeQualityGateSnapshots(qgA, qgB) {
     recommended_action: mergedDecision === 'block' ? 'block_recommended' : mergedDecision,
     block_reason,
     reasons: allReasons,
+    soft_warning_message: qgA?.soft_warning_message || qgB?.soft_warning_message || null,
   };
 }
 

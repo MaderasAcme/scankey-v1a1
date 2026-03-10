@@ -21,12 +21,14 @@ export function useAnalyzeFlow(onNavigateToResults) {
   const [result, setResult] = useState(null);
   const [capturedPhotos, setCapturedPhotos] = useState(null);
   const [analyzeError, setAnalyzeError] = useState(null);
+  const [softAnalyzeWarning, setSoftAnalyzeWarning] = useState(null);
 
   const handleAnalyze = useCallback(async (photos, opts = {}) => {
     const { qualityOverride } = opts;
     _devLog('handleAnalyze start', { hasA: Boolean(photos?.A), hasB: Boolean(photos?.B), qualityOverride });
     setCapturedPhotos(photos);
     setAnalyzeError(null);
+    setSoftAnalyzeWarning(null);
     const settings = loadJSON(SETTINGS_KEY, {});
     const modo = settings.modo || 'cliente';
     const qualityGateActiveEnabled = Boolean(settings[QUALITY_GATE_ACTIVE_ENABLED_KEY]);
@@ -58,6 +60,9 @@ export function useAnalyzeFlow(onNavigateToResults) {
 
     setIsAnalyzing(true);
     setAttemptCount(1);
+    if (qgSnapshot?.soft_warning_message) {
+      setSoftAnalyzeWarning(qgSnapshot.soft_warning_message);
+    }
     try {
       _devLog('calling analyzeKey', { modo: modo === 'taller' ? 'taller' : undefined });
       const payload = await analyzeKey(photos, {
@@ -113,7 +118,10 @@ export function useAnalyzeFlow(onNavigateToResults) {
     }
   }, [onNavigateToResults]);
 
-  const clearAnalyzeError = useCallback(() => setAnalyzeError(null), []);
+  const clearAnalyzeError = useCallback(() => {
+    setAnalyzeError(null);
+    setSoftAnalyzeWarning(null);
+  }, []);
 
   return {
     handleAnalyze,
@@ -122,6 +130,7 @@ export function useAnalyzeFlow(onNavigateToResults) {
     result,
     capturedPhotos,
     analyzeError,
+    softAnalyzeWarning,
     clearAnalyzeError,
   };
 }
