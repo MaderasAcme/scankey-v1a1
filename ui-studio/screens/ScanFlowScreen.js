@@ -15,6 +15,7 @@ const SETTINGS_KEY = 'scn_settings';
 export function ScanFlowScreen({
   onBack,
   onAnalyze,
+  isAnalyzing,
   onRetryWithOverride,
   analyzeError,
   softAnalyzeWarning,
@@ -59,7 +60,7 @@ export function ScanFlowScreen({
         </div>
       )}
       <div className="flex-1">
-        <ScanFlow onAnalyze={onAnalyze} />
+        <ScanFlow onAnalyze={onAnalyze} isAnalyzing={isAnalyzing} />
       </div>
     </div>
   );

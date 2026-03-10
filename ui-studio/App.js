@@ -133,6 +133,7 @@ export default function App() {
           <ScanFlowScreen
             onBack={() => setScreen('Home')}
             onAnalyze={handleAnalyze}
+            isAnalyzing={isAnalyzing}
             onRetryWithOverride={
               capturedPhotos
                 ? () => handleAnalyze(capturedPhotos, { qualityOverride: true })

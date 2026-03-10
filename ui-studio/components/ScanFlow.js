@@ -77,7 +77,7 @@ function SideBCameraBlock({ onCapture, onUploadFallback }) {
  * ScanFlow — flujo guiado A -> B.
  * Móvil: columna única. Web: dos columnas (preview | panel).
  */
-export const ScanFlow = ({ onAnalyze }) => {
+export const ScanFlow = ({ onAnalyze, isAnalyzing = false }) => {
   const [photos, setPhotos] = useState({});
   const [hasCamera, setHasCamera] = useState(true);
   const [cameraChecked, setCameraChecked] = useState(false);
@@ -153,6 +153,8 @@ export const ScanFlow = ({ onAnalyze }) => {
   const status = scanState?.status || 'searching';
   const previewDataUrl = scanState?.previewDataUrl;
   const canCapture = scanState?.canCapture ?? false;
+  const ocrRunning = scanState?.ocrRunning ?? false;
+  const primaryLoading = ocrRunning || isAnalyzing;
   const showDetectedPreview = Boolean(previewDataUrl) && (status === 'detected' || status === 'ready');
 
   const helpTip =
@@ -221,8 +223,8 @@ export const ScanFlow = ({ onAnalyze }) => {
       ) : null}
       <ScanActionPanel
         primaryLabel={hasA ? copy.scan.analyzeKey : copy.scan.captureA}
-        primaryDisabled={!hasA && !canCapture}
-        primaryLoading={false}
+        primaryDisabled={primaryLoading || (!hasA && !canCapture)}
+        primaryLoading={primaryLoading}
         onPrimary={hasA ? handleAnalyze : handleCaptureA}
         secondaryLabel="Capturar lado B (opcional)"
         secondaryVisible={hasA && !hasB}
@@ -298,8 +300,8 @@ export const ScanFlow = ({ onAnalyze }) => {
         <ScanHelpTip tip={helpTip} />
         <ScanActionPanel
           primaryLabel={hasA ? copy.scan.analyzeKey : copy.scan.captureA}
-          primaryDisabled={!hasA && !canCapture}
-          primaryLoading={false}
+          primaryDisabled={primaryLoading || (!hasA && !canCapture)}
+          primaryLoading={primaryLoading}
           onPrimary={hasA ? handleAnalyze : handleCaptureA}
           secondaryLabel="Capturar lado B (opcional)"
           secondaryVisible={hasA && !hasB}

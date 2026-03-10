@@ -287,6 +287,12 @@ export function WebCameraCapture({
         }
       }
 
+      let effectiveBlockReason = null;
+      if (disabled) effectiveBlockReason = 'disabled';
+      else if (ocrRunningNow) effectiveBlockReason = 'ocr_running';
+      else if (!autoCaptureEnabled) effectiveBlockReason = 'auto_capture_disabled';
+      else effectiveBlockReason = autoCaptureRes.auto_capture_block_reason;
+
       if (onScanState) {
         onScanState({
           status: scanStatus,
@@ -294,6 +300,10 @@ export function WebCameraCapture({
           canCapture,
           qualityGate: qualityGateRes,
           previewDataUrl: previewDataUrlRef.current,
+          ocrRunning: ocrRunningNow,
+          autoCaptureEnabled,
+          auto_capture_ready: autoCaptureRes.auto_capture_ready,
+          auto_capture_block_reason: effectiveBlockReason,
         });
       }
 
@@ -371,6 +381,15 @@ export function WebCameraCapture({
             recommended_action: qualityGateRes.recommended_action,
             reasons: qualityGateRes.reasons,
             positive_signals: qualityGateRes.positive_signals,
+          });
+          console.debug('[autoCapture]', {
+            autoCaptureEnabled,
+            auto_capture_ready: autoCaptureRes.auto_capture_ready,
+            goodFramesCount: autoCaptureRes.goodFramesCount,
+            key_detected: autoCaptureRes.key_detected ?? result?.key_detected,
+            quality_score: autoCaptureRes.quality_score ?? qualityGateRes?.quality_score,
+            recommended_action: autoCaptureRes.recommended_action ?? qualityGateRes?.recommended_action,
+            auto_capture_block_reason: effectiveBlockReason,
           });
           console.debug('[featureFusion]', {
             fusion_ready: featureFusionRes.fusion_ready,

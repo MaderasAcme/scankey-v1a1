@@ -65,22 +65,34 @@ function computeFrameScore(tracking, glare, shape, qualityGate, light) {
   return clamp01((t * 0.3 + g * 0.2 + s * 0.25 + q * 0.25));
 }
 
+/** Razones explícitas de no-disparo para diagnóstico */
+export const AUTO_CAPTURE_BLOCK_REASONS = {
+  no_key_detected: 'no_key_detected',
+  insufficient_good_frames: 'insufficient_good_frames',
+  quality_gate_blocked: 'quality_gate_blocked',
+  glare: 'glare',
+  low_light: 'low_light',
+  ocr_running: 'ocr_running',
+  disabled: 'disabled',
+  auto_capture_disabled: 'auto_capture_disabled',
+};
+
 function getBlockReason(tracking, glare, shape, qualityGate, light) {
-  if (!tracking?.key_detected) return 'key_not_detected';
+  if (!tracking?.key_detected) return AUTO_CAPTURE_BLOCK_REASONS.no_key_detected;
   const trackingSub = clamp01(
     (tracking.centering_score ?? 0) * 0.3 + (tracking.coverage_score ?? 0) * 0.25 +
     (tracking.stability_score ?? 0) * 0.25 + (tracking.pose_score ?? 0) * 0.2
   );
-  if (trackingSub < TRACKING_MIN) return 'tracking_insufficient';
-  if ((glare?.glare_score ?? 0) > GLARE_MAX) return 'glare_too_high';
-  if (glare?.critical_glare_zone || glare?.reflection_state === 'critical') return 'critical_glare';
-  if (!shape?.mask_detected) return 'shape_not_detected';
+  if (trackingSub < TRACKING_MIN) return AUTO_CAPTURE_BLOCK_REASONS.insufficient_good_frames;
+  if ((glare?.glare_score ?? 0) > GLARE_MAX) return AUTO_CAPTURE_BLOCK_REASONS.glare;
+  if (glare?.critical_glare_zone || glare?.reflection_state === 'critical') return AUTO_CAPTURE_BLOCK_REASONS.glare;
+  if (!shape?.mask_detected) return AUTO_CAPTURE_BLOCK_REASONS.quality_gate_blocked;
   const shapeSub = clamp01((shape.mask_confidence ?? 0) * 0.5 + (shape.contour_score ?? 0) * 0.35 + (shape.key_complete ? 0.15 : 0));
-  if (shapeSub < SHAPE_MIN) return 'shape_insufficient';
-  if (qualityGate?.recommended_action === 'block_recommended') return 'quality_block_recommended';
-  if ((qualityGate?.quality_score ?? 0) < QUALITY_MIN) return 'quality_below_threshold';
-  if (!qualityGate?.capture_ready) return 'capture_not_ready';
-  if (light?.light_level === 'very_low_light' && !light?.torch_active) return 'very_low_light';
+  if (shapeSub < SHAPE_MIN) return AUTO_CAPTURE_BLOCK_REASONS.quality_gate_blocked;
+  if (qualityGate?.recommended_action === 'block_recommended') return AUTO_CAPTURE_BLOCK_REASONS.quality_gate_blocked;
+  if ((qualityGate?.quality_score ?? 0) < QUALITY_MIN) return AUTO_CAPTURE_BLOCK_REASONS.quality_gate_blocked;
+  if (!qualityGate?.capture_ready) return AUTO_CAPTURE_BLOCK_REASONS.quality_gate_blocked;
+  if (light?.light_level === 'very_low_light' && !light?.torch_active) return AUTO_CAPTURE_BLOCK_REASONS.low_light;
   return null;
 }
 
@@ -103,12 +115,18 @@ export function evaluateAutoCapture(opts, state = { goodFramesCount: 0 }) {
   const auto_capture_reason = auto_capture_ready
     ? 'quality_stable'
     : (blockReason || `stability_${nextCount}/${MIN_GOOD_FRAMES}`);
+  const auto_capture_block_reason = auto_capture_ready ? null : (blockReason || AUTO_CAPTURE_BLOCK_REASONS.insufficient_good_frames);
 
   return {
     auto_capture_ready,
     auto_capture_reason,
+    auto_capture_block_reason,
     auto_capture_score,
     nextState,
+    goodFramesCount: nextCount,
+    key_detected: !!tracking?.key_detected,
+    quality_score: qualityGate?.quality_score ?? null,
+    recommended_action: qualityGate?.recommended_action ?? null,
   };
 }
 
