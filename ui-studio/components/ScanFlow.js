@@ -8,10 +8,12 @@ import { VisionStateBadge } from './scan/VisionStateBadge';
 import { MotorConnectionBadge } from './scan/MotorConnectionBadge';
 import { AnalyzeStateBadge } from './scan/AnalyzeStateBadge';
 import { DetectedKeyPreview } from './scan/DetectedKeyPreview';
+import { ReadableCandidatesPanel } from './scan/ReadableCandidatesPanel';
 import { ScanActionPanel } from './scan/ScanActionPanel';
 import { OptionalSideBCollapse } from './scan/OptionalSideBCollapse';
 import { ScanHelpTip } from './scan/ScanHelpTip';
 import { useMotorConnection } from '../hooks/useMotorConnection';
+import { buildReadableCandidates } from '../utils/buildReadableCandidates';
 
 const MAX_OPTIMIZED_DIM = 1024;
 
@@ -156,6 +158,13 @@ export const ScanFlow = ({ onAnalyze, isAnalyzing = false, analyzeError = null }
 
   const visionStatus = hasA ? 'key_ready' : (scanState?.status || 'searching_key');
   const previewDataUrl = scanState?.previewDataUrl;
+  const readableCandidates = hasA && photos.A?.snapshots
+    ? buildReadableCandidates({
+        ocrReal: photos.A.snapshots.ocrReal,
+        brandReconstruction: photos.A.snapshots.brandReconstruction,
+        catalogMatching: photos.A.snapshots.catalogMatching,
+      })
+    : (scanState?.readableCandidates ?? []);
   const canCapture = scanState?.canCapture ?? false;
   const ocrRunning = scanState?.ocrRunning ?? false;
   const primaryLoading = ocrRunning || isAnalyzing;
@@ -241,6 +250,9 @@ export const ScanFlow = ({ onAnalyze, isAnalyzing = false, analyzeError = null }
       ) : showDetectedPreview ? (
         <DetectedKeyPreview previewDataUrl={previewDataUrl} visible />
       ) : null}
+      {readableCandidates.length > 0 && (
+        <ReadableCandidatesPanel candidates={readableCandidates} />
+      )}
       <ScanActionPanel
         primaryLabel={hasA ? copy.scan.analyzeKey : copy.scan.captureA}
         primaryDisabled={primaryDisabled}
@@ -318,6 +330,9 @@ export const ScanFlow = ({ onAnalyze, isAnalyzing = false, analyzeError = null }
         <div className="flex-1 min-h-0">{mainPreview}</div>
         {!hasA && showDetectedPreview && (
           <DetectedKeyPreview previewDataUrl={previewDataUrl} visible />
+        )}
+        {readableCandidates.length > 0 && (
+          <ReadableCandidatesPanel candidates={readableCandidates} />
         )}
         <ScanHelpTip tip={helpTip} />
         <ScanActionPanel

@@ -25,6 +25,7 @@ import { loadJSON } from '../utils/storage';
 import { computeStableStatus } from '../utils/stableVisionStatus';
 import { computeGuideAlignment } from '../utils/computeGuideAlignment';
 import { GhostKeyOverlay } from './scan/GhostKeyOverlay';
+import { buildReadableCandidates } from '../utils/buildReadableCandidates';
 
 const MAX_DIM = 1920;
 const TRACKING_FPS = 8;
@@ -95,6 +96,8 @@ export function WebCameraCapture({
   const frozenBboxRef = useRef(null);
   const [ghostOverlayStatus, setGhostOverlayStatus] = useState('neutral');
   const lastGhostStatusRef = useRef('neutral');
+  const ocrPreviewRef = useRef(null);
+  const ocrPreviewRunningRef = useRef(false);
   const [ready, setReady] = useState(false);
   const [error, setError] = useState(null);
   const [facingMode, setFacingMode] = useState('environment');
@@ -122,6 +125,8 @@ export function WebCameraCapture({
     frozenPreviewDataUrlRef.current = null;
     frozenBboxRef.current = null;
     lastGhostStatusRef.current = 'neutral';
+    ocrPreviewRef.current = null;
+    ocrPreviewRunningRef.current = false;
     setTrackingResult(null);
     setGlareResult(null);
     setShapeResult(null);
@@ -254,6 +259,31 @@ export function WebCameraCapture({
         };
       }
 
+      if (isSlowTick && !ocrPreviewRunningRef.current && dissectionRes?.zones && (tickIdx / SLOW_TICK_EVERY) % 12 === 0) {
+        const vw = video.videoWidth;
+        const vh = video.videoHeight;
+        if (vw && vh) {
+          ocrPreviewRunningRef.current = true;
+          const c = document.createElement('canvas');
+          c.width = vw;
+          c.height = vh;
+          const ctx = c.getContext('2d');
+          if (ctx) {
+            ctx.drawImage(video, 0, 0, vw, vh);
+            runZonedOCR(c, vw, vh, {
+              dissectionResult: dissectionRes,
+              textZonesResult: textZonesRes,
+              contrastResult: contrastRes,
+            })
+              .then((r) => { ocrPreviewRef.current = r; })
+              .catch(() => {})
+              .finally(() => { ocrPreviewRunningRef.current = false; });
+          } else {
+            ocrPreviewRunningRef.current = false;
+          }
+        }
+      }
+
       topdownResultRef.current = topdownRes;
       contrastResultRef.current = contrastRes;
       dissectionResultRef.current = dissectionRes;
@@ -383,6 +413,11 @@ export function WebCameraCapture({
       else if (!autoCaptureEnabled) effectiveBlockReason = 'auto_capture_disabled';
       else effectiveBlockReason = autoCaptureRes.auto_capture_block_reason;
 
+      const readableCandidates = buildReadableCandidates({
+        ocrPreview: ocrPreviewRef.current,
+        brandReconstruction: brandReconstructionRes,
+      });
+
       if (onScanState) {
         onScanState({
           status: scanStatus,
@@ -394,6 +429,7 @@ export function WebCameraCapture({
           autoCaptureEnabled,
           auto_capture_ready: autoCaptureRes.auto_capture_ready,
           auto_capture_block_reason: effectiveBlockReason,
+          readableCandidates,
         });
       }
 
