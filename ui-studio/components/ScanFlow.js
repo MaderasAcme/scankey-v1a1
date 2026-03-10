@@ -209,7 +209,7 @@ export const ScanFlow = ({ onAnalyze, isAnalyzing = false, analyzeError = null }
   const rightPanel = (
     <div className="flex flex-col gap-4">
       <div className="flex flex-col gap-3">
-        <div className="flex flex-wrap gap-2">
+        <div className="flex flex-wrap gap-2 min-h-[2.25rem] items-center">
           <VisionStateBadge status={visionStatus} />
           <MotorConnectionBadge status={motorStatus} />
           <AnalyzeStateBadge status={analyzeStatus} />
@@ -310,7 +310,7 @@ export const ScanFlow = ({ onAnalyze, isAnalyzing = false, analyzeError = null }
     <div className="flex-1 flex flex-col p-4 md:p-6 gap-4 md:gap-6">
       {/* MÓVIL: columna única */}
       <div className="flex flex-col gap-4 md:hidden">
-        <div className="flex flex-wrap justify-center gap-2">
+        <div className="flex flex-wrap justify-center gap-2 min-h-[2.25rem] items-center">
           <VisionStateBadge status={visionStatus} />
           <MotorConnectionBadge status={motorStatus} />
           <AnalyzeStateBadge status={analyzeStatus} />

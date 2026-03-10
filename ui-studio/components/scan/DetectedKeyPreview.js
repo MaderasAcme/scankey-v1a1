@@ -7,8 +7,10 @@ import React from 'react';
 export function DetectedKeyPreview({ previewDataUrl, visible }) {
   if (!visible) {
     return (
-      <div className="rounded-xl bg-[var(--bg-secondary)] border border-[var(--border)] p-4 flex items-center justify-center min-h-[100px]">
-        <p className="text-xs text-[var(--text-muted)]">Vista detectada aparecerá aquí</p>
+      <div className="rounded-xl bg-[var(--bg-secondary)] border border-[var(--border)] overflow-hidden">
+        <div className="aspect-[4/3] flex items-center justify-center p-4">
+          <p className="text-xs text-[var(--text-muted)]">Vista detectada aparecerá aquí</p>
+        </div>
       </div>
     );
   }

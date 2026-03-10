@@ -22,11 +22,20 @@ import { runCatalogMatching, makeCatalogMatchingSnapshot } from '../utils/catalo
 import { evaluateAutoCapture, AUTO_CAPTURE_ENABLED_KEY } from '../utils/autoCapture';
 import { analyzeLight, makeLightSnapshot } from '../utils/lightSense';
 import { loadJSON } from '../utils/storage';
+import { computeStableStatus } from '../utils/stableVisionStatus';
 
 const MAX_DIM = 1920;
 const TRACKING_FPS = 8;
 const TRACK_INTERVAL_MS = 1000 / TRACKING_FPS;
-const PREVIEW_UPDATE_MS = 250;
+const SLOW_TICK_EVERY = 4;
+const PREVIEW_UPDATE_MS = 450;
+const PREVIEW_BBOX_CHANGE_THRESHOLD = 0.12;
+
+function isMobile() {
+  if (typeof navigator === 'undefined') return false;
+  return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)
+    || ('ontouchstart' in window);
+}
 const SETTINGS_KEY = 'scn_settings';
 
 const ANALYZE_W = 120;
@@ -72,6 +81,10 @@ export function WebCameraCapture({
   const previewCanvasRef = useRef(null);
   const lastPreviewUpdateRef = useRef(0);
   const previewDataUrlRef = useRef(null);
+  const lastPreviewBboxRef = useRef(null);
+  const stableStatusStateRef = useRef({});
+  const tickCountRef = useRef(0);
+  const heavyCacheRef = useRef({});
   const [ready, setReady] = useState(false);
   const [error, setError] = useState(null);
   const [facingMode, setFacingMode] = useState('environment');
@@ -91,6 +104,10 @@ export function WebCameraCapture({
     autoCaptureStateRef.current = { goodFramesCount: 0 };
     autoCaptureTriggeredRef.current = false;
     previewDataUrlRef.current = null;
+    lastPreviewBboxRef.current = null;
+    stableStatusStateRef.current = {};
+    tickCountRef.current = 0;
+    heavyCacheRef.current = {};
     setTrackingResult(null);
     setGlareResult(null);
     setShapeResult(null);
@@ -116,6 +133,12 @@ export function WebCameraCapture({
     const video = videoRef.current;
     const tick = () => {
       if (!video.videoWidth) return;
+      const tickIdx = tickCountRef.current;
+      tickCountRef.current = (tickIdx + 1) % 999999;
+
+      const isSlowTick = tickIdx % SLOW_TICK_EVERY === 0;
+      const cache = heavyCacheRef.current;
+
       const { result, nextState } = analyzeFrame(video, trackingStateRef.current);
       trackingStateRef.current = nextState;
       setTrackingResult(result);
@@ -158,66 +181,72 @@ export function WebCameraCapture({
       shapeResultRef.current = shapeRes;
       setShapeResult(shapeRes);
 
-      const topdownRes = analyzeTopdownNormalizer(video, { shapeResult: shapeRes });
+      let topdownRes = cache.topdown;
+      let contrastRes = cache.contrast;
+      let dissectionRes = cache.dissection;
+      let textZonesRes = cache.textZones;
+      let damageRes = cache.damage;
+      let qualityGateRes = cache.qualityGate;
+      let featureFusionRes = cache.featureFusion;
+      let brandReconstructionRes = cache.brandReconstruction;
+
+      if (isSlowTick) {
+        topdownRes = analyzeTopdownNormalizer(video, { shapeResult: shapeRes });
+        contrastRes = analyzeContrast(video, { roiBbox: result.bbox || null });
+        dissectionRes = analyzeKeyDissection(video, { shapeResult: shapeRes, topdownResult: topdownRes });
+        textZonesRes = analyzeTextZones(video, { dissectionResult: dissectionRes, contrastResult: contrastRes });
+        damageRes = analyzeDamageSense(video, { shapeResult: shapeRes, dissectionResult: dissectionRes });
+        qualityGateRes = analyzeQualityGateVision({
+          tracking: result,
+          glare: glareRes,
+          shape: shapeRes,
+          topdown: topdownRes,
+          contrast: contrastRes,
+          dissection: dissectionRes,
+          textZones: textZonesRes,
+          damage: damageRes,
+        });
+        featureFusionRes = analyzeFeatureFusion({
+          tracking: result,
+          glare: glareRes,
+          shape: shapeRes,
+          topdown: topdownRes,
+          contrast: contrastRes,
+          dissection: dissectionRes,
+          textZones: textZonesRes,
+          damage: damageRes,
+          qualityGate: qualityGateRes,
+        });
+        brandReconstructionRes = analyzeBrandReconstruction({
+          textZones: textZonesRes,
+          dissection: dissectionRes,
+          contrast: contrastRes,
+          featureFusion: featureFusionRes,
+          qualityGate: qualityGateRes,
+          topdown: topdownRes,
+          shape: shapeRes,
+          glare: glareRes,
+          damage: damageRes,
+        });
+        heavyCacheRef.current = {
+          topdown: topdownRes,
+          contrast: contrastRes,
+          dissection: dissectionRes,
+          textZones: textZonesRes,
+          damage: damageRes,
+          qualityGate: qualityGateRes,
+          featureFusion: featureFusionRes,
+          brandReconstruction: brandReconstructionRes,
+        };
+      }
+
       topdownResultRef.current = topdownRes;
-
-      const contrastRes = analyzeContrast(video, { roiBbox: result.bbox || null });
       contrastResultRef.current = contrastRes;
-
-      const dissectionRes = analyzeKeyDissection(video, {
-        shapeResult: shapeRes,
-        topdownResult: topdownRes,
-      });
       dissectionResultRef.current = dissectionRes;
-
-      const textZonesRes = analyzeTextZones(video, {
-        dissectionResult: dissectionRes,
-        contrastResult: contrastRes,
-      });
       textZonesResultRef.current = textZonesRes;
-
-      const damageRes = analyzeDamageSense(video, {
-        shapeResult: shapeRes,
-        dissectionResult: dissectionRes,
-      });
       damageResultRef.current = damageRes;
-
-      const qualityGateRes = analyzeQualityGateVision({
-        tracking: result,
-        glare: glareRes,
-        shape: shapeRes,
-        topdown: topdownRes,
-        contrast: contrastRes,
-        dissection: dissectionRes,
-        textZones: textZonesRes,
-        damage: damageRes,
-      });
       qualityGateResultRef.current = qualityGateRes;
-
-      const featureFusionRes = analyzeFeatureFusion({
-        tracking: result,
-        glare: glareRes,
-        shape: shapeRes,
-        topdown: topdownRes,
-        contrast: contrastRes,
-        dissection: dissectionRes,
-        textZones: textZonesRes,
-        damage: damageRes,
-        qualityGate: qualityGateRes,
-      });
       featureFusionResultRef.current = featureFusionRes;
-
-      const brandReconstructionRes = analyzeBrandReconstruction({
-        textZones: textZonesRes,
-        dissection: dissectionRes,
-        contrast: contrastRes,
-        featureFusion: featureFusionRes,
-        qualityGate: qualityGateRes,
-        topdown: topdownRes,
-        shape: shapeRes,
-        glare: glareRes,
-        damage: damageRes,
-      });
       brandReconstructionResultRef.current = brandReconstructionRes;
 
       const autoCaptureRes = evaluateAutoCapture(
@@ -240,24 +269,40 @@ export function WebCameraCapture({
         setLightStatus(lightStatusMsg);
       }
 
-      const scanStatus = deriveScanStatus({
+      const rawScanStatus = deriveScanStatus({
         ocrRunning: ocrRunningNow,
         lightStatusMsg: lightStatusMsg || null,
         qualityGate: qualityGateRes,
         tracking: result,
       });
+      const { stableStatus: scanStatus, nextState: nextStableState } = computeStableStatus(
+        rawScanStatus,
+        stableStatusStateRef.current,
+        Date.now()
+      );
+      stableStatusStateRef.current = nextStableState;
+
       const canCapture = ready && !disabled && !ocrRunningNow;
       let displayMsg = lightStatus || glareRes?.reflection_state === 'critical' ? getGlareGuidanceMessage(glareRes) : null;
       if (!displayMsg && result) displayMsg = getGuidanceMessage(result);
       if (!displayMsg && shapeRes) displayMsg = getShapeGuidanceMessage(shapeRes);
 
-      if (scanStatus === 'searching') {
+      if (scanStatus === 'searching_key') {
         previewDataUrlRef.current = null;
       } else if (result?.key_detected && (shapeRes?.shape_bbox || result?.bbox)) {
         const now = Date.now();
-        if (now - lastPreviewUpdateRef.current >= PREVIEW_UPDATE_MS) {
+        const bbox = shapeRes?.shape_bbox || result.bbox;
+        const lastBbox = lastPreviewBboxRef.current;
+        const timeOk = now - lastPreviewUpdateRef.current >= PREVIEW_UPDATE_MS;
+        const bboxChanged = !lastBbox || (
+          Math.abs(bbox.x - lastBbox.x) / 120 > PREVIEW_BBOX_CHANGE_THRESHOLD ||
+          Math.abs(bbox.y - lastBbox.y) / 90 > PREVIEW_BBOX_CHANGE_THRESHOLD ||
+          Math.abs(bbox.w - lastBbox.w) / 120 > PREVIEW_BBOX_CHANGE_THRESHOLD ||
+          Math.abs(bbox.h - lastBbox.h) / 90 > PREVIEW_BBOX_CHANGE_THRESHOLD
+        );
+        if (timeOk || bboxChanged) {
           lastPreviewUpdateRef.current = now;
-          const bbox = shapeRes?.shape_bbox || result.bbox;
+          lastPreviewBboxRef.current = { ...bbox };
           const vw = video.videoWidth;
           const vh = video.videoHeight;
           const scaleX = vw / ANALYZE_W;
@@ -421,8 +466,21 @@ export function WebCameraCapture({
       return;
     }
     try {
+      const mobile = isMobile();
+      const videoConstraints = mobile
+        ? {
+            facingMode,
+            width: { ideal: 960, max: 1280 },
+            height: { ideal: 540, max: 720 },
+            frameRate: { ideal: 24, max: 30 },
+          }
+        : {
+            facingMode,
+            width: { ideal: 1280 },
+            height: { ideal: 720 },
+          };
       const stream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode, width: { ideal: 1280 }, height: { ideal: 720 } },
+        video: videoConstraints,
         audio: false,
       });
       streamRef.current = stream;
@@ -432,6 +490,13 @@ export function WebCameraCapture({
           const caps = track.getCapabilities?.();
           const hasTorch = caps && caps.torch === true;
           torchStateRef.current = { ...torchStateRef.current, supported: !!hasTorch };
+          if (mobile && track.applyConstraints) {
+            const extra = {};
+            if (caps?.frameRate?.max >= 24) extra.frameRate = { ideal: 24, max: 30 };
+            if (Object.keys(extra).length > 0) {
+              track.applyConstraints(extra).catch(() => {});
+            }
+          }
         } catch (_) {
           torchStateRef.current = { ...torchStateRef.current, supported: false };
         }
