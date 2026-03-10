@@ -60,7 +60,7 @@ export function ScanFlowScreen({
         </div>
       )}
       <div className="flex-1">
-        <ScanFlow onAnalyze={onAnalyze} isAnalyzing={isAnalyzing} />
+        <ScanFlow onAnalyze={onAnalyze} isAnalyzing={isAnalyzing} analyzeError={analyzeError} />
       </div>
     </div>
   );

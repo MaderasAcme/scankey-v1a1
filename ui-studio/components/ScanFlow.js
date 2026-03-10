@@ -4,11 +4,14 @@ import { copy } from '../utils/copy';
 import { resizeDataUrl } from '../utils/imageResize';
 import { EMPTY_SNAPSHOTS } from '../utils/keyTracking';
 import { WebCameraCapture } from './WebCameraCapture';
-import { ScanStatusBadge } from './scan/ScanStatusBadge';
+import { VisionStateBadge } from './scan/VisionStateBadge';
+import { MotorConnectionBadge } from './scan/MotorConnectionBadge';
+import { AnalyzeStateBadge } from './scan/AnalyzeStateBadge';
 import { DetectedKeyPreview } from './scan/DetectedKeyPreview';
 import { ScanActionPanel } from './scan/ScanActionPanel';
 import { OptionalSideBCollapse } from './scan/OptionalSideBCollapse';
 import { ScanHelpTip } from './scan/ScanHelpTip';
+import { useMotorConnection } from '../hooks/useMotorConnection';
 
 const MAX_OPTIMIZED_DIM = 1024;
 
@@ -75,9 +78,10 @@ function SideBCameraBlock({ onCapture, onUploadFallback }) {
 
 /**
  * ScanFlow — flujo guiado A -> B.
+ * Estados separados: visión local, motor, análisis.
  * Móvil: columna única. Web: dos columnas (preview | panel).
  */
-export const ScanFlow = ({ onAnalyze, isAnalyzing = false }) => {
+export const ScanFlow = ({ onAnalyze, isAnalyzing = false, analyzeError = null }) => {
   const [photos, setPhotos] = useState({});
   const [hasCamera, setHasCamera] = useState(true);
   const [cameraChecked, setCameraChecked] = useState(false);
@@ -85,6 +89,7 @@ export const ScanFlow = ({ onAnalyze, isAnalyzing = false }) => {
   const [sideBExpanded, setSideBExpanded] = useState(false);
   const captureRef = useRef(null);
   const inputRef = useRef(null);
+  const { status: motorStatus } = useMotorConnection();
 
   useEffect(() => {
     if (typeof navigator === 'undefined' || !navigator.mediaDevices?.getUserMedia) {
@@ -148,18 +153,29 @@ export const ScanFlow = ({ onAnalyze, isAnalyzing = false }) => {
 
   const hasA = Boolean(photos.A);
   const hasB = Boolean(photos.B);
-  const canAnalyze = hasA;
 
-  const status = scanState?.status || 'searching';
+  const visionStatus = hasA ? 'key_ready' : (scanState?.status || 'searching_key');
   const previewDataUrl = scanState?.previewDataUrl;
   const canCapture = scanState?.canCapture ?? false;
   const ocrRunning = scanState?.ocrRunning ?? false;
   const primaryLoading = ocrRunning || isAnalyzing;
-  const showDetectedPreview = Boolean(previewDataUrl) && (status === 'detected' || status === 'ready');
+  const showDetectedPreview = Boolean(previewDataUrl) && (visionStatus === 'key_detected' || visionStatus === 'key_ready');
+
+  const analyzeStatus = isAnalyzing ? 'analyzing' : (analyzeError ? 'analyze_error' : 'idle');
+
+  const motorOnline = motorStatus === 'motor_online';
+  const motorOffline = motorStatus === 'motor_offline';
+  const canAnalyze = hasA && motorOnline;
 
   const helpTip =
-    scanState?.displayMessage ||
-    (status === 'low_light' ? 'Usa más luz si hace falta' : 'Alinea y centra la llave');
+    motorOffline && hasA
+      ? 'Motor no conectado. Reintentaremos automáticamente.'
+      : scanState?.displayMessage ||
+        (visionStatus === 'low_light' ? 'Usa más luz si hace falta' : 'Alinea y centra la llave');
+
+  const primaryDisabled =
+    primaryLoading ||
+    (hasA ? !motorOnline : !canCapture);
 
   if (!cameraChecked) {
     return (
@@ -193,7 +209,11 @@ export const ScanFlow = ({ onAnalyze, isAnalyzing = false }) => {
   const rightPanel = (
     <div className="flex flex-col gap-4">
       <div className="flex flex-col gap-3">
-        <ScanStatusBadge status={!hasA ? status : (canAnalyze ? 'ready' : status)} />
+        <div className="flex flex-wrap gap-2">
+          <VisionStateBadge status={visionStatus} />
+          <MotorConnectionBadge status={motorStatus} />
+          <AnalyzeStateBadge status={analyzeStatus} />
+        </div>
         <ScanHelpTip tip={helpTip} />
       </div>
       {hasA ? (
@@ -223,7 +243,7 @@ export const ScanFlow = ({ onAnalyze, isAnalyzing = false }) => {
       ) : null}
       <ScanActionPanel
         primaryLabel={hasA ? copy.scan.analyzeKey : copy.scan.captureA}
-        primaryDisabled={primaryLoading || (!hasA && !canCapture)}
+        primaryDisabled={primaryDisabled}
         primaryLoading={primaryLoading}
         onPrimary={hasA ? handleAnalyze : handleCaptureA}
         secondaryLabel="Capturar lado B (opcional)"
@@ -290,8 +310,10 @@ export const ScanFlow = ({ onAnalyze, isAnalyzing = false }) => {
     <div className="flex-1 flex flex-col p-4 md:p-6 gap-4 md:gap-6">
       {/* MÓVIL: columna única */}
       <div className="flex flex-col gap-4 md:hidden">
-        <div className="flex justify-center">
-          <ScanStatusBadge status={!hasA ? status : 'ready'} />
+        <div className="flex flex-wrap justify-center gap-2">
+          <VisionStateBadge status={visionStatus} />
+          <MotorConnectionBadge status={motorStatus} />
+          <AnalyzeStateBadge status={analyzeStatus} />
         </div>
         <div className="flex-1 min-h-0">{mainPreview}</div>
         {!hasA && showDetectedPreview && (
@@ -300,7 +322,7 @@ export const ScanFlow = ({ onAnalyze, isAnalyzing = false }) => {
         <ScanHelpTip tip={helpTip} />
         <ScanActionPanel
           primaryLabel={hasA ? copy.scan.analyzeKey : copy.scan.captureA}
-          primaryDisabled={primaryLoading || (!hasA && !canCapture)}
+          primaryDisabled={primaryDisabled}
           primaryLoading={primaryLoading}
           onPrimary={hasA ? handleAnalyze : handleCaptureA}
           secondaryLabel="Capturar lado B (opcional)"

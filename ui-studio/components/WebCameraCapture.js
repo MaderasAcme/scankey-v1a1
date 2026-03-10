@@ -35,9 +35,9 @@ const ANALYZE_H = 90;
 function deriveScanStatus({ ocrRunning, lightStatusMsg, qualityGate, tracking }) {
   if (ocrRunning) return 'capturing';
   if (lightStatusMsg === 'Poca luz' || lightStatusMsg === 'Más luz, por favor') return 'low_light';
-  if (qualityGate?.capture_ready) return 'ready';
-  if (tracking?.key_detected) return 'detected';
-  return 'searching';
+  if (qualityGate?.capture_ready) return 'key_ready';
+  if (tracking?.key_detected) return 'key_detected';
+  return 'searching_key';
 }
 
 export function WebCameraCapture({
