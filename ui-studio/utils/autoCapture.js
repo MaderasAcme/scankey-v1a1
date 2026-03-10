@@ -9,13 +9,15 @@ const TRACKING_MIN = 0.6;
 const GLARE_MAX = 0.35;
 const SHAPE_MIN = 0.55;
 const QUALITY_MIN = 0.65;
+const GUIDE_ALIGNMENT_MIN = 0.55;
 
 function clamp01(v) {
   return Math.max(0, Math.min(1, v));
 }
 
-function isFrameGood(tracking, glare, shape, qualityGate, light) {
+function isFrameGood(tracking, glare, shape, qualityGate, light, guideAlignment = null) {
   if (!tracking?.key_detected) return false;
+  if (guideAlignment != null && guideAlignment < GUIDE_ALIGNMENT_MIN) return false;
   const trackingSub = clamp01(
     (tracking.centering_score ?? 0) * 0.3 +
     (tracking.coverage_score ?? 0) * 0.25 +
@@ -72,13 +74,15 @@ export const AUTO_CAPTURE_BLOCK_REASONS = {
   quality_gate_blocked: 'quality_gate_blocked',
   glare: 'glare',
   low_light: 'low_light',
+  guide_misaligned: 'guide_misaligned',
   ocr_running: 'ocr_running',
   disabled: 'disabled',
   auto_capture_disabled: 'auto_capture_disabled',
 };
 
-function getBlockReason(tracking, glare, shape, qualityGate, light) {
+function getBlockReason(tracking, glare, shape, qualityGate, light, guideAlignment = null) {
   if (!tracking?.key_detected) return AUTO_CAPTURE_BLOCK_REASONS.no_key_detected;
+  if (guideAlignment != null && guideAlignment < GUIDE_ALIGNMENT_MIN) return AUTO_CAPTURE_BLOCK_REASONS.guide_misaligned;
   const trackingSub = clamp01(
     (tracking.centering_score ?? 0) * 0.3 + (tracking.coverage_score ?? 0) * 0.25 +
     (tracking.stability_score ?? 0) * 0.25 + (tracking.pose_score ?? 0) * 0.2
@@ -104,14 +108,17 @@ function getBlockReason(tracking, glare, shape, qualityGate, light) {
  * @returns {{ auto_capture_ready: boolean, auto_capture_reason: string, auto_capture_score: number, nextState: Object }}
  */
 export function evaluateAutoCapture(opts, state = { goodFramesCount: 0 }) {
-  const { tracking, glare, shape, qualityGate, light } = opts;
-  const good = isFrameGood(tracking, glare, shape, qualityGate, light);
+  const { tracking, glare, shape, qualityGate, light, guideAlignment } = opts;
+  const good = isFrameGood(tracking, glare, shape, qualityGate, light, guideAlignment);
   const nextCount = good ? (state.goodFramesCount || 0) + 1 : 0;
   const nextState = { goodFramesCount: nextCount };
 
-  const auto_capture_score = computeFrameScore(tracking, glare, shape, qualityGate, light);
+  let auto_capture_score = computeFrameScore(tracking, glare, shape, qualityGate, light);
+  if (guideAlignment != null && guideAlignment < GUIDE_ALIGNMENT_MIN) {
+    auto_capture_score = Math.min(auto_capture_score, guideAlignment);
+  }
   const auto_capture_ready = nextCount >= MIN_GOOD_FRAMES;
-  const blockReason = getBlockReason(tracking, glare, shape, qualityGate, light);
+  const blockReason = getBlockReason(tracking, glare, shape, qualityGate, light, guideAlignment);
   const auto_capture_reason = auto_capture_ready
     ? 'quality_stable'
     : (blockReason || `stability_${nextCount}/${MIN_GOOD_FRAMES}`);

@@ -23,6 +23,8 @@ import { evaluateAutoCapture, AUTO_CAPTURE_ENABLED_KEY } from '../utils/autoCapt
 import { analyzeLight, makeLightSnapshot } from '../utils/lightSense';
 import { loadJSON } from '../utils/storage';
 import { computeStableStatus } from '../utils/stableVisionStatus';
+import { computeGuideAlignment } from '../utils/computeGuideAlignment';
+import { GhostKeyOverlay } from './scan/GhostKeyOverlay';
 
 const MAX_DIM = 1920;
 const TRACKING_FPS = 8;
@@ -30,6 +32,9 @@ const TRACK_INTERVAL_MS = 1000 / TRACKING_FPS;
 const SLOW_TICK_EVERY = 4;
 const PREVIEW_UPDATE_MS = 600;
 const PREVIEW_BBOX_CHANGE_THRESHOLD = 0.18;
+const PREVIEW_FREEZE_DRIFT_THRESHOLD = 0.25;
+const PREVIEW_UNFREEZE_CENTERING = 0.45;
+const PREVIEW_UNFREEZE_ALIGNMENT = 0.5;
 
 function isMobile() {
   if (typeof navigator === 'undefined') return false;
@@ -85,6 +90,11 @@ export function WebCameraCapture({
   const stableStatusStateRef = useRef({});
   const tickCountRef = useRef(0);
   const heavyCacheRef = useRef({});
+  const previewFrozenRef = useRef(false);
+  const frozenPreviewDataUrlRef = useRef(null);
+  const frozenBboxRef = useRef(null);
+  const [ghostOverlayStatus, setGhostOverlayStatus] = useState('neutral');
+  const lastGhostStatusRef = useRef('neutral');
   const [ready, setReady] = useState(false);
   const [error, setError] = useState(null);
   const [facingMode, setFacingMode] = useState('environment');
@@ -108,6 +118,10 @@ export function WebCameraCapture({
     stableStatusStateRef.current = {};
     tickCountRef.current = 0;
     heavyCacheRef.current = {};
+    previewFrozenRef.current = false;
+    frozenPreviewDataUrlRef.current = null;
+    frozenBboxRef.current = null;
+    lastGhostStatusRef.current = 'neutral';
     setTrackingResult(null);
     setGlareResult(null);
     setShapeResult(null);
@@ -249,8 +263,9 @@ export function WebCameraCapture({
       featureFusionResultRef.current = featureFusionRes;
       brandReconstructionResultRef.current = brandReconstructionRes;
 
+      const guideAlign = computeGuideAlignment(result?.bbox);
       const autoCaptureRes = evaluateAutoCapture(
-        { tracking: result, glare: glareRes, shape: shapeRes, qualityGate: qualityGateRes, light: lightRes },
+        { tracking: result, glare: glareRes, shape: shapeRes, qualityGate: qualityGateRes, light: lightRes, guideAlignment: guideAlign },
         autoCaptureStateRef.current
       );
       autoCaptureStateRef.current = autoCaptureRes.nextState;
@@ -282,13 +297,37 @@ export function WebCameraCapture({
       );
       stableStatusStateRef.current = nextStableState;
 
+      const ghostMap = { searching_key: 'neutral', key_detected: 'active', key_ready: 'ready', low_light: 'problem', capturing: 'ready' };
+      const nextGhost = ghostMap[scanStatus] || 'neutral';
+      if (lastGhostStatusRef.current !== nextGhost) {
+        lastGhostStatusRef.current = nextGhost;
+        setGhostOverlayStatus(nextGhost);
+      }
+
       const canCapture = ready && !disabled && !ocrRunningNow;
       let displayMsg = lightStatus || glareRes?.reflection_state === 'critical' ? getGlareGuidanceMessage(glareRes) : null;
       if (!displayMsg && result) displayMsg = getGuidanceMessage(result);
       if (!displayMsg && shapeRes) displayMsg = getShapeGuidanceMessage(shapeRes);
 
+      const shouldUnfreeze =
+        rawScanStatus === 'searching_key' ||
+        (result?.centering_score ?? 0) < PREVIEW_UNFREEZE_CENTERING ||
+        guideAlign < PREVIEW_UNFREEZE_ALIGNMENT ||
+        (previewFrozenRef.current && frozenBboxRef.current && result?.bbox && (
+          Math.abs((result.bbox.cx ?? result.bbox.x + result.bbox.w / 2) - frozenBboxRef.current.cx) / 120 > PREVIEW_FREEZE_DRIFT_THRESHOLD ||
+          Math.abs((result.bbox.cy ?? result.bbox.y + result.bbox.h / 2) - frozenBboxRef.current.cy) / 90 > PREVIEW_FREEZE_DRIFT_THRESHOLD
+        ));
+
+      if (shouldUnfreeze) {
+        previewFrozenRef.current = false;
+        frozenPreviewDataUrlRef.current = null;
+        frozenBboxRef.current = null;
+      }
+
       if (scanStatus === 'searching_key') {
         previewDataUrlRef.current = null;
+      } else if (previewFrozenRef.current && frozenPreviewDataUrlRef.current) {
+        previewDataUrlRef.current = frozenPreviewDataUrlRef.current;
       } else if (result?.key_detected && (shapeRes?.shape_bbox || result?.bbox)) {
         const now = Date.now();
         const bbox = shapeRes?.shape_bbox || result.bbox;
@@ -326,7 +365,13 @@ export function WebCameraCapture({
               pctx.fillStyle = '#fafafa';
               pctx.fillRect(0, 0, prevCanv.width, prevCanv.height);
               pctx.drawImage(video, sx, sy, sw, sh, 0, 0, prevCanv.width, prevCanv.height);
-              previewDataUrlRef.current = prevCanv.toDataURL('image/jpeg', 0.85);
+              const newDataUrl = prevCanv.toDataURL('image/jpeg', 0.85);
+              previewDataUrlRef.current = newDataUrl;
+              if (scanStatus === 'key_ready' && guideAlign >= PREVIEW_UNFREEZE_ALIGNMENT && (result?.centering_score ?? 0) >= PREVIEW_UNFREEZE_CENTERING) {
+                previewFrozenRef.current = true;
+                frozenPreviewDataUrlRef.current = newDataUrl;
+                frozenBboxRef.current = { ...bbox, cx: bbox.cx ?? bbox.x + bbox.w / 2, cy: bbox.cy ?? bbox.y + bbox.h / 2 };
+              }
             }
           }
         }
@@ -628,13 +673,6 @@ export function WebCameraCapture({
   const trackingMsg = r ? getGuidanceMessage(r) : null;
   const shapeMsg = getShapeGuidanceMessage(shapeResult);
   const displayMessage = lightStatus || glareMsg || trackingMsg || shapeMsg;
-  // bbox en keyTracking está en coords de análisis 120x90; convertir a % para overlay
-  const bboxPercent = r?.bbox && r.key_detected ? {
-    left: (r.bbox.x / 120) * 100,
-    top: (r.bbox.y / 90) * 100,
-    width: (r.bbox.w / 120) * 100,
-    height: (r.bbox.h / 90) * 100,
-  } : null;
 
   if (captureRef) captureRef.current = handleCapture;
 
@@ -655,20 +693,9 @@ export function WebCameraCapture({
             <span className="text-[var(--muted)] text-sm">Cargando cámara…</span>
           </div>
         )}
-        {ready && r && (
+        {ready && (
           <>
-            {bboxPercent && r.key_detected && (
-              <div
-                className="absolute border-2 border-[var(--accent)]/50 rounded-lg pointer-events-none transition-opacity"
-                style={{
-                  left: `${bboxPercent.left}%`,
-                  top: `${bboxPercent.top}%`,
-                  width: `${bboxPercent.width}%`,
-                  height: `${bboxPercent.height}%`,
-                }}
-                aria-hidden
-              />
-            )}
+            <GhostKeyOverlay status={ghostOverlayStatus} />
             {displayMessage && (
               <div className="absolute bottom-2 left-2 right-2 flex justify-center">
                 <span className="text-xs px-3 py-1.5 rounded-lg bg-black/70 text-white backdrop-blur-sm">
