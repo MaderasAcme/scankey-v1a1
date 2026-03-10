@@ -10,6 +10,10 @@ import { safePushLimited, incrementQualityGateStat } from '../utils/storage';
 import { isWorkshopSessionValid } from '../services/auth';
 
 const SETTINGS_KEY = 'scn_settings';
+const _isDev = typeof import.meta !== 'undefined' && import.meta.env?.DEV;
+const _devLog = (tag, obj) => {
+  if (_isDev) console.log(`[scankey] ${tag}`, obj);
+};
 
 export function useAnalyzeFlow(onNavigateToResults) {
   const [isAnalyzing, setIsAnalyzing] = useState(false);
@@ -20,6 +24,7 @@ export function useAnalyzeFlow(onNavigateToResults) {
 
   const handleAnalyze = useCallback(async (photos, opts = {}) => {
     const { qualityOverride } = opts;
+    _devLog('handleAnalyze start', { hasA: Boolean(photos?.A), hasB: Boolean(photos?.B), qualityOverride });
     setCapturedPhotos(photos);
     setAnalyzeError(null);
     const settings = loadJSON(SETTINGS_KEY, {});
@@ -29,13 +34,17 @@ export function useAnalyzeFlow(onNavigateToResults) {
     const qgB = photos?.B?.snapshots?.qualityGate;
     const qgSnapshot = mergeQualityGateSnapshots(qgA, qgB);
     const canOverride = modo === 'taller' && isWorkshopSessionValid();
+    _devLog('quality-gate check', {
+      qualityGateActiveEnabled,
+      hasQgSnapshot: Boolean(qgSnapshot),
+      canOverride,
+      qgDecision: qgSnapshot?.quality_decision || qgSnapshot?.recommended_action,
+    });
 
     if (qualityGateActiveEnabled && qgSnapshot) {
       const { shouldBlock, block_reason } = computeQualityGateActiveDecision(qgSnapshot, canOverride);
       if (shouldBlock && !qualityOverride) {
-        if (typeof import.meta !== 'undefined' && import.meta.env?.DEV) {
-          console.log('[scankey] quality-gate blocked before fetch', { block_reason });
-        }
+        _devLog('quality-gate blocked before fetch', { block_reason });
         incrementQualityGateStat('block');
         setAnalyzeError({
           type: 'QUALITY_GATE',
@@ -50,12 +59,17 @@ export function useAnalyzeFlow(onNavigateToResults) {
     setIsAnalyzing(true);
     setAttemptCount(1);
     try {
+      _devLog('calling analyzeKey', { modo: modo === 'taller' ? 'taller' : undefined });
       const payload = await analyzeKey(photos, {
         modo: modo === 'taller' ? 'taller' : undefined,
         qualityOverride: Boolean(qualityOverride),
         onAttempt: (attempt, total) => setAttemptCount(attempt),
       });
       setResult(payload);
+      _devLog('analyze success, navigating to Results', {
+        request_id: payload?.request_id,
+        results_count: payload?.results?.length,
+      });
       onNavigateToResults?.();
       const top1 = payload?.results?.[0];
       const historyItem = {
@@ -81,6 +95,7 @@ export function useAnalyzeFlow(onNavigateToResults) {
       if (payload?.debug?.override_used) incrementQualityGateStat('override');
       if (payload?.debug?.quality_warning) incrementQualityGateStat('warning');
     } catch (e) {
+      _devLog('handleAnalyze error', { message: e?.message, code: e?.code });
       if (e.code === 'QUALITY_GATE') {
         incrementQualityGateStat('block');
         setAnalyzeError({

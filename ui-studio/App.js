@@ -80,7 +80,7 @@ export default function App() {
       if (!cfg.hasBase) {
         console.warn('[scankey] Base URL vacía. Configure VITE_GATEWAY_BASE_URL en .env.local');
       } else {
-        console.info('[scankey] Smoke test: 1) solo A  2) A+B  3) captura mala → quality gate');
+        console.info('[scankey] Dev: base=', cfg.base, '| Smoke: 1) solo A  2) A+B  3) captura mala → quality gate');
       }
     }
   }, []);
