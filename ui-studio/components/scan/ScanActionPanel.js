@@ -18,7 +18,7 @@ export function ScanActionPanel({
     <div className={`flex flex-col gap-2 ${className}`}>
       <Button
         variant="primary"
-        className="w-full py-4 text-base font-bold"
+        className="w-full py-4 text-base"
         onClick={onPrimary}
         disabled={primaryDisabled}
         aria-label={primaryLabel}

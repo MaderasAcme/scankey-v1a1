@@ -17,7 +17,7 @@ export function DetectedKeyPreview({ previewDataUrl, visible }) {
 
   return (
     <div className="rounded-xl bg-[var(--bg-secondary)] border border-[var(--border)] overflow-hidden">
-      <div className="px-3 py-2 border-b border-[var(--border)]">
+      <div className="px-4 py-2.5 border-b border-[var(--border)]">
         <h4 className="text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wide">Vista detectada</h4>
       </div>
       <div className="aspect-[4/3] bg-[#fafafa] dark:bg-[#1a1a1a] flex items-center justify-center p-2">

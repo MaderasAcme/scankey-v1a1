@@ -28,8 +28,8 @@ const MAX_DIM = 1920;
 const TRACKING_FPS = 8;
 const TRACK_INTERVAL_MS = 1000 / TRACKING_FPS;
 const SLOW_TICK_EVERY = 4;
-const PREVIEW_UPDATE_MS = 450;
-const PREVIEW_BBOX_CHANGE_THRESHOLD = 0.12;
+const PREVIEW_UPDATE_MS = 600;
+const PREVIEW_BBOX_CHANGE_THRESHOLD = 0.18;
 
 function isMobile() {
   if (typeof navigator === 'undefined') return false;

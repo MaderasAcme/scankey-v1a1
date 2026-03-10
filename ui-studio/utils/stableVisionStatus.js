@@ -4,9 +4,9 @@
  * Estados: searching_key | key_detected | key_ready | low_light | capturing
  */
 
-const MIN_STABILITY_MS = 450;
-const COOLDOWN_READY_MS = 500;
-const COOLDOWN_CAPTURING_MS = 600;
+const MIN_STABILITY_MS = 650;
+const COOLDOWN_READY_MS = 900;
+const COOLDOWN_CAPTURING_MS = 900;
 
 /** Prioridad para no bajar de nivel durante cooldown */
 const PRIORITY = { searching_key: 0, low_light: 1, key_detected: 2, key_ready: 3, capturing: 4 };

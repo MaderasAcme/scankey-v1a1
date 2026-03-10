@@ -218,7 +218,7 @@ export const ScanFlow = ({ onAnalyze, isAnalyzing = false, analyzeError = null }
       </div>
       {hasA ? (
         <div className="rounded-xl bg-[var(--bg-secondary)] border border-[var(--border)] overflow-hidden">
-          <div className="px-3 py-2 border-b border-[var(--border)]">
+          <div className="px-4 py-2.5 border-b border-[var(--border)]">
             <h4 className="text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wide">
               {copy.scan.sideA} — {copy.scan.captured}
             </h4>
