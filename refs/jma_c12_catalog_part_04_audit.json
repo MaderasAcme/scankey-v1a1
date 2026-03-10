@@ -1,0 +1,138 @@
+{
+  "source_file": "jma_c12_catalog_part_04.json",
+  "total_refs": 378,
+  "page_min": 118,
+  "page_max": 150,
+  "distinct_pages": 32,
+  "duplicates_count": 0,
+  "suspicious_count": 0,
+  "needs_review_count": 0,
+  "contamination_out_of_range": false,
+  "1_unique_id_model_ref": 378,
+  "1_duplicates_count": 0,
+  "2_duplicates_by_id": {},
+  "2_duplicates_examples": {},
+  "3_suspicious_count": 0,
+  "3_suspicious_list": [],
+  "4_top20_family": [
+    {
+      "family": "NE",
+      "count": 35
+    },
+    {
+      "family": "DAT",
+      "count": 29
+    },
+    {
+      "family": "GM",
+      "count": 27
+    },
+    {
+      "family": "FO",
+      "count": 19
+    },
+    {
+      "family": "HY",
+      "count": 19
+    },
+    {
+      "family": "AF",
+      "count": 18
+    },
+    {
+      "family": "MAZ",
+      "count": 18
+    },
+    {
+      "family": "RO",
+      "count": 17
+    },
+    {
+      "family": "FI",
+      "count": 15
+    },
+    {
+      "family": "MIT",
+      "count": 14
+    },
+    {
+      "family": "CHR",
+      "count": 12
+    },
+    {
+      "family": "HOND",
+      "count": 11
+    },
+    {
+      "family": "ME",
+      "count": 11
+    },
+    {
+      "family": "TOYO",
+      "count": 9
+    },
+    {
+      "family": "KI",
+      "count": 7
+    },
+    {
+      "family": "BL",
+      "count": 6
+    },
+    {
+      "family": "FEM",
+      "count": 6
+    },
+    {
+      "family": "UN",
+      "count": 6
+    },
+    {
+      "family": "VA",
+      "count": 6
+    },
+    {
+      "family": "FAR",
+      "count": 5
+    }
+  ],
+  "5_refs_per_catalog_page": {
+    "pages_with_refs": 32,
+    "refs_per_page": {
+      "129": 32,
+      "121": 24,
+      "127": 22,
+      "133": 22,
+      "118": 21,
+      "138": 20,
+      "146": 19,
+      "132": 18,
+      "137": 18,
+      "141": 14,
+      "145": 14,
+      "128": 13,
+      "140": 11,
+      "123": 10,
+      "144": 10,
+      "131": 9,
+      "134": 9,
+      "143": 9,
+      "126": 8,
+      "135": 8,
+      "147": 8,
+      "150": 8,
+      "122": 7,
+      "130": 7,
+      "119": 6,
+      "120": 6,
+      "124": 5,
+      "136": 5,
+      "142": 5,
+      "149": 4,
+      "139": 3,
+      "148": 3
+    },
+    "min_refs_page": 3,
+    "max_refs_page": 32
+  }
+}

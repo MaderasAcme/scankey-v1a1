@@ -1,0 +1,137 @@
+{
+  "source_file": "jma_c12_catalog_part_03.json",
+  "total_refs": 571,
+  "page_min": 85,
+  "page_max": 117,
+  "distinct_pages": 31,
+  "duplicates_count": 0,
+  "suspicious_count": 0,
+  "needs_review_count": 0,
+  "contamination_out_of_range": false,
+  "1_unique_id_model_ref": 571,
+  "1_duplicates_count": 0,
+  "2_duplicates_by_id": {},
+  "2_duplicates_examples": {},
+  "3_suspicious_count": 0,
+  "3_suspicious_list": [],
+  "4_top20_family": [
+    {
+      "family": "NE",
+      "count": 35
+    },
+    {
+      "family": "AF",
+      "count": 25
+    },
+    {
+      "family": "YA",
+      "count": 17
+    },
+    {
+      "family": "CHR",
+      "count": 16
+    },
+    {
+      "family": "FI",
+      "count": 15
+    },
+    {
+      "family": "RO",
+      "count": 14
+    },
+    {
+      "family": "VA",
+      "count": 13
+    },
+    {
+      "family": "FO",
+      "count": 12
+    },
+    {
+      "family": "AB",
+      "count": 11
+    },
+    {
+      "family": "IS",
+      "count": 11
+    },
+    {
+      "family": "BL",
+      "count": 10
+    },
+    {
+      "family": "KA",
+      "count": 10
+    },
+    {
+      "family": "LAP",
+      "count": 10
+    },
+    {
+      "family": "MIT",
+      "count": 10
+    },
+    {
+      "family": "MU",
+      "count": 10
+    },
+    {
+      "family": "KAE",
+      "count": 8
+    },
+    {
+      "family": "MCM",
+      "count": 8
+    },
+    {
+      "family": "TIT",
+      "count": 8
+    },
+    {
+      "family": "UCEM",
+      "count": 8
+    },
+    {
+      "family": "BM",
+      "count": 7
+    }
+  ],
+  "5_refs_per_catalog_page": {
+    "pages_with_refs": 31,
+    "refs_per_page": {
+      "95": 56,
+      "88": 38,
+      "86": 37,
+      "90": 35,
+      "87": 34,
+      "97": 32,
+      "85": 31,
+      "89": 29,
+      "96": 29,
+      "98": 28,
+      "105": 21,
+      "99": 19,
+      "93": 18,
+      "91": 17,
+      "100": 15,
+      "103": 15,
+      "107": 15,
+      "101": 12,
+      "108": 12,
+      "117": 12,
+      "102": 10,
+      "111": 10,
+      "106": 9,
+      "104": 7,
+      "109": 7,
+      "116": 6,
+      "110": 5,
+      "112": 4,
+      "113": 4,
+      "114": 2,
+      "115": 2
+    },
+    "min_refs_page": 2,
+    "max_refs_page": 56
+  }
+}

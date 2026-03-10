@@ -1,0 +1,2 @@
+# Dependencias para scripts de extracción de catálogos (refs/)
+pypdf>=4.0.0

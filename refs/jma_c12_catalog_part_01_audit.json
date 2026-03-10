@@ -1,0 +1,130 @@
+{
+  "source_file": "jma_c12_catalog_part_01.json",
+  "total_refs": 1881,
+  "1_unique_id_model_ref": 1881,
+  "1_duplicates_count": 0,
+  "2_duplicates_by_id": {},
+  "2_duplicates_examples": {},
+  "3_suspicious_count": 0,
+  "3_suspicious_list": [],
+  "4_top20_family": [
+    {
+      "family": "ZE",
+      "count": 149
+    },
+    {
+      "family": "BK",
+      "count": 139
+    },
+    {
+      "family": "DOM",
+      "count": 139
+    },
+    {
+      "family": "CE",
+      "count": 134
+    },
+    {
+      "family": "ABU",
+      "count": 106
+    },
+    {
+      "family": "COR",
+      "count": 67
+    },
+    {
+      "family": "CI",
+      "count": 55
+    },
+    {
+      "family": "BUR",
+      "count": 46
+    },
+    {
+      "family": "FB",
+      "count": 37
+    },
+    {
+      "family": "EV",
+      "count": 36
+    },
+    {
+      "family": "ALF",
+      "count": 35
+    },
+    {
+      "family": "GE",
+      "count": 31
+    },
+    {
+      "family": "BAB",
+      "count": 30
+    },
+    {
+      "family": "AGA",
+      "count": 29
+    },
+    {
+      "family": "BRI",
+      "count": 29
+    },
+    {
+      "family": "TD",
+      "count": 25
+    },
+    {
+      "family": "AS",
+      "count": 24
+    },
+    {
+      "family": "FAC",
+      "count": 22
+    },
+    {
+      "family": "GEA",
+      "count": 22
+    },
+    {
+      "family": "GLO",
+      "count": 21
+    }
+  ],
+  "5_refs_per_catalog_page": {
+    "pages_with_refs": 31,
+    "refs_per_page": {
+      "29": 139,
+      "50": 104,
+      "33": 96,
+      "39": 94,
+      "42": 92,
+      "24": 83,
+      "49": 78,
+      "34": 76,
+      "21": 68,
+      "35": 66,
+      "30": 60,
+      "36": 57,
+      "22": 56,
+      "45": 55,
+      "38": 53,
+      "47": 52,
+      "28": 51,
+      "41": 51,
+      "46": 50,
+      "51": 49,
+      "27": 47,
+      "31": 43,
+      "37": 43,
+      "40": 43,
+      "48": 43,
+      "32": 42,
+      "23": 39,
+      "43": 39,
+      "44": 39,
+      "26": 37,
+      "25": 36
+    },
+    "min_refs_page": 36,
+    "max_refs_page": 139
+  }
+}

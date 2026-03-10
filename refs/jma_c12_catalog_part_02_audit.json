@@ -1,0 +1,138 @@
+{
+  "source_file": "jma_c12_catalog_part_02.json",
+  "total_refs": 1643,
+  "page_min": 52,
+  "page_max": 84,
+  "distinct_pages": 33,
+  "duplicates_count": 0,
+  "suspicious_count": 0,
+  "needs_review_count": 0,
+  "1_unique_id_model_ref": 1643,
+  "1_duplicates_count": 0,
+  "2_duplicates_by_id": {},
+  "2_duplicates_examples": {},
+  "3_suspicious_count": 0,
+  "3_suspicious_list": [],
+  "4_top20_family": [
+    {
+      "family": "YA",
+      "count": 112
+    },
+    {
+      "family": "TOK",
+      "count": 92
+    },
+    {
+      "family": "UN",
+      "count": 75
+    },
+    {
+      "family": "RO",
+      "count": 61
+    },
+    {
+      "family": "WIL",
+      "count": 61
+    },
+    {
+      "family": "VA",
+      "count": 56
+    },
+    {
+      "family": "LF",
+      "count": 55
+    },
+    {
+      "family": "LIN",
+      "count": 37
+    },
+    {
+      "family": "TRI",
+      "count": 35
+    },
+    {
+      "family": "TV",
+      "count": 30
+    },
+    {
+      "family": "CI",
+      "count": 29
+    },
+    {
+      "family": "MCM",
+      "count": 28
+    },
+    {
+      "family": "YET",
+      "count": 28
+    },
+    {
+      "family": "LAP",
+      "count": 26
+    },
+    {
+      "family": "SLG",
+      "count": 25
+    },
+    {
+      "family": "PFA",
+      "count": 24
+    },
+    {
+      "family": "PR",
+      "count": 24
+    },
+    {
+      "family": "TIT",
+      "count": 23
+    },
+    {
+      "family": "MER",
+      "count": 22
+    },
+    {
+      "family": "OJ",
+      "count": 21
+    }
+  ],
+  "5_refs_per_catalog_page": {
+    "pages_with_refs": 33,
+    "refs_per_page": {
+      "70": 100,
+      "78": 81,
+      "71": 72,
+      "79": 72,
+      "80": 66,
+      "52": 65,
+      "63": 64,
+      "54": 61,
+      "62": 61,
+      "76": 60,
+      "72": 58,
+      "84": 55,
+      "58": 53,
+      "64": 53,
+      "65": 53,
+      "56": 49,
+      "57": 48,
+      "66": 44,
+      "53": 43,
+      "82": 43,
+      "83": 43,
+      "55": 42,
+      "67": 42,
+      "73": 42,
+      "69": 41,
+      "75": 41,
+      "59": 39,
+      "77": 39,
+      "61": 36,
+      "68": 35,
+      "60": 34,
+      "74": 4,
+      "81": 4
+    },
+    "min_refs_page": 4,
+    "max_refs_page": 100
+  }
+}

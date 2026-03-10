@@ -1,0 +1,7571 @@
+{
+  "source": "jma_c12_catalog",
+  "catalog": "C12",
+  "pages_covered": "118-150",
+  "family": "K01",
+  "type": "cylinder_and_special_keys",
+  "total_refs": 378,
+  "doubtful_count": 0,
+  "refs": [
+    {
+      "id_model_ref": "AB-6D",
+      "brand": "JMA",
+      "model": "AB-6D",
+      "aliases": [],
+      "family": "AB",
+      "type": "cylinder_special",
+      "source": "jma_c12_catalog",
+      "source_confidence": "high",
+      "catalog_page": 135,
+      "expected_visible_text": "AB-6D",
+      "expected_head_markings": null,
+      "expected_blade_markings": null,
+      "possible_tags": [
+        "JMA",
+        "C12",
+        "K01"
+      ],
+      "needs_review": false
+    },
+    {
+      "id_model_ref": "AB-6I",
+      "brand": "JMA",
+      "model": "AB-6I",
+      "aliases": [],
+      "family": "AB",
+      "type": "cylinder_special",
+      "source": "jma_c12_catalog",
+      "source_confidence": "high",
+      "catalog_page": 135,
+      "expected_visible_text": "AB-6I",
+      "expected_head_markings": null,
+      "expected_blade_markings": null,
+      "possible_tags": [
+        "JMA",
+        "C12",
+        "K01"
+      ],
+      "needs_review": false
+    },
+    {
+      "id_model_ref": "AB-8D",
+      "brand": "JMA",
+      "model": "AB-8D",
+      "aliases": [],
+      "family": "AB",
+      "type": "cylinder_special",
+      "source": "jma_c12_catalog",
+      "source_confidence": "high",
+      "catalog_page": 135,
+      "expected_visible_text": "AB-8D",
+      "expected_head_markings": null,
+      "expected_blade_markings": null,
+      "possible_tags": [
+        "JMA",
+        "C12",
+        "K01"
+      ],
+      "needs_review": false
+    },
+    {
+      "id_model_ref": "AB-8I",
+      "brand": "JMA",
+      "model": "AB-8I",
+      "aliases": [],
+      "family": "AB",
+      "type": "cylinder_special",
+      "source": "jma_c12_catalog",
+      "source_confidence": "high",
+      "catalog_page": 135,
+      "expected_visible_text": "AB-8I",
+      "expected_head_markings": null,
+      "expected_blade_markings": null,
+      "possible_tags": [
+        "JMA",
+        "C12",
+        "K01"
+      ],
+      "needs_review": false
+    },
+    {
+      "id_model_ref": "AF-10",
+      "brand": "JMA",
+      "model": "AF-10",
+      "aliases": [],
+      "family": "AF",
+      "type": "cylinder_special",
+      "source": "jma_c12_catalog",
+      "source_confidence": "high",
+      "catalog_page": 129,
+      "expected_visible_text": "AF-10",
+      "expected_head_markings": null,
+      "expected_blade_markings": null,
+      "possible_tags": [
+        "JMA",
+        "C12",
+        "K01"
+      ],
+      "needs_review": false
+    },
+    {
+      "id_model_ref": "AF-11",
+      "brand": "JMA",
+      "model": "AF-11",
+      "aliases": [],
+      "family": "AF",
+      "type": "cylinder_special",
+      "source": "jma_c12_catalog",
+      "source_confidence": "high",
+      "catalog_page": 129,
+      "expected_visible_text": "AF-11",
+      "expected_head_markings": null,
+      "expected_blade_markings": null,
+      "possible_tags": [
+        "JMA",
+        "C12",
+        "K01"
+      ],
+      "needs_review": false
+    },
+    {
+      "id_model_ref": "AF-12",
+      "brand": "JMA",
+      "model": "AF-12",
+      "aliases": [],
+      "family": "AF",
+      "type": "cylinder_special",
+      "source": "jma_c12_catalog",
+      "source_confidence": "high",
+      "catalog_page": 129,
+      "expected_visible_text": "AF-12",
+      "expected_head_markings": null,
+      "expected_blade_markings": null,
+      "possible_tags": [
+        "JMA",
+        "C12",
+        "K01"
+      ],
+      "needs_review": false
+    },
+    {
+      "id_model_ref": "AF-14",
+      "brand": "JMA",
+      "model": "AF-14",
+      "aliases": [],
+      "family": "AF",
+      "type": "cylinder_special",
+      "source": "jma_c12_catalog",
+      "source_confidence": "high",
+      "catalog_page": 129,
+      "expected_visible_text": "AF-14",
+      "expected_head_markings": null,
+      "expected_blade_markings": null,
+      "possible_tags": [
+        "JMA",
+        "C12",
+        "K01"
+      ],
+      "needs_review": false
+    },
+    {
+      "id_model_ref": "AF-19",
+      "brand": "JMA",
+      "model": "AF-19",
+      "aliases": [],
+      "family": "AF",
+      "type": "cylinder_special",
+      "source": "jma_c12_catalog",
+      "source_confidence": "high",
+      "catalog_page": 133,
+      "expected_visible_text": "AF-19",
+      "expected_head_markings": null,
+      "expected_blade_markings": null,
+      "possible_tags": [
+        "JMA",
+        "C12",
+        "K01"
+      ],
+      "needs_review": false
+    },
+    {
+      "id_model_ref": "AF-21",
+      "brand": "JMA",
+      "model": "AF-21",
+      "aliases": [],
+      "family": "AF",
+      "type": "cylinder_special",
+      "source": "jma_c12_catalog",
+      "source_confidence": "high",
+      "catalog_page": 133,
+      "expected_visible_text": "AF-21",
+      "expected_head_markings": null,
+      "expected_blade_markings": null,
+      "possible_tags": [
+        "JMA",
+        "C12",
+        "K01"
+      ],
+      "needs_review": false
+    },
+    {
+      "id_model_ref": "AF-4D",
+      "brand": "JMA",
+      "model": "AF-4D",
+      "aliases": [],
+      "family": "AF",
+      "type": "cylinder_special",
+      "source": "jma_c12_catalog",
+      "source_confidence": "high",
+      "catalog_page": 133,
+      "expected_visible_text": "AF-4D",
+      "expected_head_markings": null,
+      "expected_blade_markings": null,
+      "possible_tags": [
+        "JMA",
+        "C12",
+        "K01"
+      ],
+      "needs_review": false
+    },
+    {
+      "id_model_ref": "AF-4I",
+      "brand": "JMA",
+      "model": "AF-4I",
+      "aliases": [],
+      "family": "AF",
+      "type": "cylinder_special",
+      "source": "jma_c12_catalog",
+      "source_confidence": "high",
+      "catalog_page": 133,
+      "expected_visible_text": "AF-4I",
+      "expected_head_markings": null,
+      "expected_blade_markings": null,
+      "possible_tags": [
+        "JMA",
+        "C12",
+        "K01"
+      ],
+      "needs_review": false
+    },
+    {
+      "id_model_ref": "AF-5D",
+      "brand": "JMA",
+      "model": "AF-5D",
+      "aliases": [],
+      "family": "AF",
+      "type": "cylinder_special",
+      "source": "jma_c12_catalog",
+      "source_confidence": "high",
+      "catalog_page": 129,
+      "expected_visible_text": "AF-5D",
+      "expected_head_markings": null,
+      "expected_blade_markings": null,
+      "possible_tags": [
+        "JMA",
+        "C12",
+        "K01"
+      ],
+      "needs_review": false
+    },
+    {
+      "id_model_ref": "AF-5I",
+      "brand": "JMA",
+      "model": "AF-5I",
+      "aliases": [],
+      "family": "AF",
+      "type": "cylinder_special",
+      "source": "jma_c12_catalog",
+      "source_confidence": "high",
+      "catalog_page": 129,
+      "expected_visible_text": "AF-5I",
+      "expected_head_markings": null,
+      "expected_blade_markings": null,
+      "possible_tags": [
+        "JMA",
+        "C12",
+        "K01"
+      ],
+      "needs_review": false
+    },
+    {
+      "id_model_ref": "AF-6D",
+      "brand": "JMA",
+      "model": "AF-6D",
+      "aliases": [],
+      "family": "AF",
+      "type": "cylinder_special",
+      "source": "jma_c12_catalog",
+      "source_confidence": "high",
+      "catalog_page": 129,
+      "expected_visible_text": "AF-6D",
+      "expected_head_markings": null,
+      "expected_blade_markings": null,
+      "possible_tags": [
+        "JMA",
+        "C12",
+        "K01"
+      ],
+      "needs_review": false
+    },
+    {
+      "id_model_ref": "AF-6I",
+      "brand": "JMA",
+      "model": "AF-6I",
+      "aliases": [],
+      "family": "AF",
+      "type": "cylinder_special",
+      "source": "jma_c12_catalog",
+      "source_confidence": "high",
+      "catalog_page": 129,
+      "expected_visible_text": "AF-6I",
+      "expected_head_markings": null,
+      "expected_blade_markings": null,
+      "possible_tags": [
+        "JMA",
+        "C12",
+        "K01"
+      ],
+      "needs_review": false
+    },
+    {
+      "id_model_ref": "AF-7D",
+      "brand": "JMA",
+      "model": "AF-7D",
+      "aliases": [],
+      "family": "AF",
+      "type": "cylinder_special",
+      "source": "jma_c12_catalog",
+      "source_confidence": "high",
+      "catalog_page": 129,
+      "expected_visible_text": "AF-7D",
+      "expected_head_markings": null,
+      "expected_blade_markings": null,
+      "possible_tags": [
+        "JMA",
+        "C12",
+        "K01"
+      ],
+      "needs_review": false
+    },
+    {
+      "id_model_ref": "AF-7I",
+      "brand": "JMA",
+      "model": "AF-7I",
+      "aliases": [],
+      "family": "AF",
+      "type": "cylinder_special",
+      "source": "jma_c12_catalog",
+      "source_confidence": "high",
+      "catalog_page": 129,
+      "expected_visible_text": "AF-7I",
+      "expected_head_markings": null,
+      "expected_blade_markings": null,
+      "possible_tags": [
+        "JMA",
+        "C12",
+        "K01"
+      ],
+      "needs_review": false
+    },
+    {
+      "id_model_ref": "AF-8D",
+      "brand": "JMA",
+      "model": "AF-8D",
+      "aliases": [],
+      "family": "AF",
+      "type": "cylinder_special",
+      "source": "jma_c12_catalog",
+      "source_confidence": "high",
+      "catalog_page": 129,
+      "expected_visible_text": "AF-8D",
+      "expected_head_markings": null,
+      "expected_blade_markings": null,
+      "possible_tags": [
+        "JMA",
+        "C12",
+        "K01"
+      ],
+      "needs_review": false
+    },
+    {
+      "id_model_ref": "AF-8I",
+      "brand": "JMA",
+      "model": "AF-8I",
+      "aliases": [],
+      "family": "AF",
+      "type": "cylinder_special",
+      "source": "jma_c12_catalog",
+      "source_confidence": "high",
+      "catalog_page": 129,
+      "expected_visible_text": "AF-8I",
+      "expected_head_markings": null,
+      "expected_blade_markings": null,
+      "possible_tags": [
+        "JMA",
+        "C12",
+        "K01"
+      ],
+      "needs_review": false
+    },
+    {
+      "id_model_ref": "AF-9D",
+      "brand": "JMA",
+      "model": "AF-9D",
+      "aliases": [],
+      "family": "AF",
+      "type": "cylinder_special",
+      "source": "jma_c12_catalog",
+      "source_confidence": "high",
+      "catalog_page": 129,
+      "expected_visible_text": "AF-9D",
+      "expected_head_markings": null,
+      "expected_blade_markings": null,
+      "possible_tags": [
+        "JMA",
+        "C12",
+        "K01"
+      ],
+      "needs_review": false
+    },
+    {
+      "id_model_ref": "AF-9I",
+      "brand": "JMA",
+      "model": "AF-9I",
+      "aliases": [],
+      "family": "AF",
+      "type": "cylinder_special",
+      "source": "jma_c12_catalog",
+      "source_confidence": "high",
+      "catalog_page": 129,
+      "expected_visible_text": "AF-9I",
+      "expected_head_markings": null,
+      "expected_blade_markings": null,
+      "possible_tags": [
+        "JMA",
+        "C12",
+        "K01"
+      ],
+      "needs_review": false
+    },
+    {
+      "id_model_ref": "AMM-1",
+      "brand": "JMA",
+      "model": "AMM-1",
+      "aliases": [],
+      "family": "AMM",
+      "type": "cylinder_special",
+      "source": "jma_c12_catalog",
+      "source_confidence": "high",
+      "catalog_page": 132,
+      "expected_visible_text": "AMM-1",
+      "expected_head_markings": null,
+      "expected_blade_markings": null,
+      "possible_tags": [
+        "JMA",
+        "C12",
+        "K01"
+      ],
+      "needs_review": false
+    },
+    {
+      "id_model_ref": "AMM-2",
+      "brand": "JMA",
+      "model": "AMM-2",
+      "aliases": [],
+      "family": "AMM",
+      "type": "cylinder_special",
+      "source": "jma_c12_catalog",
+      "source_confidence": "high",
+      "catalog_page": 132,
+      "expected_visible_text": "AMM-2",
+      "expected_head_markings": null,
+      "expected_blade_markings": null,
+      "possible_tags": [
+        "JMA",
+        "C12",
+        "K01"
+      ],
+      "needs_review": false
+    },
+    {
+      "id_model_ref": "BAS-1D",
+      "brand": "JMA",
+      "model": "BAS-1D",
+      "aliases": [],
+      "family": "BAS",
+      "type": "cylinder_special",
+      "source": "jma_c12_catalog",
+      "source_confidence": "high",
+      "catalog_page": 121,
+      "expected_visible_text": "BAS-1D",
+      "expected_head_markings": null,
+      "expected_blade_markings": null,
+      "possible_tags": [
+        "JMA",
+        "C12",
+        "K01"
+      ],
+      "needs_review": false
+    },
+    {
+      "id_model_ref": "BAS-1I",
+      "brand": "JMA",
+      "model": "BAS-1I",
+      "aliases": [],
+      "family": "BAS",
+      "type": "cylinder_special",
+      "source": "jma_c12_catalog",
+      "source_confidence": "high",
+      "catalog_page": 121,
+      "expected_visible_text": "BAS-1I",
+      "expected_head_markings": null,
+      "expected_blade_markings": null,
+      "possible_tags": [
+        "JMA",
+        "C12",
+        "K01"
+      ],
+      "needs_review": false
+    },
+    {
+      "id_model_ref": "BH-1",
+      "brand": "JMA",
+      "model": "BH-1",
+      "aliases": [],
+      "family": "BH",
+      "type": "cylinder_special",
+      "source": "jma_c12_catalog",
+      "source_confidence": "high",
+      "catalog_page": 134,
+      "expected_visible_text": "BH-1",
+      "expected_head_markings": null,
+      "expected_blade_markings": null,
+      "possible_tags": [
+        "JMA",
+        "C12",
+        "K01"
+      ],
+      "needs_review": false
+    },
+    {
+      "id_model_ref": "BH-4",
+      "brand": "JMA",
+      "model": "BH-4",
+      "aliases": [],
+      "family": "BH",
+      "type": "cylinder_special",
+      "source": "jma_c12_catalog",
+      "source_confidence": "high",
+      "catalog_page": 143,
+      "expected_visible_text": "BH-4",
+      "expected_head_markings": null,
+      "expected_blade_markings": null,
+      "possible_tags": [
+        "JMA",
+        "C12",
+        "K01"
+      ],
+      "needs_review": false
+    },
+    {
+      "id_model_ref": "BL-2",
+      "brand": "JMA",
+      "model": "BL-2",
+      "aliases": [],
+      "family": "BL",
+      "type": "cylinder_special",
+      "source": "jma_c12_catalog",
+      "source_confidence": "high",
+      "catalog_page": 118,
+      "expected_visible_text": "BL-2",
+      "expected_head_markings": null,
+      "expected_blade_markings": null,
+      "possible_tags": [
+        "JMA",
+        "C12",
+        "K01"
+      ],
+      "needs_review": false
+    },
+    {
+      "id_model_ref": "BL-3",
+      "brand": "JMA",
+      "model": "BL-3",
+      "aliases": [],
+      "family": "BL",
+      "type": "cylinder_special",
+      "source": "jma_c12_catalog",
+      "source_confidence": "high",
+      "catalog_page": 118,
+      "expected_visible_text": "BL-3",
+      "expected_head_markings": null,
+      "expected_blade_markings": null,
+      "possible_tags": [
+        "JMA",
+        "C12",
+        "K01"
+      ],
+      "needs_review": false
+    },
+    {
+      "id_model_ref": "BL-4",
+      "brand": "JMA",
+      "model": "BL-4",
+      "aliases": [],
+      "family": "BL",
+      "type": "cylinder_special",
+      "source": "jma_c12_catalog",
+      "source_confidence": "high",
+      "catalog_page": 118,
+      "expected_visible_text": "BL-4",
+      "expected_head_markings": null,
+      "expected_blade_markings": null,
+      "possible_tags": [
+        "JMA",
+        "C12",
+        "K01"
+      ],
+      "needs_review": false
+    },
+    {
+      "id_model_ref": "BL-4D",
+      "brand": "JMA",
+      "model": "BL-4D",
+      "aliases": [],
+      "family": "BL",
+      "type": "cylinder_special",
+      "source": "jma_c12_catalog",
+      "source_confidence": "high",
+      "catalog_page": 118,
+      "expected_visible_text": "BL-4D",
+      "expected_head_markings": null,
+      "expected_blade_markings": null,
+      "possible_tags": [
+        "JMA",
+        "C12",
+        "K01"
+      ],
+      "needs_review": false
+    },
+    {
+      "id_model_ref": "BL-6",
+      "brand": "JMA",
+      "model": "BL-6",
+      "aliases": [],
+      "family": "BL",
+      "type": "cylinder_special",
+      "source": "jma_c12_catalog",
+      "source_confidence": "high",
+      "catalog_page": 118,
+      "expected_visible_text": "BL-6",
+      "expected_head_markings": null,
+      "expected_blade_markings": null,
+      "possible_tags": [
+        "JMA",
+        "C12",
+        "K01"
+      ],
+      "needs_review": false
+    },
+    {
+      "id_model_ref": "BL-6D",
+      "brand": "JMA",
+      "model": "BL-6D",
+      "aliases": [],
+      "family": "BL",
+      "type": "cylinder_special",
+      "source": "jma_c12_catalog",
+      "source_confidence": "high",
+      "catalog_page": 118,
+      "expected_visible_text": "BL-6D",
+      "expected_head_markings": null,
+      "expected_blade_markings": null,
+      "possible_tags": [
+        "JMA",
+        "C12",
+        "K01"
+      ],
+      "needs_review": false
+    },
+    {
+      "id_model_ref": "BOM-2",
+      "brand": "JMA",
+      "model": "BOM-2",
+      "aliases": [],
+      "family": "BOM",
+      "type": "cylinder_special",
+      "source": "jma_c12_catalog",
+      "source_confidence": "high",
+      "catalog_page": 138,
+      "expected_visible_text": "BOM-2",
+      "expected_head_markings": null,
+      "expected_blade_markings": null,
+      "possible_tags": [
+        "JMA",
+        "C12",
+        "K01"
+      ],
+      "needs_review": false
+    },
+    {
+      "id_model_ref": "BOM-2D",
+      "brand": "JMA",
+      "model": "BOM-2D",
+      "aliases": [],
+      "family": "BOM",
+      "type": "cylinder_special",
+      "source": "jma_c12_catalog",
+      "source_confidence": "high",
+      "catalog_page": 138,
+      "expected_visible_text": "BOM-2D",
+      "expected_head_markings": null,
+      "expected_blade_markings": null,
+      "possible_tags": [
+        "JMA",
+        "C12",
+        "K01"
+      ],
+      "needs_review": false
+    },
+    {
+      "id_model_ref": "BS-4D",
+      "brand": "JMA",
+      "model": "BS-4D",
+      "aliases": [],
+      "family": "BS",
+      "type": "cylinder_special",
+      "source": "jma_c12_catalog",
+      "source_confidence": "high",
+      "catalog_page": 132,
+      "expected_visible_text": "BS-4D",
+      "expected_head_markings": null,
+      "expected_blade_markings": null,
+      "possible_tags": [
+        "JMA",
+        "C12",
+        "K01"
+      ],
+      "needs_review": false
+    },
+    {
+      "id_model_ref": "BS-5",
+      "brand": "JMA",
+      "model": "BS-5",
+      "aliases": [],
+      "family": "BS",
+      "type": "cylinder_special",
+      "source": "jma_c12_catalog",
+      "source_confidence": "high",
+      "catalog_page": 148,
+      "expected_visible_text": "BS-5",
+      "expected_head_markings": null,
+      "expected_blade_markings": null,
+      "possible_tags": [
+        "JMA",
+        "C12",
+        "K01"
+      ],
+      "needs_review": false
+    },
+    {
+      "id_model_ref": "BS-6",
+      "brand": "JMA",
+      "model": "BS-6",
+      "aliases": [],
+      "family": "BS",
+      "type": "cylinder_special",
+      "source": "jma_c12_catalog",
+      "source_confidence": "high",
+      "catalog_page": 132,
+      "expected_visible_text": "BS-6",
+      "expected_head_markings": null,
+      "expected_blade_markings": null,
+      "possible_tags": [
+        "JMA",
+        "C12",
+        "K01"
+      ],
+      "needs_review": false
+    },
+    {
+      "id_model_ref": "CHR-10",
+      "brand": "JMA",
+      "model": "CHR-10",
+      "aliases": [],
+      "family": "CHR",
+      "type": "cylinder_special",
+      "source": "jma_c12_catalog",
+      "source_confidence": "high",
+      "catalog_page": 132,
+      "expected_visible_text": "CHR-10",
+      "expected_head_markings": null,
+      "expected_blade_markings": null,
+      "possible_tags": [
+        "JMA",
+        "C12",
+        "K01"
+      ],
+      "needs_review": false
+    },
+    {
+      "id_model_ref": "CHR-12",
+      "brand": "JMA",
+      "model": "CHR-12",
+      "aliases": [],
+      "family": "CHR",
+      "type": "cylinder_special",
+      "source": "jma_c12_catalog",
+      "source_confidence": "high",
+      "catalog_page": 147,
+      "expected_visible_text": "CHR-12",
+      "expected_head_markings": null,
+      "expected_blade_markings": null,
+      "possible_tags": [
+        "JMA",
+        "C12",
+        "K01"
+      ],
+      "needs_review": false
+    },
+    {
+      "id_model_ref": "CHR-13D",
+      "brand": "JMA",
+      "model": "CHR-13D",
+      "aliases": [],
+      "family": "CHR",
+      "type": "cylinder_special",
+      "source": "jma_c12_catalog",
+      "source_confidence": "high",
+      "catalog_page": 147,
+      "expected_visible_text": "CHR-13D",
+      "expected_head_markings": null,
+      "expected_blade_markings": null,
+      "possible_tags": [
+        "JMA",
+        "C12",
+        "K01"
+      ],
+      "needs_review": false
+    },
+    {
+      "id_model_ref": "CHR-14",
+      "brand": "JMA",
+      "model": "CHR-14",
+      "aliases": [],
+      "family": "CHR",
+      "type": "cylinder_special",
+      "source": "jma_c12_catalog",
+      "source_confidence": "high",
+      "catalog_page": 121,
+      "expected_visible_text": "CHR-14",
+      "expected_head_markings": null,
+      "expected_blade_markings": null,
+      "possible_tags": [
+        "JMA",
+        "C12",
+        "K01"
+      ],
+      "needs_review": false
+    },
+    {
+      "id_model_ref": "CHR-15",
+      "brand": "JMA",
+      "model": "CHR-15",
+      "aliases": [],
+      "family": "CHR",
+      "type": "cylinder_special",
+      "source": "jma_c12_catalog",
+      "source_confidence": "high",
+      "catalog_page": 147,
+      "expected_visible_text": "CHR-15",
+      "expected_head_markings": null,
+      "expected_blade_markings": null,
+      "possible_tags": [
+        "JMA",
+        "C12",
+        "K01"
+      ],
+      "needs_review": false
+    },
+    {
+      "id_model_ref": "CHR-17",
+      "brand": "JMA",
+      "model": "CHR-17",
+      "aliases": [],
+      "family": "CHR",
+      "type": "cylinder_special",
+      "source": "jma_c12_catalog",
+      "source_confidence": "high",
+      "catalog_page": 140,
+      "expected_visible_text": "CHR-17",
+      "expected_head_markings": null,
+      "expected_blade_markings": null,
+      "possible_tags": [
+        "JMA",
+        "C12",
+        "K01"
+      ],
+      "needs_review": false
+    },
+    {
+      "id_model_ref": "CHR-3",
+      "brand": "JMA",
+      "model": "CHR-3",
+      "aliases": [],
+      "family": "CHR",
+      "type": "cylinder_special",
+      "source": "jma_c12_catalog",
+      "source_confidence": "high",
+      "catalog_page": 137,
+      "expected_visible_text": "CHR-3",
+      "expected_head_markings": null,
+      "expected_blade_markings": null,
+      "possible_tags": [
+        "JMA",
+        "C12",
+        "K01"
+      ],
+      "needs_review": false
+    },
+    {
+      "id_model_ref": "CHR-4D",
+      "brand": "JMA",
+      "model": "CHR-4D",
+      "aliases": [],
+      "family": "CHR",
+      "type": "cylinder_special",
+      "source": "jma_c12_catalog",
+      "source_confidence": "high",
+      "catalog_page": 144,
+      "expected_visible_text": "CHR-4D",
+      "expected_head_markings": null,
+      "expected_blade_markings": null,
+      "possible_tags": [
+        "JMA",
+        "C12",
+        "K01"
+      ],
+      "needs_review": false
+    },
+    {
+      "id_model_ref": "CHR-4I",
+      "brand": "JMA",
+      "model": "CHR-4I",
+      "aliases": [],
+      "family": "CHR",
+      "type": "cylinder_special",
+      "source": "jma_c12_catalog",
+      "source_confidence": "high",
+      "catalog_page": 144,
+      "expected_visible_text": "CHR-4I",
+      "expected_head_markings": null,
+      "expected_blade_markings": null,
+      "possible_tags": [
+        "JMA",
+        "C12",
+        "K01"
+      ],
+      "needs_review": false
+    },
+    {
+      "id_model_ref": "CHR-7",
+      "brand": "JMA",
+      "model": "CHR-7",
+      "aliases": [],
+      "family": "CHR",
+      "type": "cylinder_special",
+      "source": "jma_c12_catalog",
+      "source_confidence": "high",
+      "catalog_page": 123,
+      "expected_visible_text": "CHR-7",
+      "expected_head_markings": null,
+      "expected_blade_markings": null,
+      "possible_tags": [
+        "JMA",
+        "C12",
+        "K01"
+      ],
+      "needs_review": false
+    },
+    {
+      "id_model_ref": "CHR-8",
+      "brand": "JMA",
+      "model": "CHR-8",
+      "aliases": [],
+      "family": "CHR",
+      "type": "cylinder_special",
+      "source": "jma_c12_catalog",
+      "source_confidence": "high",
+      "catalog_page": 123,
+      "expected_visible_text": "CHR-8",
+      "expected_head_markings": null,
+      "expected_blade_markings": null,
+      "possible_tags": [
+        "JMA",
+        "C12",
+        "K01"
+      ],
+      "needs_review": false
+    },
+    {
+      "id_model_ref": "CHR-9",
+      "brand": "JMA",
+      "model": "CHR-9",
+      "aliases": [],
+      "family": "CHR",
+      "type": "cylinder_special",
+      "source": "jma_c12_catalog",
+      "source_confidence": "high",
+      "catalog_page": 132,
+      "expected_visible_text": "CHR-9",
+      "expected_head_markings": null,
+      "expected_blade_markings": null,
+      "possible_tags": [
+        "JMA",
+        "C12",
+        "K01"
+      ],
+      "needs_review": false
+    },
+    {
+      "id_model_ref": "CL-4I",
+      "brand": "JMA",
+      "model": "CL-4I",
+      "aliases": [],
+      "family": "CL",
+      "type": "cylinder_special",
+      "source": "jma_c12_catalog",
+      "source_confidence": "high",
+      "catalog_page": 132,
+      "expected_visible_text": "CL-4I",
+      "expected_head_markings": null,
+      "expected_blade_markings": null,
+      "possible_tags": [
+        "JMA",
+        "C12",
+        "K01"
+      ],
+      "needs_review": false
+    },
+    {
+      "id_model_ref": "CT-3",
+      "brand": "JMA",
+      "model": "CT-3",
+      "aliases": [],
+      "family": "CT",
+      "type": "cylinder_special",
+      "source": "jma_c12_catalog",
+      "source_confidence": "high",
+      "catalog_page": 136,
+      "expected_visible_text": "CT-3",
+      "expected_head_markings": null,
+      "expected_blade_markings": null,
+      "possible_tags": [
+        "JMA",
+        "C12",
+        "K01"
+      ],
+      "needs_review": false
+    },
+    {
+      "id_model_ref": "DAC-4D",
+      "brand": "JMA",
+      "model": "DAC-4D",
+      "aliases": [],
+      "family": "DAC",
+      "type": "cylinder_special",
+      "source": "jma_c12_catalog",
+      "source_confidence": "high",
+      "catalog_page": 143,
+      "expected_visible_text": "DAC-4D",
+      "expected_head_markings": null,
+      "expected_blade_markings": null,
+      "possible_tags": [
+        "JMA",
+        "C12",
+        "K01"
+      ],
+      "needs_review": false
+    },
+    {
+      "id_model_ref": "DAC-6D",
+      "brand": "JMA",
+      "model": "DAC-6D",
+      "aliases": [],
+      "family": "DAC",
+      "type": "cylinder_special",
+      "source": "jma_c12_catalog",
+      "source_confidence": "high",
+      "catalog_page": 143,
+      "expected_visible_text": "DAC-6D",
+      "expected_head_markings": null,
+      "expected_blade_markings": null,
+      "possible_tags": [
+        "JMA",
+        "C12",
+        "K01"
+      ],
+      "needs_review": false
+    },
+    {
+      "id_model_ref": "DAE-3",
+      "brand": "JMA",
+      "model": "DAE-3",
+      "aliases": [],
+      "family": "DAE",
+      "type": "cylinder_special",
+      "source": "jma_c12_catalog",
+      "source_confidence": "high",
+      "catalog_page": 122,
+      "expected_visible_text": "DAE-3",
+      "expected_head_markings": null,
+      "expected_blade_markings": null,
+      "possible_tags": [
+        "JMA",
+        "C12",
+        "K01"
+      ],
+      "needs_review": false
+    },
+    {
+      "id_model_ref": "DAE-3D",
+      "brand": "JMA",
+      "model": "DAE-3D",
+      "aliases": [],
+      "family": "DAE",
+      "type": "cylinder_special",
+      "source": "jma_c12_catalog",
+      "source_confidence": "high",
+      "catalog_page": 122,
+      "expected_visible_text": "DAE-3D",
+      "expected_head_markings": null,
+      "expected_blade_markings": null,
+      "possible_tags": [
+        "JMA",
+        "C12",
+        "K01"
+      ],
+      "needs_review": false
+    },
+    {
+      "id_model_ref": "DAI-1",
+      "brand": "JMA",
+      "model": "DAI-1",
+      "aliases": [],
+      "family": "DAI",
+      "type": "cylinder_special",
+      "source": "jma_c12_catalog",
+      "source_confidence": "high",
+      "catalog_page": 147,
+      "expected_visible_text": "DAI-1",
+      "expected_head_markings": null,
+      "expected_blade_markings": null,
+      "possible_tags": [
+        "JMA",
+        "C12",
+        "K01"
+      ],
+      "needs_review": false
+    },
+    {
+      "id_model_ref": "DAT-10",
+      "brand": "JMA",
+      "model": "DAT-10",
+      "aliases": [],
+      "family": "DAT",
+      "type": "cylinder_special",
+      "source": "jma_c12_catalog",
+      "source_confidence": "high",
+      "catalog_page": 129,
+      "expected_visible_text": "DAT-10",
+      "expected_head_markings": null,
+      "expected_blade_markings": null,
+      "possible_tags": [
+        "JMA",
+        "C12",
+        "K01"
+      ],
+      "needs_review": false
+    },
+    {
+      "id_model_ref": "DAT-11",
+      "brand": "JMA",
+      "model": "DAT-11",
+      "aliases": [],
+      "family": "DAT",
+      "type": "cylinder_special",
+      "source": "jma_c12_catalog",
+      "source_confidence": "high",
+      "catalog_page": 137,
+      "expected_visible_text": "DAT-11",
+      "expected_head_markings": null,
+      "expected_blade_markings": null,
+      "possible_tags": [
+        "JMA",
+        "C12",
+        "K01"
+      ],
+      "needs_review": false
+    },
+    {
+      "id_model_ref": "DAT-11D",
+      "brand": "JMA",
+      "model": "DAT-11D",
+      "aliases": [],
+      "family": "DAT",
+      "type": "cylinder_special",
+      "source": "jma_c12_catalog",
+      "source_confidence": "high",
+      "catalog_page": 137,
+      "expected_visible_text": "DAT-11D",
+      "expected_head_markings": null,
+      "expected_blade_markings": null,
+      "possible_tags": [
+        "JMA",
+        "C12",
+        "K01"
+      ],
+      "needs_review": false
+    },
+    {
+      "id_model_ref": "DAT-12",
+      "brand": "JMA",
+      "model": "DAT-12",
+      "aliases": [],
+      "family": "DAT",
+      "type": "cylinder_special",
+      "source": "jma_c12_catalog",
+      "source_confidence": "high",
+      "catalog_page": 126,
+      "expected_visible_text": "DAT-12",
+      "expected_head_markings": null,
+      "expected_blade_markings": null,
+      "possible_tags": [
+        "JMA",
+        "C12",
+        "K01"
+      ],
+      "needs_review": false
+    },
+    {
+      "id_model_ref": "DAT-13",
+      "brand": "JMA",
+      "model": "DAT-13",
+      "aliases": [],
+      "family": "DAT",
+      "type": "cylinder_special",
+      "source": "jma_c12_catalog",
+      "source_confidence": "high",
+      "catalog_page": 129,
+      "expected_visible_text": "DAT-13",
+      "expected_head_markings": null,
+      "expected_blade_markings": null,
+      "possible_tags": [
+        "JMA",
+        "C12",
+        "K01"
+      ],
+      "needs_review": false
+    },
+    {
+      "id_model_ref": "DAT-14",
+      "brand": "JMA",
+      "model": "DAT-14",
+      "aliases": [],
+      "family": "DAT",
+      "type": "cylinder_special",
+      "source": "jma_c12_catalog",
+      "source_confidence": "high",
+      "catalog_page": 129,
+      "expected_visible_text": "DAT-14",
+      "expected_head_markings": null,
+      "expected_blade_markings": null,
+      "possible_tags": [
+        "JMA",
+        "C12",
+        "K01"
+      ],
+      "needs_review": false
+    },
+    {
+      "id_model_ref": "DAT-15",
+      "brand": "JMA",
+      "model": "DAT-15",
+      "aliases": [],
+      "family": "DAT",
+      "type": "cylinder_special",
+      "source": "jma_c12_catalog",
+      "source_confidence": "high",
+      "catalog_page": 142,
+      "expected_visible_text": "DAT-15",
+      "expected_head_markings": null,
+      "expected_blade_markings": null,
+      "possible_tags": [
+        "JMA",
+        "C12",
+        "K01"
+      ],
+      "needs_review": false
+    },
+    {
+      "id_model_ref": "DAT-16",
+      "brand": "JMA",
+      "model": "DAT-16",
+      "aliases": [],
+      "family": "DAT",
+      "type": "cylinder_special",
+      "source": "jma_c12_catalog",
+      "source_confidence": "high",
+      "catalog_page": 129,
+      "expected_visible_text": "DAT-16",
+      "expected_head_markings": null,
+      "expected_blade_markings": null,
+      "possible_tags": [
+        "JMA",
+        "C12",
+        "K01"
+      ],
+      "needs_review": false
+    },
+    {
+      "id_model_ref": "DAT-17DDAT",
+      "brand": "JMA",
+      "model": "DAT-17DDAT",
+      "aliases": [],
+      "family": "DAT",
+      "type": "cylinder_special",
+      "source": "jma_c12_catalog",
+      "source_confidence": "high",
+      "catalog_page": 142,
+      "expected_visible_text": "DAT-17DDAT",
+      "expected_head_markings": null,
+      "expected_blade_markings": null,
+      "possible_tags": [
+        "JMA",
+        "C12",
+        "K01"
+      ],
+      "needs_review": false
+    },
+    {
+      "id_model_ref": "DAT-18",
+      "brand": "JMA",
+      "model": "DAT-18",
+      "aliases": [],
+      "family": "DAT",
+      "type": "cylinder_special",
+      "source": "jma_c12_catalog",
+      "source_confidence": "high",
+      "catalog_page": 142,
+      "expected_visible_text": "DAT-18",
+      "expected_head_markings": null,
+      "expected_blade_markings": null,
+      "possible_tags": [
+        "JMA",
+        "C12",
+        "K01"
+      ],
+      "needs_review": false
+    },
+    {
+      "id_model_ref": "DAT-19",
+      "brand": "JMA",
+      "model": "DAT-19",
+      "aliases": [],
+      "family": "DAT",
+      "type": "cylinder_special",
+      "source": "jma_c12_catalog",
+      "source_confidence": "high",
+      "catalog_page": 142,
+      "expected_visible_text": "DAT-19",
+      "expected_head_markings": null,
+      "expected_blade_markings": null,
+      "possible_tags": [
+        "JMA",
+        "C12",
+        "K01"
+      ],
+      "needs_review": false
+    },
+    {
+      "id_model_ref": "DAT-1D",
+      "brand": "JMA",
+      "model": "DAT-1D",
+      "aliases": [],
+      "family": "DAT",
+      "type": "cylinder_special",
+      "source": "jma_c12_catalog",
+      "source_confidence": "high",
+      "catalog_page": 141,
+      "expected_visible_text": "DAT-1D",
+      "expected_head_markings": null,
+      "expected_blade_markings": null,
+      "possible_tags": [
+        "JMA",
+        "C12",
+        "K01"
+      ],
+      "needs_review": false
+    },
+    {
+      "id_model_ref": "DAT-1I",
+      "brand": "JMA",
+      "model": "DAT-1I",
+      "aliases": [],
+      "family": "DAT",
+      "type": "cylinder_special",
+      "source": "jma_c12_catalog",
+      "source_confidence": "high",
+      "catalog_page": 141,
+      "expected_visible_text": "DAT-1I",
+      "expected_head_markings": null,
+      "expected_blade_markings": null,
+      "possible_tags": [
+        "JMA",
+        "C12",
+        "K01"
+      ],
+      "needs_review": false
+    },
+    {
+      "id_model_ref": "DAT-20",
+      "brand": "JMA",
+      "model": "DAT-20",
+      "aliases": [],
+      "family": "DAT",
+      "type": "cylinder_special",
+      "source": "jma_c12_catalog",
+      "source_confidence": "high",
+      "catalog_page": 142,
+      "expected_visible_text": "DAT-20",
+      "expected_head_markings": null,
+      "expected_blade_markings": null,
+      "possible_tags": [
+        "JMA",
+        "C12",
+        "K01"
+      ],
+      "needs_review": false
+    },
+    {
+      "id_model_ref": "DAT-2D",
+      "brand": "JMA",
+      "model": "DAT-2D",
+      "aliases": [],
+      "family": "DAT",
+      "type": "cylinder_special",
+      "source": "jma_c12_catalog",
+      "source_confidence": "high",
+      "catalog_page": 141,
+      "expected_visible_text": "DAT-2D",
+      "expected_head_markings": null,
+      "expected_blade_markings": null,
+      "possible_tags": [
+        "JMA",
+        "C12",
+        "K01"
+      ],
+      "needs_review": false
+    },
+    {
+      "id_model_ref": "DAT-2I",
+      "brand": "JMA",
+      "model": "DAT-2I",
+      "aliases": [],
+      "family": "DAT",
+      "type": "cylinder_special",
+      "source": "jma_c12_catalog",
+      "source_confidence": "high",
+      "catalog_page": 141,
+      "expected_visible_text": "DAT-2I",
+      "expected_head_markings": null,
+      "expected_blade_markings": null,
+      "possible_tags": [
+        "JMA",
+        "C12",
+        "K01"
+      ],
+      "needs_review": false
+    },
+    {
+      "id_model_ref": "DAT-3D",
+      "brand": "JMA",
+      "model": "DAT-3D",
+      "aliases": [],
+      "family": "DAT",
+      "type": "cylinder_special",
+      "source": "jma_c12_catalog",
+      "source_confidence": "high",
+      "catalog_page": 137,
+      "expected_visible_text": "DAT-3D",
+      "expected_head_markings": null,
+      "expected_blade_markings": null,
+      "possible_tags": [
+        "JMA",
+        "C12",
+        "K01"
+      ],
+      "needs_review": false
+    },
+    {
+      "id_model_ref": "DAT-3I",
+      "brand": "JMA",
+      "model": "DAT-3I",
+      "aliases": [],
+      "family": "DAT",
+      "type": "cylinder_special",
+      "source": "jma_c12_catalog",
+      "source_confidence": "high",
+      "catalog_page": 137,
+      "expected_visible_text": "DAT-3I",
+      "expected_head_markings": null,
+      "expected_blade_markings": null,
+      "possible_tags": [
+        "JMA",
+        "C12",
+        "K01"
+      ],
+      "needs_review": false
+    },
+    {
+      "id_model_ref": "DAT-4D",
+      "brand": "JMA",
+      "model": "DAT-4D",
+      "aliases": [],
+      "family": "DAT",
+      "type": "cylinder_special",
+      "source": "jma_c12_catalog",
+      "source_confidence": "high",
+      "catalog_page": 137,
+      "expected_visible_text": "DAT-4D",
+      "expected_head_markings": null,
+      "expected_blade_markings": null,
+      "possible_tags": [
+        "JMA",
+        "C12",
+        "K01"
+      ],
+      "needs_review": false
+    },
+    {
+      "id_model_ref": "DAT-4I",
+      "brand": "JMA",
+      "model": "DAT-4I",
+      "aliases": [],
+      "family": "DAT",
+      "type": "cylinder_special",
+      "source": "jma_c12_catalog",
+      "source_confidence": "high",
+      "catalog_page": 137,
+      "expected_visible_text": "DAT-4I",
+      "expected_head_markings": null,
+      "expected_blade_markings": null,
+      "possible_tags": [
+        "JMA",
+        "C12",
+        "K01"
+      ],
+      "needs_review": false
+    },
+    {
+      "id_model_ref": "DAT-5D",
+      "brand": "JMA",
+      "model": "DAT-5D",
+      "aliases": [],
+      "family": "DAT",
+      "type": "cylinder_special",
+      "source": "jma_c12_catalog",
+      "source_confidence": "high",
+      "catalog_page": 141,
+      "expected_visible_text": "DAT-5D",
+      "expected_head_markings": null,
+      "expected_blade_markings": null,
+      "possible_tags": [
+        "JMA",
+        "C12",
+        "K01"
+      ],
+      "needs_review": false
+    },
+    {
+      "id_model_ref": "DAT-6",
+      "brand": "JMA",
+      "model": "DAT-6",
+      "aliases": [],
+      "family": "DAT",
+      "type": "cylinder_special",
+      "source": "jma_c12_catalog",
+      "source_confidence": "high",
+      "catalog_page": 129,
+      "expected_visible_text": "DAT-6",
+      "expected_head_markings": null,
+      "expected_blade_markings": null,
+      "possible_tags": [
+        "JMA",
+        "C12",
+        "K01"
+      ],
+      "needs_review": false
+    },
+    {
+      "id_model_ref": "DAT-6D",
+      "brand": "JMA",
+      "model": "DAT-6D",
+      "aliases": [],
+      "family": "DAT",
+      "type": "cylinder_special",
+      "source": "jma_c12_catalog",
+      "source_confidence": "high",
+      "catalog_page": 129,
+      "expected_visible_text": "DAT-6D",
+      "expected_head_markings": null,
+      "expected_blade_markings": null,
+      "possible_tags": [
+        "JMA",
+        "C12",
+        "K01"
+      ],
+      "needs_review": false
+    },
+    {
+      "id_model_ref": "DAT-7",
+      "brand": "JMA",
+      "model": "DAT-7",
+      "aliases": [],
+      "family": "DAT",
+      "type": "cylinder_special",
+      "source": "jma_c12_catalog",
+      "source_confidence": "high",
+      "catalog_page": 129,
+      "expected_visible_text": "DAT-7",
+      "expected_head_markings": null,
+      "expected_blade_markings": null,
+      "possible_tags": [
+        "JMA",
+        "C12",
+        "K01"
+      ],
+      "needs_review": false
+    },
+    {
+      "id_model_ref": "DAT-8",
+      "brand": "JMA",
+      "model": "DAT-8",
+      "aliases": [],
+      "family": "DAT",
+      "type": "cylinder_special",
+      "source": "jma_c12_catalog",
+      "source_confidence": "high",
+      "catalog_page": 141,
+      "expected_visible_text": "DAT-8",
+      "expected_head_markings": null,
+      "expected_blade_markings": null,
+      "possible_tags": [
+        "JMA",
+        "C12",
+        "K01"
+      ],
+      "needs_review": false
+    },
+    {
+      "id_model_ref": "DAT-8I",
+      "brand": "JMA",
+      "model": "DAT-8I",
+      "aliases": [],
+      "family": "DAT",
+      "type": "cylinder_special",
+      "source": "jma_c12_catalog",
+      "source_confidence": "high",
+      "catalog_page": 141,
+      "expected_visible_text": "DAT-8I",
+      "expected_head_markings": null,
+      "expected_blade_markings": null,
+      "possible_tags": [
+        "JMA",
+        "C12",
+        "K01"
+      ],
+      "needs_review": false
+    },
+    {
+      "id_model_ref": "DAT-9D",
+      "brand": "JMA",
+      "model": "DAT-9D",
+      "aliases": [],
+      "family": "DAT",
+      "type": "cylinder_special",
+      "source": "jma_c12_catalog",
+      "source_confidence": "high",
+      "catalog_page": 141,
+      "expected_visible_text": "DAT-9D",
+      "expected_head_markings": null,
+      "expected_blade_markings": null,
+      "possible_tags": [
+        "JMA",
+        "C12",
+        "K01"
+      ],
+      "needs_review": false
+    },
+    {
+      "id_model_ref": "DAT-9DDAT",
+      "brand": "JMA",
+      "model": "DAT-9DDAT",
+      "aliases": [],
+      "family": "DAT",
+      "type": "cylinder_special",
+      "source": "jma_c12_catalog",
+      "source_confidence": "high",
+      "catalog_page": 141,
+      "expected_visible_text": "DAT-9DDAT",
+      "expected_head_markings": null,
+      "expected_blade_markings": null,
+      "possible_tags": [
+        "JMA",
+        "C12",
+        "K01"
+      ],
+      "needs_review": false
+    },
+    {
+      "id_model_ref": "DAT-9I",
+      "brand": "JMA",
+      "model": "DAT-9I",
+      "aliases": [],
+      "family": "DAT",
+      "type": "cylinder_special",
+      "source": "jma_c12_catalog",
+      "source_confidence": "high",
+      "catalog_page": 141,
+      "expected_visible_text": "DAT-9I",
+      "expected_head_markings": null,
+      "expected_blade_markings": null,
+      "possible_tags": [
+        "JMA",
+        "C12",
+        "K01"
+      ],
+      "needs_review": false
+    },
+    {
+      "id_model_ref": "DU-1",
+      "brand": "JMA",
+      "model": "DU-1",
+      "aliases": [],
+      "family": "DU",
+      "type": "cylinder_special",
+      "source": "jma_c12_catalog",
+      "source_confidence": "high",
+      "catalog_page": 144,
+      "expected_visible_text": "DU-1",
+      "expected_head_markings": null,
+      "expected_blade_markings": null,
+      "possible_tags": [
+        "JMA",
+        "C12",
+        "K01"
+      ],
+      "needs_review": false
+    },
+    {
+      "id_model_ref": "FAB-1",
+      "brand": "JMA",
+      "model": "FAB-1",
+      "aliases": [],
+      "family": "FAB",
+      "type": "cylinder_special",
+      "source": "jma_c12_catalog",
+      "source_confidence": "high",
+      "catalog_page": 148,
+      "expected_visible_text": "FAB-1",
+      "expected_head_markings": null,
+      "expected_blade_markings": null,
+      "possible_tags": [
+        "JMA",
+        "C12",
+        "K01"
+      ],
+      "needs_review": false
+    },
+    {
+      "id_model_ref": "FAR-1D",
+      "brand": "JMA",
+      "model": "FAR-1D",
+      "aliases": [],
+      "family": "FAR",
+      "type": "cylinder_special",
+      "source": "jma_c12_catalog",
+      "source_confidence": "high",
+      "catalog_page": 129,
+      "expected_visible_text": "FAR-1D",
+      "expected_head_markings": null,
+      "expected_blade_markings": null,
+      "possible_tags": [
+        "JMA",
+        "C12",
+        "K01"
+      ],
+      "needs_review": false
+    },
+    {
+      "id_model_ref": "FAR-1I",
+      "brand": "JMA",
+      "model": "FAR-1I",
+      "aliases": [],
+      "family": "FAR",
+      "type": "cylinder_special",
+      "source": "jma_c12_catalog",
+      "source_confidence": "high",
+      "catalog_page": 129,
+      "expected_visible_text": "FAR-1I",
+      "expected_head_markings": null,
+      "expected_blade_markings": null,
+      "possible_tags": [
+        "JMA",
+        "C12",
+        "K01"
+      ],
+      "needs_review": false
+    },
+    {
+      "id_model_ref": "FAR-2DFAR",
+      "brand": "JMA",
+      "model": "FAR-2DFAR",
+      "aliases": [],
+      "family": "FAR",
+      "type": "cylinder_special",
+      "source": "jma_c12_catalog",
+      "source_confidence": "high",
+      "catalog_page": 129,
+      "expected_visible_text": "FAR-2DFAR",
+      "expected_head_markings": null,
+      "expected_blade_markings": null,
+      "possible_tags": [
+        "JMA",
+        "C12",
+        "K01"
+      ],
+      "needs_review": false
+    },
+    {
+      "id_model_ref": "FAR-3DFAR",
+      "brand": "JMA",
+      "model": "FAR-3DFAR",
+      "aliases": [],
+      "family": "FAR",
+      "type": "cylinder_special",
+      "source": "jma_c12_catalog",
+      "source_confidence": "high",
+      "catalog_page": 129,
+      "expected_visible_text": "FAR-3DFAR",
+      "expected_head_markings": null,
+      "expected_blade_markings": null,
+      "possible_tags": [
+        "JMA",
+        "C12",
+        "K01"
+      ],
+      "needs_review": false
+    },
+    {
+      "id_model_ref": "FAR-4D",
+      "brand": "JMA",
+      "model": "FAR-4D",
+      "aliases": [],
+      "family": "FAR",
+      "type": "cylinder_special",
+      "source": "jma_c12_catalog",
+      "source_confidence": "high",
+      "catalog_page": 129,
+      "expected_visible_text": "FAR-4D",
+      "expected_head_markings": null,
+      "expected_blade_markings": null,
+      "possible_tags": [
+        "JMA",
+        "C12",
+        "K01"
+      ],
+      "needs_review": false
+    },
+    {
+      "id_model_ref": "FEM-1D",
+      "brand": "JMA",
+      "model": "FEM-1D",
+      "aliases": [],
+      "family": "FEM",
+      "type": "cylinder_special",
+      "source": "jma_c12_catalog",
+      "source_confidence": "high",
+      "catalog_page": 132,
+      "expected_visible_text": "FEM-1D",
+      "expected_head_markings": null,
+      "expected_blade_markings": null,
+      "possible_tags": [
+        "JMA",
+        "C12",
+        "K01"
+      ],
+      "needs_review": false
+    },
+    {
+      "id_model_ref": "FEM-1I",
+      "brand": "JMA",
+      "model": "FEM-1I",
+      "aliases": [],
+      "family": "FEM",
+      "type": "cylinder_special",
+      "source": "jma_c12_catalog",
+      "source_confidence": "high",
+      "catalog_page": 132,
+      "expected_visible_text": "FEM-1I",
+      "expected_head_markings": null,
+      "expected_blade_markings": null,
+      "possible_tags": [
+        "JMA",
+        "C12",
+        "K01"
+      ],
+      "needs_review": false
+    },
+    {
+      "id_model_ref": "FEM-2D",
+      "brand": "JMA",
+      "model": "FEM-2D",
+      "aliases": [],
+      "family": "FEM",
+      "type": "cylinder_special",
+      "source": "jma_c12_catalog",
+      "source_confidence": "high",
+      "catalog_page": 132,
+      "expected_visible_text": "FEM-2D",
+      "expected_head_markings": null,
+      "expected_blade_markings": null,
+      "possible_tags": [
+        "JMA",
+        "C12",
+        "K01"
+      ],
+      "needs_review": false
+    },
+    {
+      "id_model_ref": "FEM-2I",
+      "brand": "JMA",
+      "model": "FEM-2I",
+      "aliases": [],
+      "family": "FEM",
+      "type": "cylinder_special",
+      "source": "jma_c12_catalog",
+      "source_confidence": "high",
+      "catalog_page": 132,
+      "expected_visible_text": "FEM-2I",
+      "expected_head_markings": null,
+      "expected_blade_markings": null,
+      "possible_tags": [
+        "JMA",
+        "C12",
+        "K01"
+      ],
+      "needs_review": false
+    },
+    {
+      "id_model_ref": "FEM-3D",
+      "brand": "JMA",
+      "model": "FEM-3D",
+      "aliases": [],
+      "family": "FEM",
+      "type": "cylinder_special",
+      "source": "jma_c12_catalog",
+      "source_confidence": "high",
+      "catalog_page": 132,
+      "expected_visible_text": "FEM-3D",
+      "expected_head_markings": null,
+      "expected_blade_markings": null,
+      "possible_tags": [
+        "JMA",
+        "C12",
+        "K01"
+      ],
+      "needs_review": false
+    },
+    {
+      "id_model_ref": "FEM-3I",
+      "brand": "JMA",
+      "model": "FEM-3I",
+      "aliases": [],
+      "family": "FEM",
+      "type": "cylinder_special",
+      "source": "jma_c12_catalog",
+      "source_confidence": "high",
+      "catalog_page": 132,
+      "expected_visible_text": "FEM-3I",
+      "expected_head_markings": null,
+      "expected_blade_markings": null,
+      "possible_tags": [
+        "JMA",
+        "C12",
+        "K01"
+      ],
+      "needs_review": false
+    },
+    {
+      "id_model_ref": "FI-1",
+      "brand": "JMA",
+      "model": "FI-1",
+      "aliases": [],
+      "family": "FI",
+      "type": "cylinder_special",
+      "source": "jma_c12_catalog",
+      "source_confidence": "high",
+      "catalog_page": 134,
+      "expected_visible_text": "FI-1",
+      "expected_head_markings": null,
+      "expected_blade_markings": null,
+      "possible_tags": [
+        "JMA",
+        "C12",
+        "K01"
+      ],
+      "needs_review": false
+    },
+    {
+      "id_model_ref": "FI-10",
+      "brand": "JMA",
+      "model": "FI-10",
+      "aliases": [],
+      "family": "FI",
+      "type": "cylinder_special",
+      "source": "jma_c12_catalog",
+      "source_confidence": "high",
+      "catalog_page": 134,
+      "expected_visible_text": "FI-10",
+      "expected_head_markings": null,
+      "expected_blade_markings": null,
+      "possible_tags": [
+        "JMA",
+        "C12",
+        "K01"
+      ],
+      "needs_review": false
+    },
+    {
+      "id_model_ref": "FI-11",
+      "brand": "JMA",
+      "model": "FI-11",
+      "aliases": [],
+      "family": "FI",
+      "type": "cylinder_special",
+      "source": "jma_c12_catalog",
+      "source_confidence": "high",
+      "catalog_page": 129,
+      "expected_visible_text": "FI-11",
+      "expected_head_markings": null,
+      "expected_blade_markings": null,
+      "possible_tags": [
+        "JMA",
+        "C12",
+        "K01"
+      ],
+      "needs_review": false
+    },
+    {
+      "id_model_ref": "FI-12",
+      "brand": "JMA",
+      "model": "FI-12",
+      "aliases": [],
+      "family": "FI",
+      "type": "cylinder_special",
+      "source": "jma_c12_catalog",
+      "source_confidence": "high",
+      "catalog_page": 129,
+      "expected_visible_text": "FI-12",
+      "expected_head_markings": null,
+      "expected_blade_markings": null,
+      "possible_tags": [
+        "JMA",
+        "C12",
+        "K01"
+      ],
+      "needs_review": false
+    },
+    {
+      "id_model_ref": "FI-13",
+      "brand": "JMA",
+      "model": "FI-13",
+      "aliases": [],
+      "family": "FI",
+      "type": "cylinder_special",
+      "source": "jma_c12_catalog",
+      "source_confidence": "high",
+      "catalog_page": 134,
+      "expected_visible_text": "FI-13",
+      "expected_head_markings": null,
+      "expected_blade_markings": null,
+      "possible_tags": [
+        "JMA",
+        "C12",
+        "K01"
+      ],
+      "needs_review": false
+    },
+    {
+      "id_model_ref": "FI-14",
+      "brand": "JMA",
+      "model": "FI-14",
+      "aliases": [],
+      "family": "FI",
+      "type": "cylinder_special",
+      "source": "jma_c12_catalog",
+      "source_confidence": "high",
+      "catalog_page": 134,
+      "expected_visible_text": "FI-14",
+      "expected_head_markings": null,
+      "expected_blade_markings": null,
+      "possible_tags": [
+        "JMA",
+        "C12",
+        "K01"
+      ],
+      "needs_review": false
+    },
+    {
+      "id_model_ref": "FI-16",
+      "brand": "JMA",
+      "model": "FI-16",
+      "aliases": [],
+      "family": "FI",
+      "type": "cylinder_special",
+      "source": "jma_c12_catalog",
+      "source_confidence": "high",
+      "catalog_page": 134,
+      "expected_visible_text": "FI-16",
+      "expected_head_markings": null,
+      "expected_blade_markings": null,
+      "possible_tags": [
+        "JMA",
+        "C12",
+        "K01"
+      ],
+      "needs_review": false
+    },
+    {
+      "id_model_ref": "FI-2D",
+      "brand": "JMA",
+      "model": "FI-2D",
+      "aliases": [],
+      "family": "FI",
+      "type": "cylinder_special",
+      "source": "jma_c12_catalog",
+      "source_confidence": "high",
+      "catalog_page": 129,
+      "expected_visible_text": "FI-2D",
+      "expected_head_markings": null,
+      "expected_blade_markings": null,
+      "possible_tags": [
+        "JMA",
+        "C12",
+        "K01"
+      ],
+      "needs_review": false
+    },
+    {
+      "id_model_ref": "FI-3",
+      "brand": "JMA",
+      "model": "FI-3",
+      "aliases": [],
+      "family": "FI",
+      "type": "cylinder_special",
+      "source": "jma_c12_catalog",
+      "source_confidence": "high",
+      "catalog_page": 129,
+      "expected_visible_text": "FI-3",
+      "expected_head_markings": null,
+      "expected_blade_markings": null,
+      "possible_tags": [
+        "JMA",
+        "C12",
+        "K01"
+      ],
+      "needs_review": false
+    },
+    {
+      "id_model_ref": "FI-3D",
+      "brand": "JMA",
+      "model": "FI-3D",
+      "aliases": [],
+      "family": "FI",
+      "type": "cylinder_special",
+      "source": "jma_c12_catalog",
+      "source_confidence": "high",
+      "catalog_page": 129,
+      "expected_visible_text": "FI-3D",
+      "expected_head_markings": null,
+      "expected_blade_markings": null,
+      "possible_tags": [
+        "JMA",
+        "C12",
+        "K01"
+      ],
+      "needs_review": false
+    },
+    {
+      "id_model_ref": "FI-4D",
+      "brand": "JMA",
+      "model": "FI-4D",
+      "aliases": [],
+      "family": "FI",
+      "type": "cylinder_special",
+      "source": "jma_c12_catalog",
+      "source_confidence": "high",
+      "catalog_page": 143,
+      "expected_visible_text": "FI-4D",
+      "expected_head_markings": null,
+      "expected_blade_markings": null,
+      "possible_tags": [
+        "JMA",
+        "C12",
+        "K01"
+      ],
+      "needs_review": false
+    },
+    {
+      "id_model_ref": "FI-5D",
+      "brand": "JMA",
+      "model": "FI-5D",
+      "aliases": [],
+      "family": "FI",
+      "type": "cylinder_special",
+      "source": "jma_c12_catalog",
+      "source_confidence": "high",
+      "catalog_page": 143,
+      "expected_visible_text": "FI-5D",
+      "expected_head_markings": null,
+      "expected_blade_markings": null,
+      "possible_tags": [
+        "JMA",
+        "C12",
+        "K01"
+      ],
+      "needs_review": false
+    },
+    {
+      "id_model_ref": "FI-5I",
+      "brand": "JMA",
+      "model": "FI-5I",
+      "aliases": [],
+      "family": "FI",
+      "type": "cylinder_special",
+      "source": "jma_c12_catalog",
+      "source_confidence": "high",
+      "catalog_page": 143,
+      "expected_visible_text": "FI-5I",
+      "expected_head_markings": null,
+      "expected_blade_markings": null,
+      "possible_tags": [
+        "JMA",
+        "C12",
+        "K01"
+      ],
+      "needs_review": false
+    },
+    {
+      "id_model_ref": "FI-6I",
+      "brand": "JMA",
+      "model": "FI-6I",
+      "aliases": [],
+      "family": "FI",
+      "type": "cylinder_special",
+      "source": "jma_c12_catalog",
+      "source_confidence": "high",
+      "catalog_page": 129,
+      "expected_visible_text": "FI-6I",
+      "expected_head_markings": null,
+      "expected_blade_markings": null,
+      "possible_tags": [
+        "JMA",
+        "C12",
+        "K01"
+      ],
+      "needs_review": false
+    },
+    {
+      "id_model_ref": "FI-9I",
+      "brand": "JMA",
+      "model": "FI-9I",
+      "aliases": [],
+      "family": "FI",
+      "type": "cylinder_special",
+      "source": "jma_c12_catalog",
+      "source_confidence": "high",
+      "catalog_page": 134,
+      "expected_visible_text": "FI-9I",
+      "expected_head_markings": null,
+      "expected_blade_markings": null,
+      "possible_tags": [
+        "JMA",
+        "C12",
+        "K01"
+      ],
+      "needs_review": false
+    },
+    {
+      "id_model_ref": "FO-1",
+      "brand": "JMA",
+      "model": "FO-1",
+      "aliases": [],
+      "family": "FO",
+      "type": "cylinder_special",
+      "source": "jma_c12_catalog",
+      "source_confidence": "high",
+      "catalog_page": 118,
+      "expected_visible_text": "FO-1",
+      "expected_head_markings": null,
+      "expected_blade_markings": null,
+      "possible_tags": [
+        "JMA",
+        "C12",
+        "K01"
+      ],
+      "needs_review": false
+    },
+    {
+      "id_model_ref": "FO-11D",
+      "brand": "JMA",
+      "model": "FO-11D",
+      "aliases": [],
+      "family": "FO",
+      "type": "cylinder_special",
+      "source": "jma_c12_catalog",
+      "source_confidence": "high",
+      "catalog_page": 118,
+      "expected_visible_text": "FO-11D",
+      "expected_head_markings": null,
+      "expected_blade_markings": null,
+      "possible_tags": [
+        "JMA",
+        "C12",
+        "K01"
+      ],
+      "needs_review": false
+    },
+    {
+      "id_model_ref": "FO-12",
+      "brand": "JMA",
+      "model": "FO-12",
+      "aliases": [],
+      "family": "FO",
+      "type": "cylinder_special",
+      "source": "jma_c12_catalog",
+      "source_confidence": "high",
+      "catalog_page": 119,
+      "expected_visible_text": "FO-12",
+      "expected_head_markings": null,
+      "expected_blade_markings": null,
+      "possible_tags": [
+        "JMA",
+        "C12",
+        "K01"
+      ],
+      "needs_review": false
+    },
+    {
+      "id_model_ref": "FO-13D",
+      "brand": "JMA",
+      "model": "FO-13D",
+      "aliases": [],
+      "family": "FO",
+      "type": "cylinder_special",
+      "source": "jma_c12_catalog",
+      "source_confidence": "high",
+      "catalog_page": 119,
+      "expected_visible_text": "FO-13D",
+      "expected_head_markings": null,
+      "expected_blade_markings": null,
+      "possible_tags": [
+        "JMA",
+        "C12",
+        "K01"
+      ],
+      "needs_review": false
+    },
+    {
+      "id_model_ref": "FO-14D",
+      "brand": "JMA",
+      "model": "FO-14D",
+      "aliases": [],
+      "family": "FO",
+      "type": "cylinder_special",
+      "source": "jma_c12_catalog",
+      "source_confidence": "high",
+      "catalog_page": 119,
+      "expected_visible_text": "FO-14D",
+      "expected_head_markings": null,
+      "expected_blade_markings": null,
+      "possible_tags": [
+        "JMA",
+        "C12",
+        "K01"
+      ],
+      "needs_review": false
+    },
+    {
+      "id_model_ref": "FO-15D",
+      "brand": "JMA",
+      "model": "FO-15D",
+      "aliases": [],
+      "family": "FO",
+      "type": "cylinder_special",
+      "source": "jma_c12_catalog",
+      "source_confidence": "high",
+      "catalog_page": 118,
+      "expected_visible_text": "FO-15D",
+      "expected_head_markings": null,
+      "expected_blade_markings": null,
+      "possible_tags": [
+        "JMA",
+        "C12",
+        "K01"
+      ],
+      "needs_review": false
+    },
+    {
+      "id_model_ref": "FO-17",
+      "brand": "JMA",
+      "model": "FO-17",
+      "aliases": [],
+      "family": "FO",
+      "type": "cylinder_special",
+      "source": "jma_c12_catalog",
+      "source_confidence": "high",
+      "catalog_page": 118,
+      "expected_visible_text": "FO-17",
+      "expected_head_markings": null,
+      "expected_blade_markings": null,
+      "possible_tags": [
+        "JMA",
+        "C12",
+        "K01"
+      ],
+      "needs_review": false
+    },
+    {
+      "id_model_ref": "FO-2",
+      "brand": "JMA",
+      "model": "FO-2",
+      "aliases": [],
+      "family": "FO",
+      "type": "cylinder_special",
+      "source": "jma_c12_catalog",
+      "source_confidence": "high",
+      "catalog_page": 118,
+      "expected_visible_text": "FO-2",
+      "expected_head_markings": null,
+      "expected_blade_markings": null,
+      "possible_tags": [
+        "JMA",
+        "C12",
+        "K01"
+      ],
+      "needs_review": false
+    },
+    {
+      "id_model_ref": "FO-20D",
+      "brand": "JMA",
+      "model": "FO-20D",
+      "aliases": [],
+      "family": "FO",
+      "type": "cylinder_special",
+      "source": "jma_c12_catalog",
+      "source_confidence": "high",
+      "catalog_page": 120,
+      "expected_visible_text": "FO-20D",
+      "expected_head_markings": null,
+      "expected_blade_markings": null,
+      "possible_tags": [
+        "JMA",
+        "C12",
+        "K01"
+      ],
+      "needs_review": false
+    },
+    {
+      "id_model_ref": "FO-22",
+      "brand": "JMA",
+      "model": "FO-22",
+      "aliases": [],
+      "family": "FO",
+      "type": "cylinder_special",
+      "source": "jma_c12_catalog",
+      "source_confidence": "high",
+      "catalog_page": 120,
+      "expected_visible_text": "FO-22",
+      "expected_head_markings": null,
+      "expected_blade_markings": null,
+      "possible_tags": [
+        "JMA",
+        "C12",
+        "K01"
+      ],
+      "needs_review": false
+    },
+    {
+      "id_model_ref": "FO-3",
+      "brand": "JMA",
+      "model": "FO-3",
+      "aliases": [],
+      "family": "FO",
+      "type": "cylinder_special",
+      "source": "jma_c12_catalog",
+      "source_confidence": "high",
+      "catalog_page": 118,
+      "expected_visible_text": "FO-3",
+      "expected_head_markings": null,
+      "expected_blade_markings": null,
+      "possible_tags": [
+        "JMA",
+        "C12",
+        "K01"
+      ],
+      "needs_review": false
+    },
+    {
+      "id_model_ref": "FO-3D",
+      "brand": "JMA",
+      "model": "FO-3D",
+      "aliases": [],
+      "family": "FO",
+      "type": "cylinder_special",
+      "source": "jma_c12_catalog",
+      "source_confidence": "high",
+      "catalog_page": 118,
+      "expected_visible_text": "FO-3D",
+      "expected_head_markings": null,
+      "expected_blade_markings": null,
+      "possible_tags": [
+        "JMA",
+        "C12",
+        "K01"
+      ],
+      "needs_review": false
+    },
+    {
+      "id_model_ref": "FO-4",
+      "brand": "JMA",
+      "model": "FO-4",
+      "aliases": [],
+      "family": "FO",
+      "type": "cylinder_special",
+      "source": "jma_c12_catalog",
+      "source_confidence": "high",
+      "catalog_page": 118,
+      "expected_visible_text": "FO-4",
+      "expected_head_markings": null,
+      "expected_blade_markings": null,
+      "possible_tags": [
+        "JMA",
+        "C12",
+        "K01"
+      ],
+      "needs_review": false
+    },
+    {
+      "id_model_ref": "FO-5",
+      "brand": "JMA",
+      "model": "FO-5",
+      "aliases": [],
+      "family": "FO",
+      "type": "cylinder_special",
+      "source": "jma_c12_catalog",
+      "source_confidence": "high",
+      "catalog_page": 131,
+      "expected_visible_text": "FO-5",
+      "expected_head_markings": null,
+      "expected_blade_markings": null,
+      "possible_tags": [
+        "JMA",
+        "C12",
+        "K01"
+      ],
+      "needs_review": false
+    },
+    {
+      "id_model_ref": "FO-6",
+      "brand": "JMA",
+      "model": "FO-6",
+      "aliases": [],
+      "family": "FO",
+      "type": "cylinder_special",
+      "source": "jma_c12_catalog",
+      "source_confidence": "high",
+      "catalog_page": 118,
+      "expected_visible_text": "FO-6",
+      "expected_head_markings": null,
+      "expected_blade_markings": null,
+      "possible_tags": [
+        "JMA",
+        "C12",
+        "K01"
+      ],
+      "needs_review": false
+    },
+    {
+      "id_model_ref": "FO-7",
+      "brand": "JMA",
+      "model": "FO-7",
+      "aliases": [],
+      "family": "FO",
+      "type": "cylinder_special",
+      "source": "jma_c12_catalog",
+      "source_confidence": "high",
+      "catalog_page": 120,
+      "expected_visible_text": "FO-7",
+      "expected_head_markings": null,
+      "expected_blade_markings": null,
+      "possible_tags": [
+        "JMA",
+        "C12",
+        "K01"
+      ],
+      "needs_review": false
+    },
+    {
+      "id_model_ref": "FO-8",
+      "brand": "JMA",
+      "model": "FO-8",
+      "aliases": [],
+      "family": "FO",
+      "type": "cylinder_special",
+      "source": "jma_c12_catalog",
+      "source_confidence": "high",
+      "catalog_page": 120,
+      "expected_visible_text": "FO-8",
+      "expected_head_markings": null,
+      "expected_blade_markings": null,
+      "possible_tags": [
+        "JMA",
+        "C12",
+        "K01"
+      ],
+      "needs_review": false
+    },
+    {
+      "id_model_ref": "FO-8D",
+      "brand": "JMA",
+      "model": "FO-8D",
+      "aliases": [],
+      "family": "FO",
+      "type": "cylinder_special",
+      "source": "jma_c12_catalog",
+      "source_confidence": "high",
+      "catalog_page": 120,
+      "expected_visible_text": "FO-8D",
+      "expected_head_markings": null,
+      "expected_blade_markings": null,
+      "possible_tags": [
+        "JMA",
+        "C12",
+        "K01"
+      ],
+      "needs_review": false
+    },
+    {
+      "id_model_ref": "FO-9D",
+      "brand": "JMA",
+      "model": "FO-9D",
+      "aliases": [],
+      "family": "FO",
+      "type": "cylinder_special",
+      "source": "jma_c12_catalog",
+      "source_confidence": "high",
+      "catalog_page": 120,
+      "expected_visible_text": "FO-9D",
+      "expected_head_markings": null,
+      "expected_blade_markings": null,
+      "possible_tags": [
+        "JMA",
+        "C12",
+        "K01"
+      ],
+      "needs_review": false
+    },
+    {
+      "id_model_ref": "GAS-1DGAS",
+      "brand": "JMA",
+      "model": "GAS-1DGAS",
+      "aliases": [],
+      "family": "GAS",
+      "type": "cylinder_special",
+      "source": "jma_c12_catalog",
+      "source_confidence": "high",
+      "catalog_page": 118,
+      "expected_visible_text": "GAS-1DGAS",
+      "expected_head_markings": null,
+      "expected_blade_markings": null,
+      "possible_tags": [
+        "JMA",
+        "C12",
+        "K01"
+      ],
+      "needs_review": false
+    },
+    {
+      "id_model_ref": "GIOB-1D",
+      "brand": "JMA",
+      "model": "GIOB-1D",
+      "aliases": [],
+      "family": "GIOB",
+      "type": "cylinder_special",
+      "source": "jma_c12_catalog",
+      "source_confidence": "high",
+      "catalog_page": 134,
+      "expected_visible_text": "GIOB-1D",
+      "expected_head_markings": null,
+      "expected_blade_markings": null,
+      "possible_tags": [
+        "JMA",
+        "C12",
+        "K01"
+      ],
+      "needs_review": false
+    },
+    {
+      "id_model_ref": "GIOB-2I",
+      "brand": "JMA",
+      "model": "GIOB-2I",
+      "aliases": [],
+      "family": "GIOB",
+      "type": "cylinder_special",
+      "source": "jma_c12_catalog",
+      "source_confidence": "high",
+      "catalog_page": 134,
+      "expected_visible_text": "GIOB-2I",
+      "expected_head_markings": null,
+      "expected_blade_markings": null,
+      "possible_tags": [
+        "JMA",
+        "C12",
+        "K01"
+      ],
+      "needs_review": false
+    },
+    {
+      "id_model_ref": "GM-1",
+      "brand": "JMA",
+      "model": "GM-1",
+      "aliases": [],
+      "family": "GM",
+      "type": "cylinder_special",
+      "source": "jma_c12_catalog",
+      "source_confidence": "high",
+      "catalog_page": 122,
+      "expected_visible_text": "GM-1",
+      "expected_head_markings": null,
+      "expected_blade_markings": null,
+      "possible_tags": [
+        "JMA",
+        "C12",
+        "K01"
+      ],
+      "needs_review": false
+    },
+    {
+      "id_model_ref": "GM-10",
+      "brand": "JMA",
+      "model": "GM-10",
+      "aliases": [],
+      "family": "GM",
+      "type": "cylinder_special",
+      "source": "jma_c12_catalog",
+      "source_confidence": "high",
+      "catalog_page": 121,
+      "expected_visible_text": "GM-10",
+      "expected_head_markings": null,
+      "expected_blade_markings": null,
+      "possible_tags": [
+        "JMA",
+        "C12",
+        "K01"
+      ],
+      "needs_review": false
+    },
+    {
+      "id_model_ref": "GM-11",
+      "brand": "JMA",
+      "model": "GM-11",
+      "aliases": [],
+      "family": "GM",
+      "type": "cylinder_special",
+      "source": "jma_c12_catalog",
+      "source_confidence": "high",
+      "catalog_page": 121,
+      "expected_visible_text": "GM-11",
+      "expected_head_markings": null,
+      "expected_blade_markings": null,
+      "possible_tags": [
+        "JMA",
+        "C12",
+        "K01"
+      ],
+      "needs_review": false
+    },
+    {
+      "id_model_ref": "GM-12",
+      "brand": "JMA",
+      "model": "GM-12",
+      "aliases": [],
+      "family": "GM",
+      "type": "cylinder_special",
+      "source": "jma_c12_catalog",
+      "source_confidence": "high",
+      "catalog_page": 121,
+      "expected_visible_text": "GM-12",
+      "expected_head_markings": null,
+      "expected_blade_markings": null,
+      "possible_tags": [
+        "JMA",
+        "C12",
+        "K01"
+      ],
+      "needs_review": false
+    },
+    {
+      "id_model_ref": "GM-13",
+      "brand": "JMA",
+      "model": "GM-13",
+      "aliases": [],
+      "family": "GM",
+      "type": "cylinder_special",
+      "source": "jma_c12_catalog",
+      "source_confidence": "high",
+      "catalog_page": 121,
+      "expected_visible_text": "GM-13",
+      "expected_head_markings": null,
+      "expected_blade_markings": null,
+      "possible_tags": [
+        "JMA",
+        "C12",
+        "K01"
+      ],
+      "needs_review": false
+    },
+    {
+      "id_model_ref": "GM-14",
+      "brand": "JMA",
+      "model": "GM-14",
+      "aliases": [],
+      "family": "GM",
+      "type": "cylinder_special",
+      "source": "jma_c12_catalog",
+      "source_confidence": "high",
+      "catalog_page": 121,
+      "expected_visible_text": "GM-14",
+      "expected_head_markings": null,
+      "expected_blade_markings": null,
+      "possible_tags": [
+        "JMA",
+        "C12",
+        "K01"
+      ],
+      "needs_review": false
+    },
+    {
+      "id_model_ref": "GM-15D",
+      "brand": "JMA",
+      "model": "GM-15D",
+      "aliases": [],
+      "family": "GM",
+      "type": "cylinder_special",
+      "source": "jma_c12_catalog",
+      "source_confidence": "high",
+      "catalog_page": 131,
+      "expected_visible_text": "GM-15D",
+      "expected_head_markings": null,
+      "expected_blade_markings": null,
+      "possible_tags": [
+        "JMA",
+        "C12",
+        "K01"
+      ],
+      "needs_review": false
+    },
+    {
+      "id_model_ref": "GM-16",
+      "brand": "JMA",
+      "model": "GM-16",
+      "aliases": [],
+      "family": "GM",
+      "type": "cylinder_special",
+      "source": "jma_c12_catalog",
+      "source_confidence": "high",
+      "catalog_page": 122,
+      "expected_visible_text": "GM-16",
+      "expected_head_markings": null,
+      "expected_blade_markings": null,
+      "possible_tags": [
+        "JMA",
+        "C12",
+        "K01"
+      ],
+      "needs_review": false
+    },
+    {
+      "id_model_ref": "GM-17",
+      "brand": "JMA",
+      "model": "GM-17",
+      "aliases": [],
+      "family": "GM",
+      "type": "cylinder_special",
+      "source": "jma_c12_catalog",
+      "source_confidence": "high",
+      "catalog_page": 122,
+      "expected_visible_text": "GM-17",
+      "expected_head_markings": null,
+      "expected_blade_markings": null,
+      "possible_tags": [
+        "JMA",
+        "C12",
+        "K01"
+      ],
+      "needs_review": false
+    },
+    {
+      "id_model_ref": "GM-18",
+      "brand": "JMA",
+      "model": "GM-18",
+      "aliases": [],
+      "family": "GM",
+      "type": "cylinder_special",
+      "source": "jma_c12_catalog",
+      "source_confidence": "high",
+      "catalog_page": 122,
+      "expected_visible_text": "GM-18",
+      "expected_head_markings": null,
+      "expected_blade_markings": null,
+      "possible_tags": [
+        "JMA",
+        "C12",
+        "K01"
+      ],
+      "needs_review": false
+    },
+    {
+      "id_model_ref": "GM-19",
+      "brand": "JMA",
+      "model": "GM-19",
+      "aliases": [],
+      "family": "GM",
+      "type": "cylinder_special",
+      "source": "jma_c12_catalog",
+      "source_confidence": "high",
+      "catalog_page": 121,
+      "expected_visible_text": "GM-19",
+      "expected_head_markings": null,
+      "expected_blade_markings": null,
+      "possible_tags": [
+        "JMA",
+        "C12",
+        "K01"
+      ],
+      "needs_review": false
+    },
+    {
+      "id_model_ref": "GM-2",
+      "brand": "JMA",
+      "model": "GM-2",
+      "aliases": [],
+      "family": "GM",
+      "type": "cylinder_special",
+      "source": "jma_c12_catalog",
+      "source_confidence": "high",
+      "catalog_page": 122,
+      "expected_visible_text": "GM-2",
+      "expected_head_markings": null,
+      "expected_blade_markings": null,
+      "possible_tags": [
+        "JMA",
+        "C12",
+        "K01"
+      ],
+      "needs_review": false
+    },
+    {
+      "id_model_ref": "GM-20",
+      "brand": "JMA",
+      "model": "GM-20",
+      "aliases": [],
+      "family": "GM",
+      "type": "cylinder_special",
+      "source": "jma_c12_catalog",
+      "source_confidence": "high",
+      "catalog_page": 121,
+      "expected_visible_text": "GM-20",
+      "expected_head_markings": null,
+      "expected_blade_markings": null,
+      "possible_tags": [
+        "JMA",
+        "C12",
+        "K01"
+      ],
+      "needs_review": false
+    },
+    {
+      "id_model_ref": "GM-21",
+      "brand": "JMA",
+      "model": "GM-21",
+      "aliases": [],
+      "family": "GM",
+      "type": "cylinder_special",
+      "source": "jma_c12_catalog",
+      "source_confidence": "high",
+      "catalog_page": 126,
+      "expected_visible_text": "GM-21",
+      "expected_head_markings": null,
+      "expected_blade_markings": null,
+      "possible_tags": [
+        "JMA",
+        "C12",
+        "K01"
+      ],
+      "needs_review": false
+    },
+    {
+      "id_model_ref": "GM-22",
+      "brand": "JMA",
+      "model": "GM-22",
+      "aliases": [],
+      "family": "GM",
+      "type": "cylinder_special",
+      "source": "jma_c12_catalog",
+      "source_confidence": "high",
+      "catalog_page": 121,
+      "expected_visible_text": "GM-22",
+      "expected_head_markings": null,
+      "expected_blade_markings": null,
+      "possible_tags": [
+        "JMA",
+        "C12",
+        "K01"
+      ],
+      "needs_review": false
+    },
+    {
+      "id_model_ref": "GM-23",
+      "brand": "JMA",
+      "model": "GM-23",
+      "aliases": [],
+      "family": "GM",
+      "type": "cylinder_special",
+      "source": "jma_c12_catalog",
+      "source_confidence": "high",
+      "catalog_page": 121,
+      "expected_visible_text": "GM-23",
+      "expected_head_markings": null,
+      "expected_blade_markings": null,
+      "possible_tags": [
+        "JMA",
+        "C12",
+        "K01"
+      ],
+      "needs_review": false
+    },
+    {
+      "id_model_ref": "GM-24",
+      "brand": "JMA",
+      "model": "GM-24",
+      "aliases": [],
+      "family": "GM",
+      "type": "cylinder_special",
+      "source": "jma_c12_catalog",
+      "source_confidence": "high",
+      "catalog_page": 124,
+      "expected_visible_text": "GM-24",
+      "expected_head_markings": null,
+      "expected_blade_markings": null,
+      "possible_tags": [
+        "JMA",
+        "C12",
+        "K01"
+      ],
+      "needs_review": false
+    },
+    {
+      "id_model_ref": "GM-25",
+      "brand": "JMA",
+      "model": "GM-25",
+      "aliases": [],
+      "family": "GM",
+      "type": "cylinder_special",
+      "source": "jma_c12_catalog",
+      "source_confidence": "high",
+      "catalog_page": 121,
+      "expected_visible_text": "GM-25",
+      "expected_head_markings": null,
+      "expected_blade_markings": null,
+      "possible_tags": [
+        "JMA",
+        "C12",
+        "K01"
+      ],
+      "needs_review": false
+    },
+    {
+      "id_model_ref": "GM-26",
+      "brand": "JMA",
+      "model": "GM-26",
+      "aliases": [],
+      "family": "GM",
+      "type": "cylinder_special",
+      "source": "jma_c12_catalog",
+      "source_confidence": "high",
+      "catalog_page": 121,
+      "expected_visible_text": "GM-26",
+      "expected_head_markings": null,
+      "expected_blade_markings": null,
+      "possible_tags": [
+        "JMA",
+        "C12",
+        "K01"
+      ],
+      "needs_review": false
+    },
+    {
+      "id_model_ref": "GM-3",
+      "brand": "JMA",
+      "model": "GM-3",
+      "aliases": [],
+      "family": "GM",
+      "type": "cylinder_special",
+      "source": "jma_c12_catalog",
+      "source_confidence": "high",
+      "catalog_page": 121,
+      "expected_visible_text": "GM-3",
+      "expected_head_markings": null,
+      "expected_blade_markings": null,
+      "possible_tags": [
+        "JMA",
+        "C12",
+        "K01"
+      ],
+      "needs_review": false
+    },
+    {
+      "id_model_ref": "GM-4",
+      "brand": "JMA",
+      "model": "GM-4",
+      "aliases": [],
+      "family": "GM",
+      "type": "cylinder_special",
+      "source": "jma_c12_catalog",
+      "source_confidence": "high",
+      "catalog_page": 131,
+      "expected_visible_text": "GM-4",
+      "expected_head_markings": null,
+      "expected_blade_markings": null,
+      "possible_tags": [
+        "JMA",
+        "C12",
+        "K01"
+      ],
+      "needs_review": false
+    },
+    {
+      "id_model_ref": "GM-42",
+      "brand": "JMA",
+      "model": "GM-42",
+      "aliases": [],
+      "family": "GM",
+      "type": "cylinder_special",
+      "source": "jma_c12_catalog",
+      "source_confidence": "high",
+      "catalog_page": 126,
+      "expected_visible_text": "GM-42",
+      "expected_head_markings": null,
+      "expected_blade_markings": null,
+      "possible_tags": [
+        "JMA",
+        "C12",
+        "K01"
+      ],
+      "needs_review": false
+    },
+    {
+      "id_model_ref": "GM-5",
+      "brand": "JMA",
+      "model": "GM-5",
+      "aliases": [],
+      "family": "GM",
+      "type": "cylinder_special",
+      "source": "jma_c12_catalog",
+      "source_confidence": "high",
+      "catalog_page": 124,
+      "expected_visible_text": "GM-5",
+      "expected_head_markings": null,
+      "expected_blade_markings": null,
+      "possible_tags": [
+        "JMA",
+        "C12",
+        "K01"
+      ],
+      "needs_review": false
+    },
+    {
+      "id_model_ref": "GM-6",
+      "brand": "JMA",
+      "model": "GM-6",
+      "aliases": [],
+      "family": "GM",
+      "type": "cylinder_special",
+      "source": "jma_c12_catalog",
+      "source_confidence": "high",
+      "catalog_page": 121,
+      "expected_visible_text": "GM-6",
+      "expected_head_markings": null,
+      "expected_blade_markings": null,
+      "possible_tags": [
+        "JMA",
+        "C12",
+        "K01"
+      ],
+      "needs_review": false
+    },
+    {
+      "id_model_ref": "GM-7",
+      "brand": "JMA",
+      "model": "GM-7",
+      "aliases": [],
+      "family": "GM",
+      "type": "cylinder_special",
+      "source": "jma_c12_catalog",
+      "source_confidence": "high",
+      "catalog_page": 121,
+      "expected_visible_text": "GM-7",
+      "expected_head_markings": null,
+      "expected_blade_markings": null,
+      "possible_tags": [
+        "JMA",
+        "C12",
+        "K01"
+      ],
+      "needs_review": false
+    },
+    {
+      "id_model_ref": "GM-8",
+      "brand": "JMA",
+      "model": "GM-8",
+      "aliases": [],
+      "family": "GM",
+      "type": "cylinder_special",
+      "source": "jma_c12_catalog",
+      "source_confidence": "high",
+      "catalog_page": 121,
+      "expected_visible_text": "GM-8",
+      "expected_head_markings": null,
+      "expected_blade_markings": null,
+      "possible_tags": [
+        "JMA",
+        "C12",
+        "K01"
+      ],
+      "needs_review": false
+    },
+    {
+      "id_model_ref": "GM-9",
+      "brand": "JMA",
+      "model": "GM-9",
+      "aliases": [],
+      "family": "GM",
+      "type": "cylinder_special",
+      "source": "jma_c12_catalog",
+      "source_confidence": "high",
+      "catalog_page": 121,
+      "expected_visible_text": "GM-9",
+      "expected_head_markings": null,
+      "expected_blade_markings": null,
+      "possible_tags": [
+        "JMA",
+        "C12",
+        "K01"
+      ],
+      "needs_review": false
+    },
+    {
+      "id_model_ref": "HOND-1",
+      "brand": "JMA",
+      "model": "HOND-1",
+      "aliases": [],
+      "family": "HOND",
+      "type": "cylinder_special",
+      "source": "jma_c12_catalog",
+      "source_confidence": "high",
+      "catalog_page": 127,
+      "expected_visible_text": "HOND-1",
+      "expected_head_markings": null,
+      "expected_blade_markings": null,
+      "possible_tags": [
+        "JMA",
+        "C12",
+        "K01"
+      ],
+      "needs_review": false
+    },
+    {
+      "id_model_ref": "HOND-10",
+      "brand": "JMA",
+      "model": "HOND-10",
+      "aliases": [],
+      "family": "HOND",
+      "type": "cylinder_special",
+      "source": "jma_c12_catalog",
+      "source_confidence": "high",
+      "catalog_page": 127,
+      "expected_visible_text": "HOND-10",
+      "expected_head_markings": null,
+      "expected_blade_markings": null,
+      "possible_tags": [
+        "JMA",
+        "C12",
+        "K01"
+      ],
+      "needs_review": false
+    },
+    {
+      "id_model_ref": "HOND-11",
+      "brand": "JMA",
+      "model": "HOND-11",
+      "aliases": [],
+      "family": "HOND",
+      "type": "cylinder_special",
+      "source": "jma_c12_catalog",
+      "source_confidence": "high",
+      "catalog_page": 127,
+      "expected_visible_text": "HOND-11",
+      "expected_head_markings": null,
+      "expected_blade_markings": null,
+      "possible_tags": [
+        "JMA",
+        "C12",
+        "K01"
+      ],
+      "needs_review": false
+    },
+    {
+      "id_model_ref": "HOND-12",
+      "brand": "JMA",
+      "model": "HOND-12",
+      "aliases": [],
+      "family": "HOND",
+      "type": "cylinder_special",
+      "source": "jma_c12_catalog",
+      "source_confidence": "high",
+      "catalog_page": 127,
+      "expected_visible_text": "HOND-12",
+      "expected_head_markings": null,
+      "expected_blade_markings": null,
+      "possible_tags": [
+        "JMA",
+        "C12",
+        "K01"
+      ],
+      "needs_review": false
+    },
+    {
+      "id_model_ref": "HOND-13",
+      "brand": "JMA",
+      "model": "HOND-13",
+      "aliases": [],
+      "family": "HOND",
+      "type": "cylinder_special",
+      "source": "jma_c12_catalog",
+      "source_confidence": "high",
+      "catalog_page": 127,
+      "expected_visible_text": "HOND-13",
+      "expected_head_markings": null,
+      "expected_blade_markings": null,
+      "possible_tags": [
+        "JMA",
+        "C12",
+        "K01"
+      ],
+      "needs_review": false
+    },
+    {
+      "id_model_ref": "HOND-14",
+      "brand": "JMA",
+      "model": "HOND-14",
+      "aliases": [],
+      "family": "HOND",
+      "type": "cylinder_special",
+      "source": "jma_c12_catalog",
+      "source_confidence": "high",
+      "catalog_page": 127,
+      "expected_visible_text": "HOND-14",
+      "expected_head_markings": null,
+      "expected_blade_markings": null,
+      "possible_tags": [
+        "JMA",
+        "C12",
+        "K01"
+      ],
+      "needs_review": false
+    },
+    {
+      "id_model_ref": "HOND-15",
+      "brand": "JMA",
+      "model": "HOND-15",
+      "aliases": [],
+      "family": "HOND",
+      "type": "cylinder_special",
+      "source": "jma_c12_catalog",
+      "source_confidence": "high",
+      "catalog_page": 127,
+      "expected_visible_text": "HOND-15",
+      "expected_head_markings": null,
+      "expected_blade_markings": null,
+      "possible_tags": [
+        "JMA",
+        "C12",
+        "K01"
+      ],
+      "needs_review": false
+    },
+    {
+      "id_model_ref": "HOND-16D",
+      "brand": "JMA",
+      "model": "HOND-16D",
+      "aliases": [],
+      "family": "HOND",
+      "type": "cylinder_special",
+      "source": "jma_c12_catalog",
+      "source_confidence": "high",
+      "catalog_page": 127,
+      "expected_visible_text": "HOND-16D",
+      "expected_head_markings": null,
+      "expected_blade_markings": null,
+      "possible_tags": [
+        "JMA",
+        "C12",
+        "K01"
+      ],
+      "needs_review": false
+    },
+    {
+      "id_model_ref": "HOND-2",
+      "brand": "JMA",
+      "model": "HOND-2",
+      "aliases": [],
+      "family": "HOND",
+      "type": "cylinder_special",
+      "source": "jma_c12_catalog",
+      "source_confidence": "high",
+      "catalog_page": 127,
+      "expected_visible_text": "HOND-2",
+      "expected_head_markings": null,
+      "expected_blade_markings": null,
+      "possible_tags": [
+        "JMA",
+        "C12",
+        "K01"
+      ],
+      "needs_review": false
+    },
+    {
+      "id_model_ref": "HOND-3D",
+      "brand": "JMA",
+      "model": "HOND-3D",
+      "aliases": [],
+      "family": "HOND",
+      "type": "cylinder_special",
+      "source": "jma_c12_catalog",
+      "source_confidence": "high",
+      "catalog_page": 127,
+      "expected_visible_text": "HOND-3D",
+      "expected_head_markings": null,
+      "expected_blade_markings": null,
+      "possible_tags": [
+        "JMA",
+        "C12",
+        "K01"
+      ],
+      "needs_review": false
+    },
+    {
+      "id_model_ref": "HOND-3I",
+      "brand": "JMA",
+      "model": "HOND-3I",
+      "aliases": [],
+      "family": "HOND",
+      "type": "cylinder_special",
+      "source": "jma_c12_catalog",
+      "source_confidence": "high",
+      "catalog_page": 127,
+      "expected_visible_text": "HOND-3I",
+      "expected_head_markings": null,
+      "expected_blade_markings": null,
+      "possible_tags": [
+        "JMA",
+        "C12",
+        "K01"
+      ],
+      "needs_review": false
+    },
+    {
+      "id_model_ref": "HUD-1",
+      "brand": "JMA",
+      "model": "HUD-1",
+      "aliases": [],
+      "family": "HUD",
+      "type": "cylinder_special",
+      "source": "jma_c12_catalog",
+      "source_confidence": "high",
+      "catalog_page": 126,
+      "expected_visible_text": "HUD-1",
+      "expected_head_markings": null,
+      "expected_blade_markings": null,
+      "possible_tags": [
+        "JMA",
+        "C12",
+        "K01"
+      ],
+      "needs_review": false
+    },
+    {
+      "id_model_ref": "HUD-1D",
+      "brand": "JMA",
+      "model": "HUD-1D",
+      "aliases": [],
+      "family": "HUD",
+      "type": "cylinder_special",
+      "source": "jma_c12_catalog",
+      "source_confidence": "high",
+      "catalog_page": 126,
+      "expected_visible_text": "HUD-1D",
+      "expected_head_markings": null,
+      "expected_blade_markings": null,
+      "possible_tags": [
+        "JMA",
+        "C12",
+        "K01"
+      ],
+      "needs_review": false
+    },
+    {
+      "id_model_ref": "HY-1",
+      "brand": "JMA",
+      "model": "HY-1",
+      "aliases": [],
+      "family": "HY",
+      "type": "cylinder_special",
+      "source": "jma_c12_catalog",
+      "source_confidence": "high",
+      "catalog_page": 127,
+      "expected_visible_text": "HY-1",
+      "expected_head_markings": null,
+      "expected_blade_markings": null,
+      "possible_tags": [
+        "JMA",
+        "C12",
+        "K01"
+      ],
+      "needs_review": false
+    },
+    {
+      "id_model_ref": "HY-10",
+      "brand": "JMA",
+      "model": "HY-10",
+      "aliases": [],
+      "family": "HY",
+      "type": "cylinder_special",
+      "source": "jma_c12_catalog",
+      "source_confidence": "high",
+      "catalog_page": 128,
+      "expected_visible_text": "HY-10",
+      "expected_head_markings": null,
+      "expected_blade_markings": null,
+      "possible_tags": [
+        "JMA",
+        "C12",
+        "K01"
+      ],
+      "needs_review": false
+    },
+    {
+      "id_model_ref": "HY-11",
+      "brand": "JMA",
+      "model": "HY-11",
+      "aliases": [],
+      "family": "HY",
+      "type": "cylinder_special",
+      "source": "jma_c12_catalog",
+      "source_confidence": "high",
+      "catalog_page": 128,
+      "expected_visible_text": "HY-11",
+      "expected_head_markings": null,
+      "expected_blade_markings": null,
+      "possible_tags": [
+        "JMA",
+        "C12",
+        "K01"
+      ],
+      "needs_review": false
+    },
+    {
+      "id_model_ref": "HY-11D",
+      "brand": "JMA",
+      "model": "HY-11D",
+      "aliases": [],
+      "family": "HY",
+      "type": "cylinder_special",
+      "source": "jma_c12_catalog",
+      "source_confidence": "high",
+      "catalog_page": 128,
+      "expected_visible_text": "HY-11D",
+      "expected_head_markings": null,
+      "expected_blade_markings": null,
+      "possible_tags": [
+        "JMA",
+        "C12",
+        "K01"
+      ],
+      "needs_review": false
+    },
+    {
+      "id_model_ref": "HY-11RKE",
+      "brand": "JMA",
+      "model": "HY-11RKE",
+      "aliases": [],
+      "family": "HY",
+      "type": "cylinder_special",
+      "source": "jma_c12_catalog",
+      "source_confidence": "high",
+      "catalog_page": 128,
+      "expected_visible_text": "HY-11RKE",
+      "expected_head_markings": null,
+      "expected_blade_markings": null,
+      "possible_tags": [
+        "JMA",
+        "C12",
+        "K01"
+      ],
+      "needs_review": false
+    },
+    {
+      "id_model_ref": "HY-12",
+      "brand": "JMA",
+      "model": "HY-12",
+      "aliases": [],
+      "family": "HY",
+      "type": "cylinder_special",
+      "source": "jma_c12_catalog",
+      "source_confidence": "high",
+      "catalog_page": 133,
+      "expected_visible_text": "HY-12",
+      "expected_head_markings": null,
+      "expected_blade_markings": null,
+      "possible_tags": [
+        "JMA",
+        "C12",
+        "K01"
+      ],
+      "needs_review": false
+    },
+    {
+      "id_model_ref": "HY-18",
+      "brand": "JMA",
+      "model": "HY-18",
+      "aliases": [],
+      "family": "HY",
+      "type": "cylinder_special",
+      "source": "jma_c12_catalog",
+      "source_confidence": "high",
+      "catalog_page": 133,
+      "expected_visible_text": "HY-18",
+      "expected_head_markings": null,
+      "expected_blade_markings": null,
+      "possible_tags": [
+        "JMA",
+        "C12",
+        "K01"
+      ],
+      "needs_review": false
+    },
+    {
+      "id_model_ref": "HY-18RKE",
+      "brand": "JMA",
+      "model": "HY-18RKE",
+      "aliases": [],
+      "family": "HY",
+      "type": "cylinder_special",
+      "source": "jma_c12_catalog",
+      "source_confidence": "high",
+      "catalog_page": 133,
+      "expected_visible_text": "HY-18RKE",
+      "expected_head_markings": null,
+      "expected_blade_markings": null,
+      "possible_tags": [
+        "JMA",
+        "C12",
+        "K01"
+      ],
+      "needs_review": false
+    },
+    {
+      "id_model_ref": "HY-19D",
+      "brand": "JMA",
+      "model": "HY-19D",
+      "aliases": [],
+      "family": "HY",
+      "type": "cylinder_special",
+      "source": "jma_c12_catalog",
+      "source_confidence": "high",
+      "catalog_page": 128,
+      "expected_visible_text": "HY-19D",
+      "expected_head_markings": null,
+      "expected_blade_markings": null,
+      "possible_tags": [
+        "JMA",
+        "C12",
+        "K01"
+      ],
+      "needs_review": false
+    },
+    {
+      "id_model_ref": "HY-2",
+      "brand": "JMA",
+      "model": "HY-2",
+      "aliases": [],
+      "family": "HY",
+      "type": "cylinder_special",
+      "source": "jma_c12_catalog",
+      "source_confidence": "high",
+      "catalog_page": 127,
+      "expected_visible_text": "HY-2",
+      "expected_head_markings": null,
+      "expected_blade_markings": null,
+      "possible_tags": [
+        "JMA",
+        "C12",
+        "K01"
+      ],
+      "needs_review": false
+    },
+    {
+      "id_model_ref": "HY-20",
+      "brand": "JMA",
+      "model": "HY-20",
+      "aliases": [],
+      "family": "HY",
+      "type": "cylinder_special",
+      "source": "jma_c12_catalog",
+      "source_confidence": "high",
+      "catalog_page": 128,
+      "expected_visible_text": "HY-20",
+      "expected_head_markings": null,
+      "expected_blade_markings": null,
+      "possible_tags": [
+        "JMA",
+        "C12",
+        "K01"
+      ],
+      "needs_review": false
+    },
+    {
+      "id_model_ref": "HY-3",
+      "brand": "JMA",
+      "model": "HY-3",
+      "aliases": [],
+      "family": "HY",
+      "type": "cylinder_special",
+      "source": "jma_c12_catalog",
+      "source_confidence": "high",
+      "catalog_page": 127,
+      "expected_visible_text": "HY-3",
+      "expected_head_markings": null,
+      "expected_blade_markings": null,
+      "possible_tags": [
+        "JMA",
+        "C12",
+        "K01"
+      ],
+      "needs_review": false
+    },
+    {
+      "id_model_ref": "HY-3D",
+      "brand": "JMA",
+      "model": "HY-3D",
+      "aliases": [],
+      "family": "HY",
+      "type": "cylinder_special",
+      "source": "jma_c12_catalog",
+      "source_confidence": "high",
+      "catalog_page": 127,
+      "expected_visible_text": "HY-3D",
+      "expected_head_markings": null,
+      "expected_blade_markings": null,
+      "possible_tags": [
+        "JMA",
+        "C12",
+        "K01"
+      ],
+      "needs_review": false
+    },
+    {
+      "id_model_ref": "HY-4",
+      "brand": "JMA",
+      "model": "HY-4",
+      "aliases": [],
+      "family": "HY",
+      "type": "cylinder_special",
+      "source": "jma_c12_catalog",
+      "source_confidence": "high",
+      "catalog_page": 128,
+      "expected_visible_text": "HY-4",
+      "expected_head_markings": null,
+      "expected_blade_markings": null,
+      "possible_tags": [
+        "JMA",
+        "C12",
+        "K01"
+      ],
+      "needs_review": false
+    },
+    {
+      "id_model_ref": "HY-5",
+      "brand": "JMA",
+      "model": "HY-5",
+      "aliases": [],
+      "family": "HY",
+      "type": "cylinder_special",
+      "source": "jma_c12_catalog",
+      "source_confidence": "high",
+      "catalog_page": 128,
+      "expected_visible_text": "HY-5",
+      "expected_head_markings": null,
+      "expected_blade_markings": null,
+      "possible_tags": [
+        "JMA",
+        "C12",
+        "K01"
+      ],
+      "needs_review": false
+    },
+    {
+      "id_model_ref": "HY-6D",
+      "brand": "JMA",
+      "model": "HY-6D",
+      "aliases": [],
+      "family": "HY",
+      "type": "cylinder_special",
+      "source": "jma_c12_catalog",
+      "source_confidence": "high",
+      "catalog_page": 128,
+      "expected_visible_text": "HY-6D",
+      "expected_head_markings": null,
+      "expected_blade_markings": null,
+      "possible_tags": [
+        "JMA",
+        "C12",
+        "K01"
+      ],
+      "needs_review": false
+    },
+    {
+      "id_model_ref": "HY-7",
+      "brand": "JMA",
+      "model": "HY-7",
+      "aliases": [],
+      "family": "HY",
+      "type": "cylinder_special",
+      "source": "jma_c12_catalog",
+      "source_confidence": "high",
+      "catalog_page": 128,
+      "expected_visible_text": "HY-7",
+      "expected_head_markings": null,
+      "expected_blade_markings": null,
+      "possible_tags": [
+        "JMA",
+        "C12",
+        "K01"
+      ],
+      "needs_review": false
+    },
+    {
+      "id_model_ref": "HY-8",
+      "brand": "JMA",
+      "model": "HY-8",
+      "aliases": [],
+      "family": "HY",
+      "type": "cylinder_special",
+      "source": "jma_c12_catalog",
+      "source_confidence": "high",
+      "catalog_page": 128,
+      "expected_visible_text": "HY-8",
+      "expected_head_markings": null,
+      "expected_blade_markings": null,
+      "possible_tags": [
+        "JMA",
+        "C12",
+        "K01"
+      ],
+      "needs_review": false
+    },
+    {
+      "id_model_ref": "HY-9",
+      "brand": "JMA",
+      "model": "HY-9",
+      "aliases": [],
+      "family": "HY",
+      "type": "cylinder_special",
+      "source": "jma_c12_catalog",
+      "source_confidence": "high",
+      "catalog_page": 128,
+      "expected_visible_text": "HY-9",
+      "expected_head_markings": null,
+      "expected_blade_markings": null,
+      "possible_tags": [
+        "JMA",
+        "C12",
+        "K01"
+      ],
+      "needs_review": false
+    },
+    {
+      "id_model_ref": "IMS-12",
+      "brand": "JMA",
+      "model": "IMS-12",
+      "aliases": [],
+      "family": "IMS",
+      "type": "cylinder_special",
+      "source": "jma_c12_catalog",
+      "source_confidence": "high",
+      "catalog_page": 143,
+      "expected_visible_text": "IMS-12",
+      "expected_head_markings": null,
+      "expected_blade_markings": null,
+      "possible_tags": [
+        "JMA",
+        "C12",
+        "K01"
+      ],
+      "needs_review": false
+    },
+    {
+      "id_model_ref": "IMS-13",
+      "brand": "JMA",
+      "model": "IMS-13",
+      "aliases": [],
+      "family": "IMS",
+      "type": "cylinder_special",
+      "source": "jma_c12_catalog",
+      "source_confidence": "high",
+      "catalog_page": 133,
+      "expected_visible_text": "IMS-13",
+      "expected_head_markings": null,
+      "expected_blade_markings": null,
+      "possible_tags": [
+        "JMA",
+        "C12",
+        "K01"
+      ],
+      "needs_review": false
+    },
+    {
+      "id_model_ref": "IMS-3",
+      "brand": "JMA",
+      "model": "IMS-3",
+      "aliases": [],
+      "family": "IMS",
+      "type": "cylinder_special",
+      "source": "jma_c12_catalog",
+      "source_confidence": "high",
+      "catalog_page": 133,
+      "expected_visible_text": "IMS-3",
+      "expected_head_markings": null,
+      "expected_blade_markings": null,
+      "possible_tags": [
+        "JMA",
+        "C12",
+        "K01"
+      ],
+      "needs_review": false
+    },
+    {
+      "id_model_ref": "IMS-5",
+      "brand": "JMA",
+      "model": "IMS-5",
+      "aliases": [],
+      "family": "IMS",
+      "type": "cylinder_special",
+      "source": "jma_c12_catalog",
+      "source_confidence": "high",
+      "catalog_page": 133,
+      "expected_visible_text": "IMS-5",
+      "expected_head_markings": null,
+      "expected_blade_markings": null,
+      "possible_tags": [
+        "JMA",
+        "C12",
+        "K01"
+      ],
+      "needs_review": false
+    },
+    {
+      "id_model_ref": "IMS-7",
+      "brand": "JMA",
+      "model": "IMS-7",
+      "aliases": [],
+      "family": "IMS",
+      "type": "cylinder_special",
+      "source": "jma_c12_catalog",
+      "source_confidence": "high",
+      "catalog_page": 135,
+      "expected_visible_text": "IMS-7",
+      "expected_head_markings": null,
+      "expected_blade_markings": null,
+      "possible_tags": [
+        "JMA",
+        "C12",
+        "K01"
+      ],
+      "needs_review": false
+    },
+    {
+      "id_model_ref": "IN-1",
+      "brand": "JMA",
+      "model": "IN-1",
+      "aliases": [],
+      "family": "IN",
+      "type": "cylinder_special",
+      "source": "jma_c12_catalog",
+      "source_confidence": "high",
+      "catalog_page": 131,
+      "expected_visible_text": "IN-1",
+      "expected_head_markings": null,
+      "expected_blade_markings": null,
+      "possible_tags": [
+        "JMA",
+        "C12",
+        "K01"
+      ],
+      "needs_review": false
+    },
+    {
+      "id_model_ref": "IN-4",
+      "brand": "JMA",
+      "model": "IN-4",
+      "aliases": [],
+      "family": "IN",
+      "type": "cylinder_special",
+      "source": "jma_c12_catalog",
+      "source_confidence": "high",
+      "catalog_page": 131,
+      "expected_visible_text": "IN-4",
+      "expected_head_markings": null,
+      "expected_blade_markings": null,
+      "possible_tags": [
+        "JMA",
+        "C12",
+        "K01"
+      ],
+      "needs_review": false
+    },
+    {
+      "id_model_ref": "IN-5",
+      "brand": "JMA",
+      "model": "IN-5",
+      "aliases": [],
+      "family": "IN",
+      "type": "cylinder_special",
+      "source": "jma_c12_catalog",
+      "source_confidence": "high",
+      "catalog_page": 131,
+      "expected_visible_text": "IN-5",
+      "expected_head_markings": null,
+      "expected_blade_markings": null,
+      "possible_tags": [
+        "JMA",
+        "C12",
+        "K01"
+      ],
+      "needs_review": false
+    },
+    {
+      "id_model_ref": "ISU-3D",
+      "brand": "JMA",
+      "model": "ISU-3D",
+      "aliases": [],
+      "family": "ISU",
+      "type": "cylinder_special",
+      "source": "jma_c12_catalog",
+      "source_confidence": "high",
+      "catalog_page": 131,
+      "expected_visible_text": "ISU-3D",
+      "expected_head_markings": null,
+      "expected_blade_markings": null,
+      "possible_tags": [
+        "JMA",
+        "C12",
+        "K01"
+      ],
+      "needs_review": false
+    },
+    {
+      "id_model_ref": "JAU-1",
+      "brand": "JMA",
+      "model": "JAU-1",
+      "aliases": [],
+      "family": "JAU",
+      "type": "cylinder_special",
+      "source": "jma_c12_catalog",
+      "source_confidence": "high",
+      "catalog_page": 131,
+      "expected_visible_text": "JAU-1",
+      "expected_head_markings": null,
+      "expected_blade_markings": null,
+      "possible_tags": [
+        "JMA",
+        "C12",
+        "K01"
+      ],
+      "needs_review": false
+    },
+    {
+      "id_model_ref": "KAW-4",
+      "brand": "JMA",
+      "model": "KAW-4",
+      "aliases": [],
+      "family": "KAW",
+      "type": "cylinder_special",
+      "source": "jma_c12_catalog",
+      "source_confidence": "high",
+      "catalog_page": 128,
+      "expected_visible_text": "KAW-4",
+      "expected_head_markings": null,
+      "expected_blade_markings": null,
+      "possible_tags": [
+        "JMA",
+        "C12",
+        "K01"
+      ],
+      "needs_review": false
+    },
+    {
+      "id_model_ref": "KEN-1",
+      "brand": "JMA",
+      "model": "KEN-1",
+      "aliases": [],
+      "family": "KEN",
+      "type": "cylinder_special",
+      "source": "jma_c12_catalog",
+      "source_confidence": "high",
+      "catalog_page": 130,
+      "expected_visible_text": "KEN-1",
+      "expected_head_markings": null,
+      "expected_blade_markings": null,
+      "possible_tags": [
+        "JMA",
+        "C12",
+        "K01"
+      ],
+      "needs_review": false
+    },
+    {
+      "id_model_ref": "KEN-1D",
+      "brand": "JMA",
+      "model": "KEN-1D",
+      "aliases": [],
+      "family": "KEN",
+      "type": "cylinder_special",
+      "source": "jma_c12_catalog",
+      "source_confidence": "high",
+      "catalog_page": 130,
+      "expected_visible_text": "KEN-1D",
+      "expected_head_markings": null,
+      "expected_blade_markings": null,
+      "possible_tags": [
+        "JMA",
+        "C12",
+        "K01"
+      ],
+      "needs_review": false
+    },
+    {
+      "id_model_ref": "KI-11",
+      "brand": "JMA",
+      "model": "KI-11",
+      "aliases": [],
+      "family": "KI",
+      "type": "cylinder_special",
+      "source": "jma_c12_catalog",
+      "source_confidence": "high",
+      "catalog_page": 133,
+      "expected_visible_text": "KI-11",
+      "expected_head_markings": null,
+      "expected_blade_markings": null,
+      "possible_tags": [
+        "JMA",
+        "C12",
+        "K01"
+      ],
+      "needs_review": false
+    },
+    {
+      "id_model_ref": "KI-12",
+      "brand": "JMA",
+      "model": "KI-12",
+      "aliases": [],
+      "family": "KI",
+      "type": "cylinder_special",
+      "source": "jma_c12_catalog",
+      "source_confidence": "high",
+      "catalog_page": 133,
+      "expected_visible_text": "KI-12",
+      "expected_head_markings": null,
+      "expected_blade_markings": null,
+      "possible_tags": [
+        "JMA",
+        "C12",
+        "K01"
+      ],
+      "needs_review": false
+    },
+    {
+      "id_model_ref": "KI-12D",
+      "brand": "JMA",
+      "model": "KI-12D",
+      "aliases": [],
+      "family": "KI",
+      "type": "cylinder_special",
+      "source": "jma_c12_catalog",
+      "source_confidence": "high",
+      "catalog_page": 133,
+      "expected_visible_text": "KI-12D",
+      "expected_head_markings": null,
+      "expected_blade_markings": null,
+      "possible_tags": [
+        "JMA",
+        "C12",
+        "K01"
+      ],
+      "needs_review": false
+    },
+    {
+      "id_model_ref": "KI-1D",
+      "brand": "JMA",
+      "model": "KI-1D",
+      "aliases": [],
+      "family": "KI",
+      "type": "cylinder_special",
+      "source": "jma_c12_catalog",
+      "source_confidence": "high",
+      "catalog_page": 119,
+      "expected_visible_text": "KI-1D",
+      "expected_head_markings": null,
+      "expected_blade_markings": null,
+      "possible_tags": [
+        "JMA",
+        "C12",
+        "K01"
+      ],
+      "needs_review": false
+    },
+    {
+      "id_model_ref": "KI-2D",
+      "brand": "JMA",
+      "model": "KI-2D",
+      "aliases": [],
+      "family": "KI",
+      "type": "cylinder_special",
+      "source": "jma_c12_catalog",
+      "source_confidence": "high",
+      "catalog_page": 133,
+      "expected_visible_text": "KI-2D",
+      "expected_head_markings": null,
+      "expected_blade_markings": null,
+      "possible_tags": [
+        "JMA",
+        "C12",
+        "K01"
+      ],
+      "needs_review": false
+    },
+    {
+      "id_model_ref": "KI-3",
+      "brand": "JMA",
+      "model": "KI-3",
+      "aliases": [],
+      "family": "KI",
+      "type": "cylinder_special",
+      "source": "jma_c12_catalog",
+      "source_confidence": "high",
+      "catalog_page": 133,
+      "expected_visible_text": "KI-3",
+      "expected_head_markings": null,
+      "expected_blade_markings": null,
+      "possible_tags": [
+        "JMA",
+        "C12",
+        "K01"
+      ],
+      "needs_review": false
+    },
+    {
+      "id_model_ref": "KI-3D",
+      "brand": "JMA",
+      "model": "KI-3D",
+      "aliases": [],
+      "family": "KI",
+      "type": "cylinder_special",
+      "source": "jma_c12_catalog",
+      "source_confidence": "high",
+      "catalog_page": 133,
+      "expected_visible_text": "KI-3D",
+      "expected_head_markings": null,
+      "expected_blade_markings": null,
+      "possible_tags": [
+        "JMA",
+        "C12",
+        "K01"
+      ],
+      "needs_review": false
+    },
+    {
+      "id_model_ref": "LA-1D",
+      "brand": "JMA",
+      "model": "LA-1D",
+      "aliases": [],
+      "family": "LA",
+      "type": "cylinder_special",
+      "source": "jma_c12_catalog",
+      "source_confidence": "high",
+      "catalog_page": 133,
+      "expected_visible_text": "LA-1D",
+      "expected_head_markings": null,
+      "expected_blade_markings": null,
+      "possible_tags": [
+        "JMA",
+        "C12",
+        "K01"
+      ],
+      "needs_review": false
+    },
+    {
+      "id_model_ref": "LA-2",
+      "brand": "JMA",
+      "model": "LA-2",
+      "aliases": [],
+      "family": "LA",
+      "type": "cylinder_special",
+      "source": "jma_c12_catalog",
+      "source_confidence": "high",
+      "catalog_page": 133,
+      "expected_visible_text": "LA-2",
+      "expected_head_markings": null,
+      "expected_blade_markings": null,
+      "possible_tags": [
+        "JMA",
+        "C12",
+        "K01"
+      ],
+      "needs_review": false
+    },
+    {
+      "id_model_ref": "LA-3D",
+      "brand": "JMA",
+      "model": "LA-3D",
+      "aliases": [],
+      "family": "LA",
+      "type": "cylinder_special",
+      "source": "jma_c12_catalog",
+      "source_confidence": "high",
+      "catalog_page": 133,
+      "expected_visible_text": "LA-3D",
+      "expected_head_markings": null,
+      "expected_blade_markings": null,
+      "possible_tags": [
+        "JMA",
+        "C12",
+        "K01"
+      ],
+      "needs_review": false
+    },
+    {
+      "id_model_ref": "LA-4D",
+      "brand": "JMA",
+      "model": "LA-4D",
+      "aliases": [],
+      "family": "LA",
+      "type": "cylinder_special",
+      "source": "jma_c12_catalog",
+      "source_confidence": "high",
+      "catalog_page": 133,
+      "expected_visible_text": "LA-4D",
+      "expected_head_markings": null,
+      "expected_blade_markings": null,
+      "possible_tags": [
+        "JMA",
+        "C12",
+        "K01"
+      ],
+      "needs_review": false
+    },
+    {
+      "id_model_ref": "LMP-1",
+      "brand": "JMA",
+      "model": "LMP-1",
+      "aliases": [],
+      "family": "LMP",
+      "type": "cylinder_special",
+      "source": "jma_c12_catalog",
+      "source_confidence": "high",
+      "catalog_page": 145,
+      "expected_visible_text": "LMP-1",
+      "expected_head_markings": null,
+      "expected_blade_markings": null,
+      "possible_tags": [
+        "JMA",
+        "C12",
+        "K01"
+      ],
+      "needs_review": false
+    },
+    {
+      "id_model_ref": "LMP-2",
+      "brand": "JMA",
+      "model": "LMP-2",
+      "aliases": [],
+      "family": "LMP",
+      "type": "cylinder_special",
+      "source": "jma_c12_catalog",
+      "source_confidence": "high",
+      "catalog_page": 145,
+      "expected_visible_text": "LMP-2",
+      "expected_head_markings": null,
+      "expected_blade_markings": null,
+      "possible_tags": [
+        "JMA",
+        "C12",
+        "K01"
+      ],
+      "needs_review": false
+    },
+    {
+      "id_model_ref": "LMP-3",
+      "brand": "JMA",
+      "model": "LMP-3",
+      "aliases": [],
+      "family": "LMP",
+      "type": "cylinder_special",
+      "source": "jma_c12_catalog",
+      "source_confidence": "high",
+      "catalog_page": 145,
+      "expected_visible_text": "LMP-3",
+      "expected_head_markings": null,
+      "expected_blade_markings": null,
+      "possible_tags": [
+        "JMA",
+        "C12",
+        "K01"
+      ],
+      "needs_review": false
+    },
+    {
+      "id_model_ref": "LMP-4",
+      "brand": "JMA",
+      "model": "LMP-4",
+      "aliases": [],
+      "family": "LMP",
+      "type": "cylinder_special",
+      "source": "jma_c12_catalog",
+      "source_confidence": "high",
+      "catalog_page": 145,
+      "expected_visible_text": "LMP-4",
+      "expected_head_markings": null,
+      "expected_blade_markings": null,
+      "possible_tags": [
+        "JMA",
+        "C12",
+        "K01"
+      ],
+      "needs_review": false
+    },
+    {
+      "id_model_ref": "LMP-5",
+      "brand": "JMA",
+      "model": "LMP-5",
+      "aliases": [],
+      "family": "LMP",
+      "type": "cylinder_special",
+      "source": "jma_c12_catalog",
+      "source_confidence": "high",
+      "catalog_page": 145,
+      "expected_visible_text": "LMP-5",
+      "expected_head_markings": null,
+      "expected_blade_markings": null,
+      "possible_tags": [
+        "JMA",
+        "C12",
+        "K01"
+      ],
+      "needs_review": false
+    },
+    {
+      "id_model_ref": "MAR-1",
+      "brand": "JMA",
+      "model": "MAR-1",
+      "aliases": [],
+      "family": "MAR",
+      "type": "cylinder_special",
+      "source": "jma_c12_catalog",
+      "source_confidence": "high",
+      "catalog_page": 136,
+      "expected_visible_text": "MAR-1",
+      "expected_head_markings": null,
+      "expected_blade_markings": null,
+      "possible_tags": [
+        "JMA",
+        "C12",
+        "K01"
+      ],
+      "needs_review": false
+    },
+    {
+      "id_model_ref": "MAZ-11D",
+      "brand": "JMA",
+      "model": "MAZ-11D",
+      "aliases": [],
+      "family": "MAZ",
+      "type": "cylinder_special",
+      "source": "jma_c12_catalog",
+      "source_confidence": "high",
+      "catalog_page": 137,
+      "expected_visible_text": "MAZ-11D",
+      "expected_head_markings": null,
+      "expected_blade_markings": null,
+      "possible_tags": [
+        "JMA",
+        "C12",
+        "K01"
+      ],
+      "needs_review": false
+    },
+    {
+      "id_model_ref": "MAZ-13D",
+      "brand": "JMA",
+      "model": "MAZ-13D",
+      "aliases": [],
+      "family": "MAZ",
+      "type": "cylinder_special",
+      "source": "jma_c12_catalog",
+      "source_confidence": "high",
+      "catalog_page": 138,
+      "expected_visible_text": "MAZ-13D",
+      "expected_head_markings": null,
+      "expected_blade_markings": null,
+      "possible_tags": [
+        "JMA",
+        "C12",
+        "K01"
+      ],
+      "needs_review": false
+    },
+    {
+      "id_model_ref": "MAZ-14D",
+      "brand": "JMA",
+      "model": "MAZ-14D",
+      "aliases": [],
+      "family": "MAZ",
+      "type": "cylinder_special",
+      "source": "jma_c12_catalog",
+      "source_confidence": "high",
+      "catalog_page": 138,
+      "expected_visible_text": "MAZ-14D",
+      "expected_head_markings": null,
+      "expected_blade_markings": null,
+      "possible_tags": [
+        "JMA",
+        "C12",
+        "K01"
+      ],
+      "needs_review": false
+    },
+    {
+      "id_model_ref": "MAZ-15D",
+      "brand": "JMA",
+      "model": "MAZ-15D",
+      "aliases": [],
+      "family": "MAZ",
+      "type": "cylinder_special",
+      "source": "jma_c12_catalog",
+      "source_confidence": "high",
+      "catalog_page": 138,
+      "expected_visible_text": "MAZ-15D",
+      "expected_head_markings": null,
+      "expected_blade_markings": null,
+      "possible_tags": [
+        "JMA",
+        "C12",
+        "K01"
+      ],
+      "needs_review": false
+    },
+    {
+      "id_model_ref": "MAZ-16",
+      "brand": "JMA",
+      "model": "MAZ-16",
+      "aliases": [],
+      "family": "MAZ",
+      "type": "cylinder_special",
+      "source": "jma_c12_catalog",
+      "source_confidence": "high",
+      "catalog_page": 138,
+      "expected_visible_text": "MAZ-16",
+      "expected_head_markings": null,
+      "expected_blade_markings": null,
+      "possible_tags": [
+        "JMA",
+        "C12",
+        "K01"
+      ],
+      "needs_review": false
+    },
+    {
+      "id_model_ref": "MAZ-1D",
+      "brand": "JMA",
+      "model": "MAZ-1D",
+      "aliases": [],
+      "family": "MAZ",
+      "type": "cylinder_special",
+      "source": "jma_c12_catalog",
+      "source_confidence": "high",
+      "catalog_page": 137,
+      "expected_visible_text": "MAZ-1D",
+      "expected_head_markings": null,
+      "expected_blade_markings": null,
+      "possible_tags": [
+        "JMA",
+        "C12",
+        "K01"
+      ],
+      "needs_review": false
+    },
+    {
+      "id_model_ref": "MAZ-1I",
+      "brand": "JMA",
+      "model": "MAZ-1I",
+      "aliases": [],
+      "family": "MAZ",
+      "type": "cylinder_special",
+      "source": "jma_c12_catalog",
+      "source_confidence": "high",
+      "catalog_page": 137,
+      "expected_visible_text": "MAZ-1I",
+      "expected_head_markings": null,
+      "expected_blade_markings": null,
+      "possible_tags": [
+        "JMA",
+        "C12",
+        "K01"
+      ],
+      "needs_review": false
+    },
+    {
+      "id_model_ref": "MAZ-21D",
+      "brand": "JMA",
+      "model": "MAZ-21D",
+      "aliases": [],
+      "family": "MAZ",
+      "type": "cylinder_special",
+      "source": "jma_c12_catalog",
+      "source_confidence": "high",
+      "catalog_page": 138,
+      "expected_visible_text": "MAZ-21D",
+      "expected_head_markings": null,
+      "expected_blade_markings": null,
+      "possible_tags": [
+        "JMA",
+        "C12",
+        "K01"
+      ],
+      "needs_review": false
+    },
+    {
+      "id_model_ref": "MAZ-2D",
+      "brand": "JMA",
+      "model": "MAZ-2D",
+      "aliases": [],
+      "family": "MAZ",
+      "type": "cylinder_special",
+      "source": "jma_c12_catalog",
+      "source_confidence": "high",
+      "catalog_page": 119,
+      "expected_visible_text": "MAZ-2D",
+      "expected_head_markings": null,
+      "expected_blade_markings": null,
+      "possible_tags": [
+        "JMA",
+        "C12",
+        "K01"
+      ],
+      "needs_review": false
+    },
+    {
+      "id_model_ref": "MAZ-2I",
+      "brand": "JMA",
+      "model": "MAZ-2I",
+      "aliases": [],
+      "family": "MAZ",
+      "type": "cylinder_special",
+      "source": "jma_c12_catalog",
+      "source_confidence": "high",
+      "catalog_page": 119,
+      "expected_visible_text": "MAZ-2I",
+      "expected_head_markings": null,
+      "expected_blade_markings": null,
+      "possible_tags": [
+        "JMA",
+        "C12",
+        "K01"
+      ],
+      "needs_review": false
+    },
+    {
+      "id_model_ref": "MAZ-3D",
+      "brand": "JMA",
+      "model": "MAZ-3D",
+      "aliases": [],
+      "family": "MAZ",
+      "type": "cylinder_special",
+      "source": "jma_c12_catalog",
+      "source_confidence": "high",
+      "catalog_page": 137,
+      "expected_visible_text": "MAZ-3D",
+      "expected_head_markings": null,
+      "expected_blade_markings": null,
+      "possible_tags": [
+        "JMA",
+        "C12",
+        "K01"
+      ],
+      "needs_review": false
+    },
+    {
+      "id_model_ref": "MAZ-3I",
+      "brand": "JMA",
+      "model": "MAZ-3I",
+      "aliases": [],
+      "family": "MAZ",
+      "type": "cylinder_special",
+      "source": "jma_c12_catalog",
+      "source_confidence": "high",
+      "catalog_page": 137,
+      "expected_visible_text": "MAZ-3I",
+      "expected_head_markings": null,
+      "expected_blade_markings": null,
+      "possible_tags": [
+        "JMA",
+        "C12",
+        "K01"
+      ],
+      "needs_review": false
+    },
+    {
+      "id_model_ref": "MAZ-4",
+      "brand": "JMA",
+      "model": "MAZ-4",
+      "aliases": [],
+      "family": "MAZ",
+      "type": "cylinder_special",
+      "source": "jma_c12_catalog",
+      "source_confidence": "high",
+      "catalog_page": 137,
+      "expected_visible_text": "MAZ-4",
+      "expected_head_markings": null,
+      "expected_blade_markings": null,
+      "possible_tags": [
+        "JMA",
+        "C12",
+        "K01"
+      ],
+      "needs_review": false
+    },
+    {
+      "id_model_ref": "MAZ-5D",
+      "brand": "JMA",
+      "model": "MAZ-5D",
+      "aliases": [],
+      "family": "MAZ",
+      "type": "cylinder_special",
+      "source": "jma_c12_catalog",
+      "source_confidence": "high",
+      "catalog_page": 137,
+      "expected_visible_text": "MAZ-5D",
+      "expected_head_markings": null,
+      "expected_blade_markings": null,
+      "possible_tags": [
+        "JMA",
+        "C12",
+        "K01"
+      ],
+      "needs_review": false
+    },
+    {
+      "id_model_ref": "MAZ-6",
+      "brand": "JMA",
+      "model": "MAZ-6",
+      "aliases": [],
+      "family": "MAZ",
+      "type": "cylinder_special",
+      "source": "jma_c12_catalog",
+      "source_confidence": "high",
+      "catalog_page": 121,
+      "expected_visible_text": "MAZ-6",
+      "expected_head_markings": null,
+      "expected_blade_markings": null,
+      "possible_tags": [
+        "JMA",
+        "C12",
+        "K01"
+      ],
+      "needs_review": false
+    },
+    {
+      "id_model_ref": "MAZ-6D",
+      "brand": "JMA",
+      "model": "MAZ-6D",
+      "aliases": [],
+      "family": "MAZ",
+      "type": "cylinder_special",
+      "source": "jma_c12_catalog",
+      "source_confidence": "high",
+      "catalog_page": 121,
+      "expected_visible_text": "MAZ-6D",
+      "expected_head_markings": null,
+      "expected_blade_markings": null,
+      "possible_tags": [
+        "JMA",
+        "C12",
+        "K01"
+      ],
+      "needs_review": false
+    },
+    {
+      "id_model_ref": "MAZ-7D",
+      "brand": "JMA",
+      "model": "MAZ-7D",
+      "aliases": [],
+      "family": "MAZ",
+      "type": "cylinder_special",
+      "source": "jma_c12_catalog",
+      "source_confidence": "high",
+      "catalog_page": 137,
+      "expected_visible_text": "MAZ-7D",
+      "expected_head_markings": null,
+      "expected_blade_markings": null,
+      "possible_tags": [
+        "JMA",
+        "C12",
+        "K01"
+      ],
+      "needs_review": false
+    },
+    {
+      "id_model_ref": "MAZ-8D",
+      "brand": "JMA",
+      "model": "MAZ-8D",
+      "aliases": [],
+      "family": "MAZ",
+      "type": "cylinder_special",
+      "source": "jma_c12_catalog",
+      "source_confidence": "high",
+      "catalog_page": 137,
+      "expected_visible_text": "MAZ-8D",
+      "expected_head_markings": null,
+      "expected_blade_markings": null,
+      "possible_tags": [
+        "JMA",
+        "C12",
+        "K01"
+      ],
+      "needs_review": false
+    },
+    {
+      "id_model_ref": "ME-1",
+      "brand": "JMA",
+      "model": "ME-1",
+      "aliases": [],
+      "family": "ME",
+      "type": "cylinder_special",
+      "source": "jma_c12_catalog",
+      "source_confidence": "high",
+      "catalog_page": 138,
+      "expected_visible_text": "ME-1",
+      "expected_head_markings": null,
+      "expected_blade_markings": null,
+      "possible_tags": [
+        "JMA",
+        "C12",
+        "K01"
+      ],
+      "needs_review": false
+    },
+    {
+      "id_model_ref": "ME-10",
+      "brand": "JMA",
+      "model": "ME-10",
+      "aliases": [],
+      "family": "ME",
+      "type": "cylinder_special",
+      "source": "jma_c12_catalog",
+      "source_confidence": "high",
+      "catalog_page": 138,
+      "expected_visible_text": "ME-10",
+      "expected_head_markings": null,
+      "expected_blade_markings": null,
+      "possible_tags": [
+        "JMA",
+        "C12",
+        "K01"
+      ],
+      "needs_review": false
+    },
+    {
+      "id_model_ref": "ME-11",
+      "brand": "JMA",
+      "model": "ME-11",
+      "aliases": [],
+      "family": "ME",
+      "type": "cylinder_special",
+      "source": "jma_c12_catalog",
+      "source_confidence": "high",
+      "catalog_page": 138,
+      "expected_visible_text": "ME-11",
+      "expected_head_markings": null,
+      "expected_blade_markings": null,
+      "possible_tags": [
+        "JMA",
+        "C12",
+        "K01"
+      ],
+      "needs_review": false
+    },
+    {
+      "id_model_ref": "ME-12",
+      "brand": "JMA",
+      "model": "ME-12",
+      "aliases": [],
+      "family": "ME",
+      "type": "cylinder_special",
+      "source": "jma_c12_catalog",
+      "source_confidence": "high",
+      "catalog_page": 138,
+      "expected_visible_text": "ME-12",
+      "expected_head_markings": null,
+      "expected_blade_markings": null,
+      "possible_tags": [
+        "JMA",
+        "C12",
+        "K01"
+      ],
+      "needs_review": false
+    },
+    {
+      "id_model_ref": "ME-2",
+      "brand": "JMA",
+      "model": "ME-2",
+      "aliases": [],
+      "family": "ME",
+      "type": "cylinder_special",
+      "source": "jma_c12_catalog",
+      "source_confidence": "high",
+      "catalog_page": 138,
+      "expected_visible_text": "ME-2",
+      "expected_head_markings": null,
+      "expected_blade_markings": null,
+      "possible_tags": [
+        "JMA",
+        "C12",
+        "K01"
+      ],
+      "needs_review": false
+    },
+    {
+      "id_model_ref": "ME-3",
+      "brand": "JMA",
+      "model": "ME-3",
+      "aliases": [],
+      "family": "ME",
+      "type": "cylinder_special",
+      "source": "jma_c12_catalog",
+      "source_confidence": "high",
+      "catalog_page": 138,
+      "expected_visible_text": "ME-3",
+      "expected_head_markings": null,
+      "expected_blade_markings": null,
+      "possible_tags": [
+        "JMA",
+        "C12",
+        "K01"
+      ],
+      "needs_review": false
+    },
+    {
+      "id_model_ref": "ME-4",
+      "brand": "JMA",
+      "model": "ME-4",
+      "aliases": [],
+      "family": "ME",
+      "type": "cylinder_special",
+      "source": "jma_c12_catalog",
+      "source_confidence": "high",
+      "catalog_page": 138,
+      "expected_visible_text": "ME-4",
+      "expected_head_markings": null,
+      "expected_blade_markings": null,
+      "possible_tags": [
+        "JMA",
+        "C12",
+        "K01"
+      ],
+      "needs_review": false
+    },
+    {
+      "id_model_ref": "ME-5",
+      "brand": "JMA",
+      "model": "ME-5",
+      "aliases": [],
+      "family": "ME",
+      "type": "cylinder_special",
+      "source": "jma_c12_catalog",
+      "source_confidence": "high",
+      "catalog_page": 138,
+      "expected_visible_text": "ME-5",
+      "expected_head_markings": null,
+      "expected_blade_markings": null,
+      "possible_tags": [
+        "JMA",
+        "C12",
+        "K01"
+      ],
+      "needs_review": false
+    },
+    {
+      "id_model_ref": "ME-6",
+      "brand": "JMA",
+      "model": "ME-6",
+      "aliases": [],
+      "family": "ME",
+      "type": "cylinder_special",
+      "source": "jma_c12_catalog",
+      "source_confidence": "high",
+      "catalog_page": 138,
+      "expected_visible_text": "ME-6",
+      "expected_head_markings": null,
+      "expected_blade_markings": null,
+      "possible_tags": [
+        "JMA",
+        "C12",
+        "K01"
+      ],
+      "needs_review": false
+    },
+    {
+      "id_model_ref": "ME-7",
+      "brand": "JMA",
+      "model": "ME-7",
+      "aliases": [],
+      "family": "ME",
+      "type": "cylinder_special",
+      "source": "jma_c12_catalog",
+      "source_confidence": "high",
+      "catalog_page": 138,
+      "expected_visible_text": "ME-7",
+      "expected_head_markings": null,
+      "expected_blade_markings": null,
+      "possible_tags": [
+        "JMA",
+        "C12",
+        "K01"
+      ],
+      "needs_review": false
+    },
+    {
+      "id_model_ref": "ME-8",
+      "brand": "JMA",
+      "model": "ME-8",
+      "aliases": [],
+      "family": "ME",
+      "type": "cylinder_special",
+      "source": "jma_c12_catalog",
+      "source_confidence": "high",
+      "catalog_page": 138,
+      "expected_visible_text": "ME-8",
+      "expected_head_markings": null,
+      "expected_blade_markings": null,
+      "possible_tags": [
+        "JMA",
+        "C12",
+        "K01"
+      ],
+      "needs_review": false
+    },
+    {
+      "id_model_ref": "MIT-12",
+      "brand": "JMA",
+      "model": "MIT-12",
+      "aliases": [],
+      "family": "MIT",
+      "type": "cylinder_special",
+      "source": "jma_c12_catalog",
+      "source_confidence": "high",
+      "catalog_page": 140,
+      "expected_visible_text": "MIT-12",
+      "expected_head_markings": null,
+      "expected_blade_markings": null,
+      "possible_tags": [
+        "JMA",
+        "C12",
+        "K01"
+      ],
+      "needs_review": false
+    },
+    {
+      "id_model_ref": "MIT-13D",
+      "brand": "JMA",
+      "model": "MIT-13D",
+      "aliases": [],
+      "family": "MIT",
+      "type": "cylinder_special",
+      "source": "jma_c12_catalog",
+      "source_confidence": "high",
+      "catalog_page": 140,
+      "expected_visible_text": "MIT-13D",
+      "expected_head_markings": null,
+      "expected_blade_markings": null,
+      "possible_tags": [
+        "JMA",
+        "C12",
+        "K01"
+      ],
+      "needs_review": false
+    },
+    {
+      "id_model_ref": "MIT-14D",
+      "brand": "JMA",
+      "model": "MIT-14D",
+      "aliases": [],
+      "family": "MIT",
+      "type": "cylinder_special",
+      "source": "jma_c12_catalog",
+      "source_confidence": "high",
+      "catalog_page": 140,
+      "expected_visible_text": "MIT-14D",
+      "expected_head_markings": null,
+      "expected_blade_markings": null,
+      "possible_tags": [
+        "JMA",
+        "C12",
+        "K01"
+      ],
+      "needs_review": false
+    },
+    {
+      "id_model_ref": "MIT-15",
+      "brand": "JMA",
+      "model": "MIT-15",
+      "aliases": [],
+      "family": "MIT",
+      "type": "cylinder_special",
+      "source": "jma_c12_catalog",
+      "source_confidence": "high",
+      "catalog_page": 140,
+      "expected_visible_text": "MIT-15",
+      "expected_head_markings": null,
+      "expected_blade_markings": null,
+      "possible_tags": [
+        "JMA",
+        "C12",
+        "K01"
+      ],
+      "needs_review": false
+    },
+    {
+      "id_model_ref": "MIT-1D",
+      "brand": "JMA",
+      "model": "MIT-1D",
+      "aliases": [],
+      "family": "MIT",
+      "type": "cylinder_special",
+      "source": "jma_c12_catalog",
+      "source_confidence": "high",
+      "catalog_page": 126,
+      "expected_visible_text": "MIT-1D",
+      "expected_head_markings": null,
+      "expected_blade_markings": null,
+      "possible_tags": [
+        "JMA",
+        "C12",
+        "K01"
+      ],
+      "needs_review": false
+    },
+    {
+      "id_model_ref": "MIT-1I",
+      "brand": "JMA",
+      "model": "MIT-1I",
+      "aliases": [],
+      "family": "MIT",
+      "type": "cylinder_special",
+      "source": "jma_c12_catalog",
+      "source_confidence": "high",
+      "catalog_page": 126,
+      "expected_visible_text": "MIT-1I",
+      "expected_head_markings": null,
+      "expected_blade_markings": null,
+      "possible_tags": [
+        "JMA",
+        "C12",
+        "K01"
+      ],
+      "needs_review": false
+    },
+    {
+      "id_model_ref": "MIT-2D",
+      "brand": "JMA",
+      "model": "MIT-2D",
+      "aliases": [],
+      "family": "MIT",
+      "type": "cylinder_special",
+      "source": "jma_c12_catalog",
+      "source_confidence": "high",
+      "catalog_page": 123,
+      "expected_visible_text": "MIT-2D",
+      "expected_head_markings": null,
+      "expected_blade_markings": null,
+      "possible_tags": [
+        "JMA",
+        "C12",
+        "K01"
+      ],
+      "needs_review": false
+    },
+    {
+      "id_model_ref": "MIT-2I",
+      "brand": "JMA",
+      "model": "MIT-2I",
+      "aliases": [],
+      "family": "MIT",
+      "type": "cylinder_special",
+      "source": "jma_c12_catalog",
+      "source_confidence": "high",
+      "catalog_page": 123,
+      "expected_visible_text": "MIT-2I",
+      "expected_head_markings": null,
+      "expected_blade_markings": null,
+      "possible_tags": [
+        "JMA",
+        "C12",
+        "K01"
+      ],
+      "needs_review": false
+    },
+    {
+      "id_model_ref": "MIT-3",
+      "brand": "JMA",
+      "model": "MIT-3",
+      "aliases": [],
+      "family": "MIT",
+      "type": "cylinder_special",
+      "source": "jma_c12_catalog",
+      "source_confidence": "high",
+      "catalog_page": 140,
+      "expected_visible_text": "MIT-3",
+      "expected_head_markings": null,
+      "expected_blade_markings": null,
+      "possible_tags": [
+        "JMA",
+        "C12",
+        "K01"
+      ],
+      "needs_review": false
+    },
+    {
+      "id_model_ref": "MIT-4",
+      "brand": "JMA",
+      "model": "MIT-4",
+      "aliases": [],
+      "family": "MIT",
+      "type": "cylinder_special",
+      "source": "jma_c12_catalog",
+      "source_confidence": "high",
+      "catalog_page": 140,
+      "expected_visible_text": "MIT-4",
+      "expected_head_markings": null,
+      "expected_blade_markings": null,
+      "possible_tags": [
+        "JMA",
+        "C12",
+        "K01"
+      ],
+      "needs_review": false
+    },
+    {
+      "id_model_ref": "MIT-5",
+      "brand": "JMA",
+      "model": "MIT-5",
+      "aliases": [],
+      "family": "MIT",
+      "type": "cylinder_special",
+      "source": "jma_c12_catalog",
+      "source_confidence": "high",
+      "catalog_page": 140,
+      "expected_visible_text": "MIT-5",
+      "expected_head_markings": null,
+      "expected_blade_markings": null,
+      "possible_tags": [
+        "JMA",
+        "C12",
+        "K01"
+      ],
+      "needs_review": false
+    },
+    {
+      "id_model_ref": "MIT-6",
+      "brand": "JMA",
+      "model": "MIT-6",
+      "aliases": [],
+      "family": "MIT",
+      "type": "cylinder_special",
+      "source": "jma_c12_catalog",
+      "source_confidence": "high",
+      "catalog_page": 140,
+      "expected_visible_text": "MIT-6",
+      "expected_head_markings": null,
+      "expected_blade_markings": null,
+      "possible_tags": [
+        "JMA",
+        "C12",
+        "K01"
+      ],
+      "needs_review": false
+    },
+    {
+      "id_model_ref": "MIT-7",
+      "brand": "JMA",
+      "model": "MIT-7",
+      "aliases": [],
+      "family": "MIT",
+      "type": "cylinder_special",
+      "source": "jma_c12_catalog",
+      "source_confidence": "high",
+      "catalog_page": 140,
+      "expected_visible_text": "MIT-7",
+      "expected_head_markings": null,
+      "expected_blade_markings": null,
+      "possible_tags": [
+        "JMA",
+        "C12",
+        "K01"
+      ],
+      "needs_review": false
+    },
+    {
+      "id_model_ref": "MIT-8D",
+      "brand": "JMA",
+      "model": "MIT-8D",
+      "aliases": [],
+      "family": "MIT",
+      "type": "cylinder_special",
+      "source": "jma_c12_catalog",
+      "source_confidence": "high",
+      "catalog_page": 140,
+      "expected_visible_text": "MIT-8D",
+      "expected_head_markings": null,
+      "expected_blade_markings": null,
+      "possible_tags": [
+        "JMA",
+        "C12",
+        "K01"
+      ],
+      "needs_review": false
+    },
+    {
+      "id_model_ref": "MOS-1",
+      "brand": "JMA",
+      "model": "MOS-1",
+      "aliases": [],
+      "family": "MOS",
+      "type": "cylinder_special",
+      "source": "jma_c12_catalog",
+      "source_confidence": "high",
+      "catalog_page": 141,
+      "expected_visible_text": "MOS-1",
+      "expected_head_markings": null,
+      "expected_blade_markings": null,
+      "possible_tags": [
+        "JMA",
+        "C12",
+        "K01"
+      ],
+      "needs_review": false
+    },
+    {
+      "id_model_ref": "NE-1",
+      "brand": "JMA",
+      "model": "NE-1",
+      "aliases": [],
+      "family": "NE",
+      "type": "cylinder_special",
+      "source": "jma_c12_catalog",
+      "source_confidence": "high",
+      "catalog_page": 127,
+      "expected_visible_text": "NE-1",
+      "expected_head_markings": null,
+      "expected_blade_markings": null,
+      "possible_tags": [
+        "JMA",
+        "C12",
+        "K01"
+      ],
+      "needs_review": false
+    },
+    {
+      "id_model_ref": "NE-10",
+      "brand": "JMA",
+      "model": "NE-10",
+      "aliases": [],
+      "family": "NE",
+      "type": "cylinder_special",
+      "source": "jma_c12_catalog",
+      "source_confidence": "high",
+      "catalog_page": 139,
+      "expected_visible_text": "NE-10",
+      "expected_head_markings": null,
+      "expected_blade_markings": null,
+      "possible_tags": [
+        "JMA",
+        "C12",
+        "K01"
+      ],
+      "needs_review": false
+    },
+    {
+      "id_model_ref": "NE-11",
+      "brand": "JMA",
+      "model": "NE-11",
+      "aliases": [],
+      "family": "NE",
+      "type": "cylinder_special",
+      "source": "jma_c12_catalog",
+      "source_confidence": "high",
+      "catalog_page": 118,
+      "expected_visible_text": "NE-11",
+      "expected_head_markings": null,
+      "expected_blade_markings": null,
+      "possible_tags": [
+        "JMA",
+        "C12",
+        "K01"
+      ],
+      "needs_review": false
+    },
+    {
+      "id_model_ref": "NE-15D",
+      "brand": "JMA",
+      "model": "NE-15D",
+      "aliases": [],
+      "family": "NE",
+      "type": "cylinder_special",
+      "source": "jma_c12_catalog",
+      "source_confidence": "high",
+      "catalog_page": 145,
+      "expected_visible_text": "NE-15D",
+      "expected_head_markings": null,
+      "expected_blade_markings": null,
+      "possible_tags": [
+        "JMA",
+        "C12",
+        "K01"
+      ],
+      "needs_review": false
+    },
+    {
+      "id_model_ref": "NE-15I",
+      "brand": "JMA",
+      "model": "NE-15I",
+      "aliases": [],
+      "family": "NE",
+      "type": "cylinder_special",
+      "source": "jma_c12_catalog",
+      "source_confidence": "high",
+      "catalog_page": 145,
+      "expected_visible_text": "NE-15I",
+      "expected_head_markings": null,
+      "expected_blade_markings": null,
+      "possible_tags": [
+        "JMA",
+        "C12",
+        "K01"
+      ],
+      "needs_review": false
+    },
+    {
+      "id_model_ref": "NE-16",
+      "brand": "JMA",
+      "model": "NE-16",
+      "aliases": [],
+      "family": "NE",
+      "type": "cylinder_special",
+      "source": "jma_c12_catalog",
+      "source_confidence": "high",
+      "catalog_page": 149,
+      "expected_visible_text": "NE-16",
+      "expected_head_markings": null,
+      "expected_blade_markings": null,
+      "possible_tags": [
+        "JMA",
+        "C12",
+        "K01"
+      ],
+      "needs_review": false
+    },
+    {
+      "id_model_ref": "NE-19",
+      "brand": "JMA",
+      "model": "NE-19",
+      "aliases": [],
+      "family": "NE",
+      "type": "cylinder_special",
+      "source": "jma_c12_catalog",
+      "source_confidence": "high",
+      "catalog_page": 145,
+      "expected_visible_text": "NE-19",
+      "expected_head_markings": null,
+      "expected_blade_markings": null,
+      "possible_tags": [
+        "JMA",
+        "C12",
+        "K01"
+      ],
+      "needs_review": false
+    },
+    {
+      "id_model_ref": "NE-1D",
+      "brand": "JMA",
+      "model": "NE-1D",
+      "aliases": [],
+      "family": "NE",
+      "type": "cylinder_special",
+      "source": "jma_c12_catalog",
+      "source_confidence": "high",
+      "catalog_page": 127,
+      "expected_visible_text": "NE-1D",
+      "expected_head_markings": null,
+      "expected_blade_markings": null,
+      "possible_tags": [
+        "JMA",
+        "C12",
+        "K01"
+      ],
+      "needs_review": false
+    },
+    {
+      "id_model_ref": "NE-20",
+      "brand": "JMA",
+      "model": "NE-20",
+      "aliases": [],
+      "family": "NE",
+      "type": "cylinder_special",
+      "source": "jma_c12_catalog",
+      "source_confidence": "high",
+      "catalog_page": 145,
+      "expected_visible_text": "NE-20",
+      "expected_head_markings": null,
+      "expected_blade_markings": null,
+      "possible_tags": [
+        "JMA",
+        "C12",
+        "K01"
+      ],
+      "needs_review": false
+    },
+    {
+      "id_model_ref": "NE-22",
+      "brand": "JMA",
+      "model": "NE-22",
+      "aliases": [],
+      "family": "NE",
+      "type": "cylinder_special",
+      "source": "jma_c12_catalog",
+      "source_confidence": "high",
+      "catalog_page": 138,
+      "expected_visible_text": "NE-22",
+      "expected_head_markings": null,
+      "expected_blade_markings": null,
+      "possible_tags": [
+        "JMA",
+        "C12",
+        "K01"
+      ],
+      "needs_review": false
+    },
+    {
+      "id_model_ref": "NE-24",
+      "brand": "JMA",
+      "model": "NE-24",
+      "aliases": [],
+      "family": "NE",
+      "type": "cylinder_special",
+      "source": "jma_c12_catalog",
+      "source_confidence": "high",
+      "catalog_page": 118,
+      "expected_visible_text": "NE-24",
+      "expected_head_markings": null,
+      "expected_blade_markings": null,
+      "possible_tags": [
+        "JMA",
+        "C12",
+        "K01"
+      ],
+      "needs_review": false
+    },
+    {
+      "id_model_ref": "NE-26NE",
+      "brand": "JMA",
+      "model": "NE-26NE",
+      "aliases": [],
+      "family": "NE",
+      "type": "cylinder_special",
+      "source": "jma_c12_catalog",
+      "source_confidence": "high",
+      "catalog_page": 138,
+      "expected_visible_text": "NE-26NE",
+      "expected_head_markings": null,
+      "expected_blade_markings": null,
+      "possible_tags": [
+        "JMA",
+        "C12",
+        "K01"
+      ],
+      "needs_review": false
+    },
+    {
+      "id_model_ref": "NE-28",
+      "brand": "JMA",
+      "model": "NE-28",
+      "aliases": [],
+      "family": "NE",
+      "type": "cylinder_special",
+      "source": "jma_c12_catalog",
+      "source_confidence": "high",
+      "catalog_page": 149,
+      "expected_visible_text": "NE-28",
+      "expected_head_markings": null,
+      "expected_blade_markings": null,
+      "possible_tags": [
+        "JMA",
+        "C12",
+        "K01"
+      ],
+      "needs_review": false
+    },
+    {
+      "id_model_ref": "NE-29",
+      "brand": "JMA",
+      "model": "NE-29",
+      "aliases": [],
+      "family": "NE",
+      "type": "cylinder_special",
+      "source": "jma_c12_catalog",
+      "source_confidence": "high",
+      "catalog_page": 145,
+      "expected_visible_text": "NE-29",
+      "expected_head_markings": null,
+      "expected_blade_markings": null,
+      "possible_tags": [
+        "JMA",
+        "C12",
+        "K01"
+      ],
+      "needs_review": false
+    },
+    {
+      "id_model_ref": "NE-3",
+      "brand": "JMA",
+      "model": "NE-3",
+      "aliases": [],
+      "family": "NE",
+      "type": "cylinder_special",
+      "source": "jma_c12_catalog",
+      "source_confidence": "high",
+      "catalog_page": 133,
+      "expected_visible_text": "NE-3",
+      "expected_head_markings": null,
+      "expected_blade_markings": null,
+      "possible_tags": [
+        "JMA",
+        "C12",
+        "K01"
+      ],
+      "needs_review": false
+    },
+    {
+      "id_model_ref": "NE-34",
+      "brand": "JMA",
+      "model": "NE-34",
+      "aliases": [],
+      "family": "NE",
+      "type": "cylinder_special",
+      "source": "jma_c12_catalog",
+      "source_confidence": "high",
+      "catalog_page": 145,
+      "expected_visible_text": "NE-34",
+      "expected_head_markings": null,
+      "expected_blade_markings": null,
+      "possible_tags": [
+        "JMA",
+        "C12",
+        "K01"
+      ],
+      "needs_review": false
+    },
+    {
+      "id_model_ref": "NE-35",
+      "brand": "JMA",
+      "model": "NE-35",
+      "aliases": [],
+      "family": "NE",
+      "type": "cylinder_special",
+      "source": "jma_c12_catalog",
+      "source_confidence": "high",
+      "catalog_page": 127,
+      "expected_visible_text": "NE-35",
+      "expected_head_markings": null,
+      "expected_blade_markings": null,
+      "possible_tags": [
+        "JMA",
+        "C12",
+        "K01"
+      ],
+      "needs_review": false
+    },
+    {
+      "id_model_ref": "NE-36",
+      "brand": "JMA",
+      "model": "NE-36",
+      "aliases": [],
+      "family": "NE",
+      "type": "cylinder_special",
+      "source": "jma_c12_catalog",
+      "source_confidence": "high",
+      "catalog_page": 145,
+      "expected_visible_text": "NE-36",
+      "expected_head_markings": null,
+      "expected_blade_markings": null,
+      "possible_tags": [
+        "JMA",
+        "C12",
+        "K01"
+      ],
+      "needs_review": false
+    },
+    {
+      "id_model_ref": "NE-37",
+      "brand": "JMA",
+      "model": "NE-37",
+      "aliases": [],
+      "family": "NE",
+      "type": "cylinder_special",
+      "source": "jma_c12_catalog",
+      "source_confidence": "high",
+      "catalog_page": 146,
+      "expected_visible_text": "NE-37",
+      "expected_head_markings": null,
+      "expected_blade_markings": null,
+      "possible_tags": [
+        "JMA",
+        "C12",
+        "K01"
+      ],
+      "needs_review": false
+    },
+    {
+      "id_model_ref": "NE-38",
+      "brand": "JMA",
+      "model": "NE-38",
+      "aliases": [],
+      "family": "NE",
+      "type": "cylinder_special",
+      "source": "jma_c12_catalog",
+      "source_confidence": "high",
+      "catalog_page": 149,
+      "expected_visible_text": "NE-38",
+      "expected_head_markings": null,
+      "expected_blade_markings": null,
+      "possible_tags": [
+        "JMA",
+        "C12",
+        "K01"
+      ],
+      "needs_review": false
+    },
+    {
+      "id_model_ref": "NE-39",
+      "brand": "JMA",
+      "model": "NE-39",
+      "aliases": [],
+      "family": "NE",
+      "type": "cylinder_special",
+      "source": "jma_c12_catalog",
+      "source_confidence": "high",
+      "catalog_page": 146,
+      "expected_visible_text": "NE-39",
+      "expected_head_markings": null,
+      "expected_blade_markings": null,
+      "possible_tags": [
+        "JMA",
+        "C12",
+        "K01"
+      ],
+      "needs_review": false
+    },
+    {
+      "id_model_ref": "NE-3D",
+      "brand": "JMA",
+      "model": "NE-3D",
+      "aliases": [],
+      "family": "NE",
+      "type": "cylinder_special",
+      "source": "jma_c12_catalog",
+      "source_confidence": "high",
+      "catalog_page": 133,
+      "expected_visible_text": "NE-3D",
+      "expected_head_markings": null,
+      "expected_blade_markings": null,
+      "possible_tags": [
+        "JMA",
+        "C12",
+        "K01"
+      ],
+      "needs_review": false
+    },
+    {
+      "id_model_ref": "NE-4",
+      "brand": "JMA",
+      "model": "NE-4",
+      "aliases": [],
+      "family": "NE",
+      "type": "cylinder_special",
+      "source": "jma_c12_catalog",
+      "source_confidence": "high",
+      "catalog_page": 145,
+      "expected_visible_text": "NE-4",
+      "expected_head_markings": null,
+      "expected_blade_markings": null,
+      "possible_tags": [
+        "JMA",
+        "C12",
+        "K01"
+      ],
+      "needs_review": false
+    },
+    {
+      "id_model_ref": "NE-42",
+      "brand": "JMA",
+      "model": "NE-42",
+      "aliases": [],
+      "family": "NE",
+      "type": "cylinder_special",
+      "source": "jma_c12_catalog",
+      "source_confidence": "high",
+      "catalog_page": 147,
+      "expected_visible_text": "NE-42",
+      "expected_head_markings": null,
+      "expected_blade_markings": null,
+      "possible_tags": [
+        "JMA",
+        "C12",
+        "K01"
+      ],
+      "needs_review": false
+    },
+    {
+      "id_model_ref": "NE-43",
+      "brand": "JMA",
+      "model": "NE-43",
+      "aliases": [],
+      "family": "NE",
+      "type": "cylinder_special",
+      "source": "jma_c12_catalog",
+      "source_confidence": "high",
+      "catalog_page": 147,
+      "expected_visible_text": "NE-43",
+      "expected_head_markings": null,
+      "expected_blade_markings": null,
+      "possible_tags": [
+        "JMA",
+        "C12",
+        "K01"
+      ],
+      "needs_review": false
+    },
+    {
+      "id_model_ref": "NE-4D",
+      "brand": "JMA",
+      "model": "NE-4D",
+      "aliases": [],
+      "family": "NE",
+      "type": "cylinder_special",
+      "source": "jma_c12_catalog",
+      "source_confidence": "high",
+      "catalog_page": 145,
+      "expected_visible_text": "NE-4D",
+      "expected_head_markings": null,
+      "expected_blade_markings": null,
+      "possible_tags": [
+        "JMA",
+        "C12",
+        "K01"
+      ],
+      "needs_review": false
+    },
+    {
+      "id_model_ref": "NE-5",
+      "brand": "JMA",
+      "model": "NE-5",
+      "aliases": [],
+      "family": "NE",
+      "type": "cylinder_special",
+      "source": "jma_c12_catalog",
+      "source_confidence": "high",
+      "catalog_page": 149,
+      "expected_visible_text": "NE-5",
+      "expected_head_markings": null,
+      "expected_blade_markings": null,
+      "possible_tags": [
+        "JMA",
+        "C12",
+        "K01"
+      ],
+      "needs_review": false
+    },
+    {
+      "id_model_ref": "NE-50",
+      "brand": "JMA",
+      "model": "NE-50",
+      "aliases": [],
+      "family": "NE",
+      "type": "cylinder_special",
+      "source": "jma_c12_catalog",
+      "source_confidence": "high",
+      "catalog_page": 150,
+      "expected_visible_text": "NE-50",
+      "expected_head_markings": null,
+      "expected_blade_markings": null,
+      "possible_tags": [
+        "JMA",
+        "C12",
+        "K01"
+      ],
+      "needs_review": false
+    },
+    {
+      "id_model_ref": "NE-51",
+      "brand": "JMA",
+      "model": "NE-51",
+      "aliases": [],
+      "family": "NE",
+      "type": "cylinder_special",
+      "source": "jma_c12_catalog",
+      "source_confidence": "high",
+      "catalog_page": 146,
+      "expected_visible_text": "NE-51",
+      "expected_head_markings": null,
+      "expected_blade_markings": null,
+      "possible_tags": [
+        "JMA",
+        "C12",
+        "K01"
+      ],
+      "needs_review": false
+    },
+    {
+      "id_model_ref": "NE-52",
+      "brand": "JMA",
+      "model": "NE-52",
+      "aliases": [],
+      "family": "NE",
+      "type": "cylinder_special",
+      "source": "jma_c12_catalog",
+      "source_confidence": "high",
+      "catalog_page": 135,
+      "expected_visible_text": "NE-52",
+      "expected_head_markings": null,
+      "expected_blade_markings": null,
+      "possible_tags": [
+        "JMA",
+        "C12",
+        "K01"
+      ],
+      "needs_review": false
+    },
+    {
+      "id_model_ref": "NE-53",
+      "brand": "JMA",
+      "model": "NE-53",
+      "aliases": [],
+      "family": "NE",
+      "type": "cylinder_special",
+      "source": "jma_c12_catalog",
+      "source_confidence": "high",
+      "catalog_page": 147,
+      "expected_visible_text": "NE-53",
+      "expected_head_markings": null,
+      "expected_blade_markings": null,
+      "possible_tags": [
+        "JMA",
+        "C12",
+        "K01"
+      ],
+      "needs_review": false
+    },
+    {
+      "id_model_ref": "NE-55",
+      "brand": "JMA",
+      "model": "NE-55",
+      "aliases": [],
+      "family": "NE",
+      "type": "cylinder_special",
+      "source": "jma_c12_catalog",
+      "source_confidence": "high",
+      "catalog_page": 150,
+      "expected_visible_text": "NE-55",
+      "expected_head_markings": null,
+      "expected_blade_markings": null,
+      "possible_tags": [
+        "JMA",
+        "C12",
+        "K01"
+      ],
+      "needs_review": false
+    },
+    {
+      "id_model_ref": "NE-59",
+      "brand": "JMA",
+      "model": "NE-59",
+      "aliases": [],
+      "family": "NE",
+      "type": "cylinder_special",
+      "source": "jma_c12_catalog",
+      "source_confidence": "high",
+      "catalog_page": 150,
+      "expected_visible_text": "NE-59",
+      "expected_head_markings": null,
+      "expected_blade_markings": null,
+      "possible_tags": [
+        "JMA",
+        "C12",
+        "K01"
+      ],
+      "needs_review": false
+    },
+    {
+      "id_model_ref": "NE-61D",
+      "brand": "JMA",
+      "model": "NE-61D",
+      "aliases": [],
+      "family": "NE",
+      "type": "cylinder_special",
+      "source": "jma_c12_catalog",
+      "source_confidence": "high",
+      "catalog_page": 139,
+      "expected_visible_text": "NE-61D",
+      "expected_head_markings": null,
+      "expected_blade_markings": null,
+      "possible_tags": [
+        "JMA",
+        "C12",
+        "K01"
+      ],
+      "needs_review": false
+    },
+    {
+      "id_model_ref": "NE-62",
+      "brand": "JMA",
+      "model": "NE-62",
+      "aliases": [],
+      "family": "NE",
+      "type": "cylinder_special",
+      "source": "jma_c12_catalog",
+      "source_confidence": "high",
+      "catalog_page": 139,
+      "expected_visible_text": "NE-62",
+      "expected_head_markings": null,
+      "expected_blade_markings": null,
+      "possible_tags": [
+        "JMA",
+        "C12",
+        "K01"
+      ],
+      "needs_review": false
+    },
+    {
+      "id_model_ref": "OP-6",
+      "brand": "JMA",
+      "model": "OP-6",
+      "aliases": [],
+      "family": "OP",
+      "type": "cylinder_special",
+      "source": "jma_c12_catalog",
+      "source_confidence": "high",
+      "catalog_page": 144,
+      "expected_visible_text": "OP-6",
+      "expected_head_markings": null,
+      "expected_blade_markings": null,
+      "possible_tags": [
+        "JMA",
+        "C12",
+        "K01"
+      ],
+      "needs_review": false
+    },
+    {
+      "id_model_ref": "OP-7",
+      "brand": "JMA",
+      "model": "OP-7",
+      "aliases": [],
+      "family": "OP",
+      "type": "cylinder_special",
+      "source": "jma_c12_catalog",
+      "source_confidence": "high",
+      "catalog_page": 144,
+      "expected_visible_text": "OP-7",
+      "expected_head_markings": null,
+      "expected_blade_markings": null,
+      "possible_tags": [
+        "JMA",
+        "C12",
+        "K01"
+      ],
+      "needs_review": false
+    },
+    {
+      "id_model_ref": "OP-8",
+      "brand": "JMA",
+      "model": "OP-8",
+      "aliases": [],
+      "family": "OP",
+      "type": "cylinder_special",
+      "source": "jma_c12_catalog",
+      "source_confidence": "high",
+      "catalog_page": 144,
+      "expected_visible_text": "OP-8",
+      "expected_head_markings": null,
+      "expected_blade_markings": null,
+      "possible_tags": [
+        "JMA",
+        "C12",
+        "K01"
+      ],
+      "needs_review": false
+    },
+    {
+      "id_model_ref": "OP-9",
+      "brand": "JMA",
+      "model": "OP-9",
+      "aliases": [],
+      "family": "OP",
+      "type": "cylinder_special",
+      "source": "jma_c12_catalog",
+      "source_confidence": "high",
+      "catalog_page": 144,
+      "expected_visible_text": "OP-9",
+      "expected_head_markings": null,
+      "expected_blade_markings": null,
+      "possible_tags": [
+        "JMA",
+        "C12",
+        "K01"
+      ],
+      "needs_review": false
+    },
+    {
+      "id_model_ref": "PO-2",
+      "brand": "JMA",
+      "model": "PO-2",
+      "aliases": [],
+      "family": "PO",
+      "type": "cylinder_special",
+      "source": "jma_c12_catalog",
+      "source_confidence": "high",
+      "catalog_page": 147,
+      "expected_visible_text": "PO-2",
+      "expected_head_markings": null,
+      "expected_blade_markings": null,
+      "possible_tags": [
+        "JMA",
+        "C12",
+        "K01"
+      ],
+      "needs_review": false
+    },
+    {
+      "id_model_ref": "PSUZU-7",
+      "brand": "JMA",
+      "model": "PSUZU-7",
+      "aliases": [],
+      "family": "PSUZU",
+      "type": "cylinder_special",
+      "source": "jma_c12_catalog",
+      "source_confidence": "high",
+      "catalog_page": 124,
+      "expected_visible_text": "PSUZU-7",
+      "expected_head_markings": null,
+      "expected_blade_markings": null,
+      "possible_tags": [
+        "JMA",
+        "C12",
+        "K01"
+      ],
+      "needs_review": false
+    },
+    {
+      "id_model_ref": "RE-1",
+      "brand": "JMA",
+      "model": "RE-1",
+      "aliases": [],
+      "family": "RE",
+      "type": "cylinder_special",
+      "source": "jma_c12_catalog",
+      "source_confidence": "high",
+      "catalog_page": 127,
+      "expected_visible_text": "RE-1",
+      "expected_head_markings": null,
+      "expected_blade_markings": null,
+      "possible_tags": [
+        "JMA",
+        "C12",
+        "K01"
+      ],
+      "needs_review": false
+    },
+    {
+      "id_model_ref": "RE-1D",
+      "brand": "JMA",
+      "model": "RE-1D",
+      "aliases": [],
+      "family": "RE",
+      "type": "cylinder_special",
+      "source": "jma_c12_catalog",
+      "source_confidence": "high",
+      "catalog_page": 127,
+      "expected_visible_text": "RE-1D",
+      "expected_head_markings": null,
+      "expected_blade_markings": null,
+      "possible_tags": [
+        "JMA",
+        "C12",
+        "K01"
+      ],
+      "needs_review": false
+    },
+    {
+      "id_model_ref": "RO-11D",
+      "brand": "JMA",
+      "model": "RO-11D",
+      "aliases": [],
+      "family": "RO",
+      "type": "cylinder_special",
+      "source": "jma_c12_catalog",
+      "source_confidence": "high",
+      "catalog_page": 146,
+      "expected_visible_text": "RO-11D",
+      "expected_head_markings": null,
+      "expected_blade_markings": null,
+      "possible_tags": [
+        "JMA",
+        "C12",
+        "K01"
+      ],
+      "needs_review": false
+    },
+    {
+      "id_model_ref": "RO-11I",
+      "brand": "JMA",
+      "model": "RO-11I",
+      "aliases": [],
+      "family": "RO",
+      "type": "cylinder_special",
+      "source": "jma_c12_catalog",
+      "source_confidence": "high",
+      "catalog_page": 146,
+      "expected_visible_text": "RO-11I",
+      "expected_head_markings": null,
+      "expected_blade_markings": null,
+      "possible_tags": [
+        "JMA",
+        "C12",
+        "K01"
+      ],
+      "needs_review": false
+    },
+    {
+      "id_model_ref": "RO-14",
+      "brand": "JMA",
+      "model": "RO-14",
+      "aliases": [],
+      "family": "RO",
+      "type": "cylinder_special",
+      "source": "jma_c12_catalog",
+      "source_confidence": "high",
+      "catalog_page": 146,
+      "expected_visible_text": "RO-14",
+      "expected_head_markings": null,
+      "expected_blade_markings": null,
+      "possible_tags": [
+        "JMA",
+        "C12",
+        "K01"
+      ],
+      "needs_review": false
+    },
+    {
+      "id_model_ref": "RO-15",
+      "brand": "JMA",
+      "model": "RO-15",
+      "aliases": [],
+      "family": "RO",
+      "type": "cylinder_special",
+      "source": "jma_c12_catalog",
+      "source_confidence": "high",
+      "catalog_page": 150,
+      "expected_visible_text": "RO-15",
+      "expected_head_markings": null,
+      "expected_blade_markings": null,
+      "possible_tags": [
+        "JMA",
+        "C12",
+        "K01"
+      ],
+      "needs_review": false
+    },
+    {
+      "id_model_ref": "RO-1D",
+      "brand": "JMA",
+      "model": "RO-1D",
+      "aliases": [],
+      "family": "RO",
+      "type": "cylinder_special",
+      "source": "jma_c12_catalog",
+      "source_confidence": "high",
+      "catalog_page": 146,
+      "expected_visible_text": "RO-1D",
+      "expected_head_markings": null,
+      "expected_blade_markings": null,
+      "possible_tags": [
+        "JMA",
+        "C12",
+        "K01"
+      ],
+      "needs_review": false
+    },
+    {
+      "id_model_ref": "RO-1DS",
+      "brand": "JMA",
+      "model": "RO-1DS",
+      "aliases": [],
+      "family": "RO",
+      "type": "cylinder_special",
+      "source": "jma_c12_catalog",
+      "source_confidence": "high",
+      "catalog_page": 144,
+      "expected_visible_text": "RO-1DS",
+      "expected_head_markings": null,
+      "expected_blade_markings": null,
+      "possible_tags": [
+        "JMA",
+        "C12",
+        "K01"
+      ],
+      "needs_review": false
+    },
+    {
+      "id_model_ref": "RO-1I",
+      "brand": "JMA",
+      "model": "RO-1I",
+      "aliases": [],
+      "family": "RO",
+      "type": "cylinder_special",
+      "source": "jma_c12_catalog",
+      "source_confidence": "high",
+      "catalog_page": 146,
+      "expected_visible_text": "RO-1I",
+      "expected_head_markings": null,
+      "expected_blade_markings": null,
+      "possible_tags": [
+        "JMA",
+        "C12",
+        "K01"
+      ],
+      "needs_review": false
+    },
+    {
+      "id_model_ref": "RO-1IS",
+      "brand": "JMA",
+      "model": "RO-1IS",
+      "aliases": [],
+      "family": "RO",
+      "type": "cylinder_special",
+      "source": "jma_c12_catalog",
+      "source_confidence": "high",
+      "catalog_page": 144,
+      "expected_visible_text": "RO-1IS",
+      "expected_head_markings": null,
+      "expected_blade_markings": null,
+      "possible_tags": [
+        "JMA",
+        "C12",
+        "K01"
+      ],
+      "needs_review": false
+    },
+    {
+      "id_model_ref": "RO-2D",
+      "brand": "JMA",
+      "model": "RO-2D",
+      "aliases": [],
+      "family": "RO",
+      "type": "cylinder_special",
+      "source": "jma_c12_catalog",
+      "source_confidence": "high",
+      "catalog_page": 146,
+      "expected_visible_text": "RO-2D",
+      "expected_head_markings": null,
+      "expected_blade_markings": null,
+      "possible_tags": [
+        "JMA",
+        "C12",
+        "K01"
+      ],
+      "needs_review": false
+    },
+    {
+      "id_model_ref": "RO-2I",
+      "brand": "JMA",
+      "model": "RO-2I",
+      "aliases": [],
+      "family": "RO",
+      "type": "cylinder_special",
+      "source": "jma_c12_catalog",
+      "source_confidence": "high",
+      "catalog_page": 146,
+      "expected_visible_text": "RO-2I",
+      "expected_head_markings": null,
+      "expected_blade_markings": null,
+      "possible_tags": [
+        "JMA",
+        "C12",
+        "K01"
+      ],
+      "needs_review": false
+    },
+    {
+      "id_model_ref": "RO-3",
+      "brand": "JMA",
+      "model": "RO-3",
+      "aliases": [],
+      "family": "RO",
+      "type": "cylinder_special",
+      "source": "jma_c12_catalog",
+      "source_confidence": "high",
+      "catalog_page": 144,
+      "expected_visible_text": "RO-3",
+      "expected_head_markings": null,
+      "expected_blade_markings": null,
+      "possible_tags": [
+        "JMA",
+        "C12",
+        "K01"
+      ],
+      "needs_review": false
+    },
+    {
+      "id_model_ref": "RO-4D",
+      "brand": "JMA",
+      "model": "RO-4D",
+      "aliases": [],
+      "family": "RO",
+      "type": "cylinder_special",
+      "source": "jma_c12_catalog",
+      "source_confidence": "high",
+      "catalog_page": 146,
+      "expected_visible_text": "RO-4D",
+      "expected_head_markings": null,
+      "expected_blade_markings": null,
+      "possible_tags": [
+        "JMA",
+        "C12",
+        "K01"
+      ],
+      "needs_review": false
+    },
+    {
+      "id_model_ref": "RO-4I",
+      "brand": "JMA",
+      "model": "RO-4I",
+      "aliases": [],
+      "family": "RO",
+      "type": "cylinder_special",
+      "source": "jma_c12_catalog",
+      "source_confidence": "high",
+      "catalog_page": 146,
+      "expected_visible_text": "RO-4I",
+      "expected_head_markings": null,
+      "expected_blade_markings": null,
+      "possible_tags": [
+        "JMA",
+        "C12",
+        "K01"
+      ],
+      "needs_review": false
+    },
+    {
+      "id_model_ref": "RO-5D",
+      "brand": "JMA",
+      "model": "RO-5D",
+      "aliases": [],
+      "family": "RO",
+      "type": "cylinder_special",
+      "source": "jma_c12_catalog",
+      "source_confidence": "high",
+      "catalog_page": 137,
+      "expected_visible_text": "RO-5D",
+      "expected_head_markings": null,
+      "expected_blade_markings": null,
+      "possible_tags": [
+        "JMA",
+        "C12",
+        "K01"
+      ],
+      "needs_review": false
+    },
+    {
+      "id_model_ref": "RO-5I",
+      "brand": "JMA",
+      "model": "RO-5I",
+      "aliases": [],
+      "family": "RO",
+      "type": "cylinder_special",
+      "source": "jma_c12_catalog",
+      "source_confidence": "high",
+      "catalog_page": 137,
+      "expected_visible_text": "RO-5I",
+      "expected_head_markings": null,
+      "expected_blade_markings": null,
+      "possible_tags": [
+        "JMA",
+        "C12",
+        "K01"
+      ],
+      "needs_review": false
+    },
+    {
+      "id_model_ref": "RO-6D",
+      "brand": "JMA",
+      "model": "RO-6D",
+      "aliases": [],
+      "family": "RO",
+      "type": "cylinder_special",
+      "source": "jma_c12_catalog",
+      "source_confidence": "high",
+      "catalog_page": 146,
+      "expected_visible_text": "RO-6D",
+      "expected_head_markings": null,
+      "expected_blade_markings": null,
+      "possible_tags": [
+        "JMA",
+        "C12",
+        "K01"
+      ],
+      "needs_review": false
+    },
+    {
+      "id_model_ref": "RO-6I",
+      "brand": "JMA",
+      "model": "RO-6I",
+      "aliases": [],
+      "family": "RO",
+      "type": "cylinder_special",
+      "source": "jma_c12_catalog",
+      "source_confidence": "high",
+      "catalog_page": 146,
+      "expected_visible_text": "RO-6I",
+      "expected_head_markings": null,
+      "expected_blade_markings": null,
+      "possible_tags": [
+        "JMA",
+        "C12",
+        "K01"
+      ],
+      "needs_review": false
+    },
+    {
+      "id_model_ref": "SIP-1",
+      "brand": "JMA",
+      "model": "SIP-1",
+      "aliases": [],
+      "family": "SIP",
+      "type": "cylinder_special",
+      "source": "jma_c12_catalog",
+      "source_confidence": "high",
+      "catalog_page": 143,
+      "expected_visible_text": "SIP-1",
+      "expected_head_markings": null,
+      "expected_blade_markings": null,
+      "possible_tags": [
+        "JMA",
+        "C12",
+        "K01"
+      ],
+      "needs_review": false
+    },
+    {
+      "id_model_ref": "SIP-2",
+      "brand": "JMA",
+      "model": "SIP-2",
+      "aliases": [],
+      "family": "SIP",
+      "type": "cylinder_special",
+      "source": "jma_c12_catalog",
+      "source_confidence": "high",
+      "catalog_page": 148,
+      "expected_visible_text": "SIP-2",
+      "expected_head_markings": null,
+      "expected_blade_markings": null,
+      "possible_tags": [
+        "JMA",
+        "C12",
+        "K01"
+      ],
+      "needs_review": false
+    },
+    {
+      "id_model_ref": "SIP-3",
+      "brand": "JMA",
+      "model": "SIP-3",
+      "aliases": [],
+      "family": "SIP",
+      "type": "cylinder_special",
+      "source": "jma_c12_catalog",
+      "source_confidence": "high",
+      "catalog_page": 135,
+      "expected_visible_text": "SIP-3",
+      "expected_head_markings": null,
+      "expected_blade_markings": null,
+      "possible_tags": [
+        "JMA",
+        "C12",
+        "K01"
+      ],
+      "needs_review": false
+    },
+    {
+      "id_model_ref": "SIX-1",
+      "brand": "JMA",
+      "model": "SIX-1",
+      "aliases": [],
+      "family": "SIX",
+      "type": "cylinder_special",
+      "source": "jma_c12_catalog",
+      "source_confidence": "high",
+      "catalog_page": 146,
+      "expected_visible_text": "SIX-1",
+      "expected_head_markings": null,
+      "expected_blade_markings": null,
+      "possible_tags": [
+        "JMA",
+        "C12",
+        "K01"
+      ],
+      "needs_review": false
+    },
+    {
+      "id_model_ref": "SIX-2",
+      "brand": "JMA",
+      "model": "SIX-2",
+      "aliases": [],
+      "family": "SIX",
+      "type": "cylinder_special",
+      "source": "jma_c12_catalog",
+      "source_confidence": "high",
+      "catalog_page": 146,
+      "expected_visible_text": "SIX-2",
+      "expected_head_markings": null,
+      "expected_blade_markings": null,
+      "possible_tags": [
+        "JMA",
+        "C12",
+        "K01"
+      ],
+      "needs_review": false
+    },
+    {
+      "id_model_ref": "SIX-3",
+      "brand": "JMA",
+      "model": "SIX-3",
+      "aliases": [],
+      "family": "SIX",
+      "type": "cylinder_special",
+      "source": "jma_c12_catalog",
+      "source_confidence": "high",
+      "catalog_page": 132,
+      "expected_visible_text": "SIX-3",
+      "expected_head_markings": null,
+      "expected_blade_markings": null,
+      "possible_tags": [
+        "JMA",
+        "C12",
+        "K01"
+      ],
+      "needs_review": false
+    },
+    {
+      "id_model_ref": "SIX-4",
+      "brand": "JMA",
+      "model": "SIX-4",
+      "aliases": [],
+      "family": "SIX",
+      "type": "cylinder_special",
+      "source": "jma_c12_catalog",
+      "source_confidence": "high",
+      "catalog_page": 146,
+      "expected_visible_text": "SIX-4",
+      "expected_head_markings": null,
+      "expected_blade_markings": null,
+      "possible_tags": [
+        "JMA",
+        "C12",
+        "K01"
+      ],
+      "needs_review": false
+    },
+    {
+      "id_model_ref": "SUZU-10",
+      "brand": "JMA",
+      "model": "SUZU-10",
+      "aliases": [],
+      "family": "SUZU",
+      "type": "cylinder_special",
+      "source": "jma_c12_catalog",
+      "source_confidence": "high",
+      "catalog_page": 126,
+      "expected_visible_text": "SUZU-10",
+      "expected_head_markings": null,
+      "expected_blade_markings": null,
+      "possible_tags": [
+        "JMA",
+        "C12",
+        "K01"
+      ],
+      "needs_review": false
+    },
+    {
+      "id_model_ref": "SUZU-7",
+      "brand": "JMA",
+      "model": "SUZU-7",
+      "aliases": [],
+      "family": "SUZU",
+      "type": "cylinder_special",
+      "source": "jma_c12_catalog",
+      "source_confidence": "high",
+      "catalog_page": 124,
+      "expected_visible_text": "SUZU-7",
+      "expected_head_markings": null,
+      "expected_blade_markings": null,
+      "possible_tags": [
+        "JMA",
+        "C12",
+        "K01"
+      ],
+      "needs_review": false
+    },
+    {
+      "id_model_ref": "SUZU-7D",
+      "brand": "JMA",
+      "model": "SUZU-7D",
+      "aliases": [],
+      "family": "SUZU",
+      "type": "cylinder_special",
+      "source": "jma_c12_catalog",
+      "source_confidence": "high",
+      "catalog_page": 124,
+      "expected_visible_text": "SUZU-7D",
+      "expected_head_markings": null,
+      "expected_blade_markings": null,
+      "possible_tags": [
+        "JMA",
+        "C12",
+        "K01"
+      ],
+      "needs_review": false
+    },
+    {
+      "id_model_ref": "TAT-2D",
+      "brand": "JMA",
+      "model": "TAT-2D",
+      "aliases": [],
+      "family": "TAT",
+      "type": "cylinder_special",
+      "source": "jma_c12_catalog",
+      "source_confidence": "high",
+      "catalog_page": 136,
+      "expected_visible_text": "TAT-2D",
+      "expected_head_markings": null,
+      "expected_blade_markings": null,
+      "possible_tags": [
+        "JMA",
+        "C12",
+        "K01"
+      ],
+      "needs_review": false
+    },
+    {
+      "id_model_ref": "TOYO-14",
+      "brand": "JMA",
+      "model": "TOYO-14",
+      "aliases": [],
+      "family": "TOYO",
+      "type": "cylinder_special",
+      "source": "jma_c12_catalog",
+      "source_confidence": "high",
+      "catalog_page": 127,
+      "expected_visible_text": "TOYO-14",
+      "expected_head_markings": null,
+      "expected_blade_markings": null,
+      "possible_tags": [
+        "JMA",
+        "C12",
+        "K01"
+      ],
+      "needs_review": false
+    },
+    {
+      "id_model_ref": "TOYO-15",
+      "brand": "JMA",
+      "model": "TOYO-15",
+      "aliases": [],
+      "family": "TOYO",
+      "type": "cylinder_special",
+      "source": "jma_c12_catalog",
+      "source_confidence": "high",
+      "catalog_page": 123,
+      "expected_visible_text": "TOYO-15",
+      "expected_head_markings": null,
+      "expected_blade_markings": null,
+      "possible_tags": [
+        "JMA",
+        "C12",
+        "K01"
+      ],
+      "needs_review": false
+    },
+    {
+      "id_model_ref": "TOYO-15D",
+      "brand": "JMA",
+      "model": "TOYO-15D",
+      "aliases": [],
+      "family": "TOYO",
+      "type": "cylinder_special",
+      "source": "jma_c12_catalog",
+      "source_confidence": "high",
+      "catalog_page": 123,
+      "expected_visible_text": "TOYO-15D",
+      "expected_head_markings": null,
+      "expected_blade_markings": null,
+      "possible_tags": [
+        "JMA",
+        "C12",
+        "K01"
+      ],
+      "needs_review": false
+    },
+    {
+      "id_model_ref": "TOYO-18",
+      "brand": "JMA",
+      "model": "TOYO-18",
+      "aliases": [],
+      "family": "TOYO",
+      "type": "cylinder_special",
+      "source": "jma_c12_catalog",
+      "source_confidence": "high",
+      "catalog_page": 123,
+      "expected_visible_text": "TOYO-18",
+      "expected_head_markings": null,
+      "expected_blade_markings": null,
+      "possible_tags": [
+        "JMA",
+        "C12",
+        "K01"
+      ],
+      "needs_review": false
+    },
+    {
+      "id_model_ref": "TOYO-30",
+      "brand": "JMA",
+      "model": "TOYO-30",
+      "aliases": [],
+      "family": "TOYO",
+      "type": "cylinder_special",
+      "source": "jma_c12_catalog",
+      "source_confidence": "high",
+      "catalog_page": 135,
+      "expected_visible_text": "TOYO-30",
+      "expected_head_markings": null,
+      "expected_blade_markings": null,
+      "possible_tags": [
+        "JMA",
+        "C12",
+        "K01"
+      ],
+      "needs_review": false
+    },
+    {
+      "id_model_ref": "TOYO-4",
+      "brand": "JMA",
+      "model": "TOYO-4",
+      "aliases": [],
+      "family": "TOYO",
+      "type": "cylinder_special",
+      "source": "jma_c12_catalog",
+      "source_confidence": "high",
+      "catalog_page": 127,
+      "expected_visible_text": "TOYO-4",
+      "expected_head_markings": null,
+      "expected_blade_markings": null,
+      "possible_tags": [
+        "JMA",
+        "C12",
+        "K01"
+      ],
+      "needs_review": false
+    },
+    {
+      "id_model_ref": "TOYO-40",
+      "brand": "JMA",
+      "model": "TOYO-40",
+      "aliases": [],
+      "family": "TOYO",
+      "type": "cylinder_special",
+      "source": "jma_c12_catalog",
+      "source_confidence": "high",
+      "catalog_page": 123,
+      "expected_visible_text": "TOYO-40",
+      "expected_head_markings": null,
+      "expected_blade_markings": null,
+      "possible_tags": [
+        "JMA",
+        "C12",
+        "K01"
+      ],
+      "needs_review": false
+    },
+    {
+      "id_model_ref": "TOYO-40D",
+      "brand": "JMA",
+      "model": "TOYO-40D",
+      "aliases": [],
+      "family": "TOYO",
+      "type": "cylinder_special",
+      "source": "jma_c12_catalog",
+      "source_confidence": "high",
+      "catalog_page": 123,
+      "expected_visible_text": "TOYO-40D",
+      "expected_head_markings": null,
+      "expected_blade_markings": null,
+      "possible_tags": [
+        "JMA",
+        "C12",
+        "K01"
+      ],
+      "needs_review": false
+    },
+    {
+      "id_model_ref": "TOYO-41",
+      "brand": "JMA",
+      "model": "TOYO-41",
+      "aliases": [],
+      "family": "TOYO",
+      "type": "cylinder_special",
+      "source": "jma_c12_catalog",
+      "source_confidence": "high",
+      "catalog_page": 123,
+      "expected_visible_text": "TOYO-41",
+      "expected_head_markings": null,
+      "expected_blade_markings": null,
+      "possible_tags": [
+        "JMA",
+        "C12",
+        "K01"
+      ],
+      "needs_review": false
+    },
+    {
+      "id_model_ref": "UN-1FS",
+      "brand": "JMA",
+      "model": "UN-1FS",
+      "aliases": [],
+      "family": "UN",
+      "type": "cylinder_special",
+      "source": "jma_c12_catalog",
+      "source_confidence": "high",
+      "catalog_page": 130,
+      "expected_visible_text": "UN-1FS",
+      "expected_head_markings": null,
+      "expected_blade_markings": null,
+      "possible_tags": [
+        "JMA",
+        "C12",
+        "K01"
+      ],
+      "needs_review": false
+    },
+    {
+      "id_model_ref": "UN-2",
+      "brand": "JMA",
+      "model": "UN-2",
+      "aliases": [],
+      "family": "UN",
+      "type": "cylinder_special",
+      "source": "jma_c12_catalog",
+      "source_confidence": "high",
+      "catalog_page": 130,
+      "expected_visible_text": "UN-2",
+      "expected_head_markings": null,
+      "expected_blade_markings": null,
+      "possible_tags": [
+        "JMA",
+        "C12",
+        "K01"
+      ],
+      "needs_review": false
+    },
+    {
+      "id_model_ref": "UN-3",
+      "brand": "JMA",
+      "model": "UN-3",
+      "aliases": [],
+      "family": "UN",
+      "type": "cylinder_special",
+      "source": "jma_c12_catalog",
+      "source_confidence": "high",
+      "catalog_page": 130,
+      "expected_visible_text": "UN-3",
+      "expected_head_markings": null,
+      "expected_blade_markings": null,
+      "possible_tags": [
+        "JMA",
+        "C12",
+        "K01"
+      ],
+      "needs_review": false
+    },
+    {
+      "id_model_ref": "UN-4",
+      "brand": "JMA",
+      "model": "UN-4",
+      "aliases": [],
+      "family": "UN",
+      "type": "cylinder_special",
+      "source": "jma_c12_catalog",
+      "source_confidence": "high",
+      "catalog_page": 131,
+      "expected_visible_text": "UN-4",
+      "expected_head_markings": null,
+      "expected_blade_markings": null,
+      "possible_tags": [
+        "JMA",
+        "C12",
+        "K01"
+      ],
+      "needs_review": false
+    },
+    {
+      "id_model_ref": "UN-44",
+      "brand": "JMA",
+      "model": "UN-44",
+      "aliases": [],
+      "family": "UN",
+      "type": "cylinder_special",
+      "source": "jma_c12_catalog",
+      "source_confidence": "high",
+      "catalog_page": 130,
+      "expected_visible_text": "UN-44",
+      "expected_head_markings": null,
+      "expected_blade_markings": null,
+      "possible_tags": [
+        "JMA",
+        "C12",
+        "K01"
+      ],
+      "needs_review": false
+    },
+    {
+      "id_model_ref": "UN-44D",
+      "brand": "JMA",
+      "model": "UN-44D",
+      "aliases": [],
+      "family": "UN",
+      "type": "cylinder_special",
+      "source": "jma_c12_catalog",
+      "source_confidence": "high",
+      "catalog_page": 130,
+      "expected_visible_text": "UN-44D",
+      "expected_head_markings": null,
+      "expected_blade_markings": null,
+      "possible_tags": [
+        "JMA",
+        "C12",
+        "K01"
+      ],
+      "needs_review": false
+    },
+    {
+      "id_model_ref": "VA-10",
+      "brand": "JMA",
+      "model": "VA-10",
+      "aliases": [],
+      "family": "VA",
+      "type": "cylinder_special",
+      "source": "jma_c12_catalog",
+      "source_confidence": "high",
+      "catalog_page": 150,
+      "expected_visible_text": "VA-10",
+      "expected_head_markings": null,
+      "expected_blade_markings": null,
+      "possible_tags": [
+        "JMA",
+        "C12",
+        "K01"
+      ],
+      "needs_review": false
+    },
+    {
+      "id_model_ref": "VA-17",
+      "brand": "JMA",
+      "model": "VA-17",
+      "aliases": [],
+      "family": "VA",
+      "type": "cylinder_special",
+      "source": "jma_c12_catalog",
+      "source_confidence": "high",
+      "catalog_page": 150,
+      "expected_visible_text": "VA-17",
+      "expected_head_markings": null,
+      "expected_blade_markings": null,
+      "possible_tags": [
+        "JMA",
+        "C12",
+        "K01"
+      ],
+      "needs_review": false
+    },
+    {
+      "id_model_ref": "VA-18",
+      "brand": "JMA",
+      "model": "VA-18",
+      "aliases": [],
+      "family": "VA",
+      "type": "cylinder_special",
+      "source": "jma_c12_catalog",
+      "source_confidence": "high",
+      "catalog_page": 146,
+      "expected_visible_text": "VA-18",
+      "expected_head_markings": null,
+      "expected_blade_markings": null,
+      "possible_tags": [
+        "JMA",
+        "C12",
+        "K01"
+      ],
+      "needs_review": false
+    },
+    {
+      "id_model_ref": "VA-34",
+      "brand": "JMA",
+      "model": "VA-34",
+      "aliases": [],
+      "family": "VA",
+      "type": "cylinder_special",
+      "source": "jma_c12_catalog",
+      "source_confidence": "high",
+      "catalog_page": 150,
+      "expected_visible_text": "VA-34",
+      "expected_head_markings": null,
+      "expected_blade_markings": null,
+      "possible_tags": [
+        "JMA",
+        "C12",
+        "K01"
+      ],
+      "needs_review": false
+    },
+    {
+      "id_model_ref": "VA-6",
+      "brand": "JMA",
+      "model": "VA-6",
+      "aliases": [],
+      "family": "VA",
+      "type": "cylinder_special",
+      "source": "jma_c12_catalog",
+      "source_confidence": "high",
+      "catalog_page": 146,
+      "expected_visible_text": "VA-6",
+      "expected_head_markings": null,
+      "expected_blade_markings": null,
+      "possible_tags": [
+        "JMA",
+        "C12",
+        "K01"
+      ],
+      "needs_review": false
+    },
+    {
+      "id_model_ref": "VA-7",
+      "brand": "JMA",
+      "model": "VA-7",
+      "aliases": [],
+      "family": "VA",
+      "type": "cylinder_special",
+      "source": "jma_c12_catalog",
+      "source_confidence": "high",
+      "catalog_page": 150,
+      "expected_visible_text": "VA-7",
+      "expected_head_markings": null,
+      "expected_blade_markings": null,
+      "possible_tags": [
+        "JMA",
+        "C12",
+        "K01"
+      ],
+      "needs_review": false
+    },
+    {
+      "id_model_ref": "VO-2",
+      "brand": "JMA",
+      "model": "VO-2",
+      "aliases": [],
+      "family": "VO",
+      "type": "cylinder_special",
+      "source": "jma_c12_catalog",
+      "source_confidence": "high",
+      "catalog_page": 118,
+      "expected_visible_text": "VO-2",
+      "expected_head_markings": null,
+      "expected_blade_markings": null,
+      "possible_tags": [
+        "JMA",
+        "C12",
+        "K01"
+      ],
+      "needs_review": false
+    },
+    {
+      "id_model_ref": "VO-2D",
+      "brand": "JMA",
+      "model": "VO-2D",
+      "aliases": [],
+      "family": "VO",
+      "type": "cylinder_special",
+      "source": "jma_c12_catalog",
+      "source_confidence": "high",
+      "catalog_page": 118,
+      "expected_visible_text": "VO-2D",
+      "expected_head_markings": null,
+      "expected_blade_markings": null,
+      "possible_tags": [
+        "JMA",
+        "C12",
+        "K01"
+      ],
+      "needs_review": false
+    },
+    {
+      "id_model_ref": "VO-7",
+      "brand": "JMA",
+      "model": "VO-7",
+      "aliases": [],
+      "family": "VO",
+      "type": "cylinder_special",
+      "source": "jma_c12_catalog",
+      "source_confidence": "high",
+      "catalog_page": 143,
+      "expected_visible_text": "VO-7",
+      "expected_head_markings": null,
+      "expected_blade_markings": null,
+      "possible_tags": [
+        "JMA",
+        "C12",
+        "K01"
+      ],
+      "needs_review": false
+    },
+    {
+      "id_model_ref": "VO-8",
+      "brand": "JMA",
+      "model": "VO-8",
+      "aliases": [],
+      "family": "VO",
+      "type": "cylinder_special",
+      "source": "jma_c12_catalog",
+      "source_confidence": "high",
+      "catalog_page": 118,
+      "expected_visible_text": "VO-8",
+      "expected_head_markings": null,
+      "expected_blade_markings": null,
+      "possible_tags": [
+        "JMA",
+        "C12",
+        "K01"
+      ],
+      "needs_review": false
+    },
+    {
+      "id_model_ref": "VOL-2",
+      "brand": "JMA",
+      "model": "VOL-2",
+      "aliases": [],
+      "family": "VOL",
+      "type": "cylinder_special",
+      "source": "jma_c12_catalog",
+      "source_confidence": "high",
+      "catalog_page": 141,
+      "expected_visible_text": "VOL-2",
+      "expected_head_markings": null,
+      "expected_blade_markings": null,
+      "possible_tags": [
+        "JMA",
+        "C12",
+        "K01"
+      ],
+      "needs_review": false
+    },
+    {
+      "id_model_ref": "VOL-2D",
+      "brand": "JMA",
+      "model": "VOL-2D",
+      "aliases": [],
+      "family": "VOL",
+      "type": "cylinder_special",
+      "source": "jma_c12_catalog",
+      "source_confidence": "high",
+      "catalog_page": 141,
+      "expected_visible_text": "VOL-2D",
+      "expected_head_markings": null,
+      "expected_blade_markings": null,
+      "possible_tags": [
+        "JMA",
+        "C12",
+        "K01"
+      ],
+      "needs_review": false
+    },
+    {
+      "id_model_ref": "VOL-3",
+      "brand": "JMA",
+      "model": "VOL-3",
+      "aliases": [],
+      "family": "VOL",
+      "type": "cylinder_special",
+      "source": "jma_c12_catalog",
+      "source_confidence": "high",
+      "catalog_page": 141,
+      "expected_visible_text": "VOL-3",
+      "expected_head_markings": null,
+      "expected_blade_markings": null,
+      "possible_tags": [
+        "JMA",
+        "C12",
+        "K01"
+      ],
+      "needs_review": false
+    },
+    {
+      "id_model_ref": "WAS-1",
+      "brand": "JMA",
+      "model": "WAS-1",
+      "aliases": [],
+      "family": "WAS",
+      "type": "cylinder_special",
+      "source": "jma_c12_catalog",
+      "source_confidence": "high",
+      "catalog_page": 132,
+      "expected_visible_text": "WAS-1",
+      "expected_head_markings": null,
+      "expected_blade_markings": null,
+      "possible_tags": [
+        "JMA",
+        "C12",
+        "K01"
+      ],
+      "needs_review": false
+    },
+    {
+      "id_model_ref": "WAS-2",
+      "brand": "JMA",
+      "model": "WAS-2",
+      "aliases": [],
+      "family": "WAS",
+      "type": "cylinder_special",
+      "source": "jma_c12_catalog",
+      "source_confidence": "high",
+      "catalog_page": 132,
+      "expected_visible_text": "WAS-2",
+      "expected_head_markings": null,
+      "expected_blade_markings": null,
+      "possible_tags": [
+        "JMA",
+        "C12",
+        "K01"
+      ],
+      "needs_review": false
+    },
+    {
+      "id_model_ref": "WAS-5",
+      "brand": "JMA",
+      "model": "WAS-5",
+      "aliases": [],
+      "family": "WAS",
+      "type": "cylinder_special",
+      "source": "jma_c12_catalog",
+      "source_confidence": "high",
+      "catalog_page": 136,
+      "expected_visible_text": "WAS-5",
+      "expected_head_markings": null,
+      "expected_blade_markings": null,
+      "possible_tags": [
+        "JMA",
+        "C12",
+        "K01"
+      ],
+      "needs_review": false
+    },
+    {
+      "id_model_ref": "WAS-6",
+      "brand": "JMA",
+      "model": "WAS-6",
+      "aliases": [],
+      "family": "WAS",
+      "type": "cylinder_special",
+      "source": "jma_c12_catalog",
+      "source_confidence": "high",
+      "catalog_page": 136,
+      "expected_visible_text": "WAS-6",
+      "expected_head_markings": null,
+      "expected_blade_markings": null,
+      "possible_tags": [
+        "JMA",
+        "C12",
+        "K01"
+      ],
+      "needs_review": false
+    },
+    {
+      "id_model_ref": "YA-11D",
+      "brand": "JMA",
+      "model": "YA-11D",
+      "aliases": [],
+      "family": "YA",
+      "type": "cylinder_special",
+      "source": "jma_c12_catalog",
+      "source_confidence": "high",
+      "catalog_page": 132,
+      "expected_visible_text": "YA-11D",
+      "expected_head_markings": null,
+      "expected_blade_markings": null,
+      "possible_tags": [
+        "JMA",
+        "C12",
+        "K01"
+      ],
+      "needs_review": false
+    },
+    {
+      "id_model_ref": "YA-11I",
+      "brand": "JMA",
+      "model": "YA-11I",
+      "aliases": [],
+      "family": "YA",
+      "type": "cylinder_special",
+      "source": "jma_c12_catalog",
+      "source_confidence": "high",
+      "catalog_page": 132,
+      "expected_visible_text": "YA-11I",
+      "expected_head_markings": null,
+      "expected_blade_markings": null,
+      "possible_tags": [
+        "JMA",
+        "C12",
+        "K01"
+      ],
+      "needs_review": false
+    },
+    {
+      "id_model_ref": "YA-8D",
+      "brand": "JMA",
+      "model": "YA-8D",
+      "aliases": [],
+      "family": "YA",
+      "type": "cylinder_special",
+      "source": "jma_c12_catalog",
+      "source_confidence": "high",
+      "catalog_page": 121,
+      "expected_visible_text": "YA-8D",
+      "expected_head_markings": null,
+      "expected_blade_markings": null,
+      "possible_tags": [
+        "JMA",
+        "C12",
+        "K01"
+      ],
+      "needs_review": false
+    },
+    {
+      "id_model_ref": "YA-8I",
+      "brand": "JMA",
+      "model": "YA-8I",
+      "aliases": [],
+      "family": "YA",
+      "type": "cylinder_special",
+      "source": "jma_c12_catalog",
+      "source_confidence": "high",
+      "catalog_page": 121,
+      "expected_visible_text": "YA-8I",
+      "expected_head_markings": null,
+      "expected_blade_markings": null,
+      "possible_tags": [
+        "JMA",
+        "C12",
+        "K01"
+      ],
+      "needs_review": false
+    },
+    {
+      "id_model_ref": "YA-9I",
+      "brand": "JMA",
+      "model": "YA-9I",
+      "aliases": [],
+      "family": "YA",
+      "type": "cylinder_special",
+      "source": "jma_c12_catalog",
+      "source_confidence": "high",
+      "catalog_page": 121,
+      "expected_visible_text": "YA-9I",
+      "expected_head_markings": null,
+      "expected_blade_markings": null,
+      "possible_tags": [
+        "JMA",
+        "C12",
+        "K01"
+      ],
+      "needs_review": false
+    }
+  ]
+}
