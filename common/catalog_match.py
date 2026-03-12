@@ -9,6 +9,7 @@ CATALOG_DIR = BASE / "resources" / "catalog"
 CANON_CLEAN = CATALOG_DIR / "jma_catalog_refs_canon.clean.json"
 CANON_FULL  = CATALOG_DIR / "jma_catalog_refs_canon.json"
 VARIANTS_PATH = CATALOG_DIR / "jma_catalog_refs_variants.json"
+C12_REF_DB = CATALOG_DIR / "jma_c12_ref_db.json"
 
 # Override opcional por env (Cloud Run)
 CANON_OVERRIDE = os.getenv("SCN_CATALOG_CANON", "").strip()
@@ -100,7 +101,7 @@ def _load_catalog():
     preferred = {}
     rich_ref_db = {} # Initialize as empty
 
-    # Load rich_ref_db from SCN_REF_DB_PATH
+    # Load rich_ref_db from SCN_REF_DB_PATH (override) or C12 bundle (default)
     scn_ref_db_path = os.getenv("SCN_REF_DB_PATH", "").strip()
     if scn_ref_db_path:
         ref_db_path = Path(scn_ref_db_path)
@@ -109,8 +110,13 @@ def _load_catalog():
                 with open(ref_db_path, "r", encoding="utf-8") as f:
                     rich_ref_db = json.load(f)
             except Exception:
-                # If loading fails, rich_ref_db remains empty
                 pass
+    elif C12_REF_DB.exists():
+        try:
+            with open(C12_REF_DB, "r", encoding="utf-8") as f:
+                rich_ref_db = json.load(f)
+        except Exception:
+            pass
 
     paths = []
     if CANON_OVERRIDE:
@@ -127,9 +133,11 @@ def _load_catalog():
             except Exception:
                 pass
 
-    # Ensure rich_ref_db keys are also in canon_set
-    for k in rich_ref_db.keys():
+    # Ensure rich_ref_db keys are also in canon_set; use model as preferred display
+    for k, v in rich_ref_db.items():
         canon_set.add(k)
+        if isinstance(v, dict) and v.get("model"):
+            preferred[k] = str(v["model"])
 
     if VARIANTS_PATH.exists():
         try:
@@ -217,8 +225,8 @@ def match_tokens(tokens, manufacturer_hint=None):
                     break
 
         if hit:
-            rich_data = rich_ref_db.get(hit, {}) # Get rich data, or empty dict if not found
-            disp = preferred.get(hit) or pretty_ref(hit)
+            rich_data = rich_ref_db.get(hit, {})  # Get rich data, or empty dict if not found
+            disp = preferred.get(hit) or (rich_data.get("model") if isinstance(rich_data, dict) else None) or pretty_ref(hit)
             
             # Prioritize hits that match manufacturer_hint if provided and confident
             score = 1.0 # Base score for a match
@@ -279,7 +287,7 @@ def match_tokens(tokens, manufacturer_hint=None):
         "catalog_hits_unique": uniq,
         "catalog_hits_count": len(hits),
         "catalog_unique_count": len(uniq),
-        "best_ref": (preferred.get(best) or pretty_ref(best)) if best else None,
+        "best_ref": (preferred.get(best) or (rich_ref_db.get(best, {}) or {}).get("model") or pretty_ref(best)) if best else None,
         "best_ref_canon": best,
         "best_ref_rich_data": rich_ref_db.get(best, {}) # Include rich data for best ref
     }

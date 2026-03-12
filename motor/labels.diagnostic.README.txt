@@ -1,0 +1,15 @@
+labels.diagnostic.json — USO SOLO PARA DIAGNÓSTICO TÉCNICO
+
+ADVERTENCIA: Los nombres CLASS_0, CLASS_1, CLASS_2 son PLACEHOLDERS.
+NO tienen significado semántico. Invalidan cualquier interpretación real
+de las predicciones del modelo.
+
+Uso:
+  LABELS_PATH=C:\Users\guill\Desktop\scankey-v1a1\motor\labels.diagnostic.json
+
+Sirve únicamente para:
+  - Validar que el pipeline técnico funciona con 3 clases
+  - Comprobar que /health muestra labels_count=3
+  - Verificar que analyze-key no falla por desajuste labels vs ONNX output
+
+NO usar para análisis de negocio ni interpretar resultados.
