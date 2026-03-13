@@ -225,7 +225,7 @@ async def auth_login(req: Request):
 
 @APP.api_route("/motor/health", methods=["GET", "POST"])
 @APP.api_route("/motor/health/", methods=["GET", "POST"], include_in_schema=False)
-async def motor_health(req: Request, _: bool = Depends(require_apikey)):
+async def motor_health(req: Request):
     rid = getattr(req.state, "request_id", get_request_id(req))
     r = await _motor_get("/health", request_id=rid)
     return _proxy_httpx_json(r, rid)
@@ -262,7 +262,6 @@ async def proxy_analyze_key(
     image_back: UploadFile = File(None),
     modo: Optional[str] = Form(None),
     modo_taller: Optional[str] = Form(None),
-    _: bool = Depends(require_apikey),
 ):
     f = front or image_front
     b = back or image_back
@@ -420,7 +419,7 @@ async def job_status(req: Request, job_id: str, process: str = "1", _: bool = De
 
 
 @APP.post("/api/feedback")
-async def feedback(req: Request, _: bool = Depends(require_apikey)):
+async def feedback(req: Request):
     rid = getattr(req.state, "request_id", get_request_id(req))
     api_key = (req.headers.get("x-api-key") or "").strip()
     ip = client_ip(req)
