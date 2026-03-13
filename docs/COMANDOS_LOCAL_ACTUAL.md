@@ -11,7 +11,7 @@ cd C:\Users\guill\Desktop\scankey-v1a1
 .\scripts\start_local.ps1
 ```
 
-Abre 3 ventanas (motor, gateway, UI). Crea `ui-studio/.env.local` si no existe.
+Abre 3 ventanas (motor, gateway, UI). Crea `ui-studio/.env.local` si no existe. Tras ~10 s, ejecuta `.\scripts\check_local.ps1` para verificar.
 
 ---
 
@@ -56,7 +56,15 @@ npm.cmd -C ui-studio run dev:web
 
 ---
 
-## Validación
+## Verificación (un comando)
+
+```powershell
+.\scripts\check_local.ps1
+```
+
+Comprueba motor, gateway y analyze-key. Exit 0 si todo OK.
+
+## Validación manual
 
 ```powershell
 # Motor
