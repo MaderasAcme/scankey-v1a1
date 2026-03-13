@@ -10,4 +10,7 @@ cd "$ROOT"
 echo "Deploying $SERVICE (region=$REGION) from: $PWD"
 # Gateway requiere contexto repo root (common/). cloudbuild-gateway.yaml usa gateway/Dockerfile + contexto .
 # Variables ENV necesarias en Cloud Run: WORKSHOP_LOGIN_EMAIL, WORKSHOP_LOGIN_PASSWORD, WORKSHOP_TOKEN
-gcloud builds submit --config=cloudbuild-gateway.yaml .
+# SHORT_SHA: en deploys locales no se infiere; Cloud Build necesita un tag válido para la imagen
+SHORT_SHA="${SHORT_SHA:-$(git rev-parse --short HEAD 2>/dev/null || echo 'local')}"
+gcloud builds submit --config=cloudbuild-gateway.yaml . \
+  --substitutions="SHORT_SHA=$SHORT_SHA"
