@@ -181,7 +181,6 @@ export const ScanFlow = ({ onAnalyze, isAnalyzing = false, analyzeError = null }
     setPhotos((p) => {
       const next = { ...p };
       delete next[side];
-      if (side === 'A') delete next.B;
       return next;
     });
     if (side === 'A') {
