@@ -107,9 +107,11 @@ export async function analyzeKey(photos, { modo, qualityOverride, onAttempt } = 
     if (ws?.token) headers['X-Workshop-Token'] = ws.token;
     const ac = new AbortController();
     const t = setTimeout(() => ac.abort(), ANALYZE_TIMEOUT_MS);
-    const res = await fetch(url, { method: 'POST', headers, body: form, signal: ac.signal });
-    clearTimeout(t);
-    return res;
+    try {
+      return await fetch(url, { method: 'POST', headers, body: form, signal: ac.signal });
+    } finally {
+      clearTimeout(t);
+    }
   };
 
   const isRetryableError = (e) =>
