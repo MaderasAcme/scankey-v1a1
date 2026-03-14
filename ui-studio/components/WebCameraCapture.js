@@ -82,6 +82,7 @@ export function WebCameraCapture({
   const torchStateRef = useRef({ supported: false, requested: false, active: false });
   const trackingIntervalRef = useRef(null);
   const lastLogRef = useRef(0);
+  const captureLockRef = useRef(false);
   const autoCaptureStateRef = useRef({ goodFramesCount: 0 });
   const autoCaptureTriggeredRef = useRef(false);
   const previewCanvasRef = useRef(null);
@@ -114,6 +115,7 @@ export function WebCameraCapture({
       clearInterval(trackingIntervalRef.current);
       trackingIntervalRef.current = null;
     }
+    captureLockRef.current = false;
     autoCaptureStateRef.current = { goodFramesCount: 0 };
     autoCaptureTriggeredRef.current = false;
     previewDataUrlRef.current = null;
@@ -302,13 +304,7 @@ export function WebCameraCapture({
 
       const autoCaptureEnabled = Boolean(loadJSON(SETTINGS_KEY, {})[AUTO_CAPTURE_ENABLED_KEY]);
       const ocrRunningNow = ocrRunningRef.current;
-      const aboutToAutoCapture = autoCaptureEnabled && autoCaptureRes.auto_capture_ready &&
-        !autoCaptureTriggeredRef.current && !ocrRunningNow && !disabled;
-      if (aboutToAutoCapture) {
-        setLightStatus('Llave lista, capturando...');
-        autoCaptureTriggeredRef.current = true;
-        handleCapture();
-      } else if (!lightStatusMsg) {
+      if (!lightStatusMsg) {
         setLightStatus(null);
       } else {
         setLightStatus(lightStatusMsg);
@@ -335,7 +331,12 @@ export function WebCameraCapture({
       }
 
       const canCapture = ready && !disabled && !ocrRunningNow;
-      let displayMsg = lightStatus || glareRes?.reflection_state === 'critical' ? getGlareGuidanceMessage(glareRes) : null;
+      let displayMsg = null;
+      if (lightStatus) {
+        displayMsg = lightStatus;
+      } else if (glareRes?.reflection_state === 'critical') {
+        displayMsg = getGlareGuidanceMessage(glareRes);
+      }
       if (!displayMsg && result) displayMsg = getGuidanceMessage(result);
       if (!displayMsg && shapeRes) displayMsg = getShapeGuidanceMessage(shapeRes);
 
@@ -601,82 +602,84 @@ export function WebCameraCapture({
   }, [facingMode]);
 
   const handleCapture = async () => {
+    if (captureLockRef.current) return;
     const video = videoRef.current;
-    if (!video || !ready || disabled || ocrRunning) return;
+    if (!video || !ready || disabled) return;
     const w = video.videoWidth;
     const h = video.videoHeight;
     if (!w || !h) return;
 
+    captureLockRef.current = true;
     setOcrRunning(true);
-    const scale = Math.min(1, MAX_DIM / Math.max(w, h));
-    const cw = Math.round(w * scale);
-    const ch = Math.round(h * scale);
-    const canvas = document.createElement('canvas');
-    canvas.width = cw;
-    canvas.height = ch;
-    const ctx = canvas.getContext('2d');
-    if (!ctx) {
-      setOcrRunning(false);
-      return;
-    }
-    ctx.drawImage(video, 0, 0, cw, ch);
-    const dataUrl = canvas.toDataURL('image/jpeg', 0.9);
-
-    const lastResult = trackingStateRef.current?.lastResult;
-    const trackingSnapshot = makeTrackingSnapshot(lastResult, w, h);
-    const glareSnapshot = makeGlareSnapshot(glareResultRef.current);
-    const shapeSnapshot = makeShapeSnapshot(shapeResultRef.current, w, h);
-    const topdownSnapshot = makeTopdownSnapshot(topdownResultRef.current, w, h);
-    const contrastSnapshot = makeContrastSnapshot(contrastResultRef.current);
-    const dissectionSnapshot = makeDissectionSnapshot(dissectionResultRef.current, w, h);
-    const textZonesSnapshot = makeTextZonesSnapshot(textZonesResultRef.current, w, h);
-    const damageSnapshot = makeDamageSnapshot(damageResultRef.current);
-    const qualityGateSnapshot = makeQualityGateSnapshot(qualityGateResultRef.current);
-    const featureFusionSnapshot = makeFeatureFusionSnapshot(featureFusionResultRef.current);
-    const brandReconstructionSnapshot = makeBrandReconstructionSnapshot(brandReconstructionResultRef.current);
-    const lightSnapshot = makeLightSnapshot(lightResultRef.current);
-
-    let ocrRealSnapshot = null;
     try {
-      const ocrResult = await runZonedOCR(canvas, cw, ch, {
-        dissectionResult: dissectionResultRef.current,
-        textZonesResult: textZonesResultRef.current,
-        contrastResult: contrastResultRef.current,
+      const scale = Math.min(1, MAX_DIM / Math.max(w, h));
+      const cw = Math.round(w * scale);
+      const ch = Math.round(h * scale);
+      const canvas = document.createElement('canvas');
+      canvas.width = cw;
+      canvas.height = ch;
+      const ctx = canvas.getContext('2d');
+      if (!ctx) return;
+      ctx.drawImage(video, 0, 0, cw, ch);
+      const dataUrl = canvas.toDataURL('image/jpeg', 0.9);
+
+      const lastResult = trackingStateRef.current?.lastResult;
+      const trackingSnapshot = makeTrackingSnapshot(lastResult, w, h);
+      const glareSnapshot = makeGlareSnapshot(glareResultRef.current);
+      const shapeSnapshot = makeShapeSnapshot(shapeResultRef.current, w, h);
+      const topdownSnapshot = makeTopdownSnapshot(topdownResultRef.current, w, h);
+      const contrastSnapshot = makeContrastSnapshot(contrastResultRef.current);
+      const dissectionSnapshot = makeDissectionSnapshot(dissectionResultRef.current, w, h);
+      const textZonesSnapshot = makeTextZonesSnapshot(textZonesResultRef.current, w, h);
+      const damageSnapshot = makeDamageSnapshot(damageResultRef.current);
+      const qualityGateSnapshot = makeQualityGateSnapshot(qualityGateResultRef.current);
+      const featureFusionSnapshot = makeFeatureFusionSnapshot(featureFusionResultRef.current);
+      const brandReconstructionSnapshot = makeBrandReconstructionSnapshot(brandReconstructionResultRef.current);
+      const lightSnapshot = makeLightSnapshot(lightResultRef.current);
+
+      let ocrRealSnapshot = null;
+      try {
+        const ocrResult = await runZonedOCR(canvas, cw, ch, {
+          dissectionResult: dissectionResultRef.current,
+          textZonesResult: textZonesResultRef.current,
+          contrastResult: contrastResultRef.current,
+        });
+        ocrRealSnapshot = makeOcrRealSnapshot(ocrResult);
+      } catch (_) {
+        ocrRealSnapshot = makeOcrRealSnapshot({ ocr_ready: false, ocr_reasons: ['error'] });
+      }
+
+      const snapshots = { ...EMPTY_SNAPSHOTS };
+      snapshots.tracking = trackingSnapshot || null;
+      snapshots.glare = glareSnapshot || null;
+      snapshots.shape = shapeSnapshot || null;
+      snapshots.topdown = topdownSnapshot || null;
+      snapshots.contrast = contrastSnapshot || null;
+      snapshots.dissection = dissectionSnapshot || null;
+      snapshots.textZones = textZonesSnapshot || null;
+      snapshots.damage = damageSnapshot || null;
+      snapshots.qualityGate = qualityGateSnapshot || null;
+      snapshots.featureFusion = featureFusionSnapshot || null;
+      snapshots.brandReconstruction = brandReconstructionSnapshot || null;
+      snapshots.light = lightSnapshot || null;
+      snapshots.ocrReal = ocrRealSnapshot || null;
+
+      const catalogMatchResult = runCatalogMatching({
+        shape: shapeSnapshot,
+        topdown: topdownSnapshot,
+        dissection: dissectionSnapshot,
+        textZones: textZonesSnapshot,
+        ocrReal: ocrRealSnapshot,
+        brandReconstruction: brandReconstructionSnapshot,
+        featureFusion: featureFusionSnapshot,
       });
-      ocrRealSnapshot = makeOcrRealSnapshot(ocrResult);
-    } catch (_) {
-      ocrRealSnapshot = makeOcrRealSnapshot({ ocr_ready: false, ocr_reasons: ['error'] });
+      snapshots.catalogMatching = makeCatalogMatchingSnapshot(catalogMatchResult) || null;
+
+      if (onCapture) await Promise.resolve(onCapture({ dataUrl, snapshots }));
     } finally {
       setOcrRunning(false);
+      captureLockRef.current = false;
     }
-
-    const snapshots = { ...EMPTY_SNAPSHOTS };
-    snapshots.tracking = trackingSnapshot || null;
-    snapshots.glare = glareSnapshot || null;
-    snapshots.shape = shapeSnapshot || null;
-    snapshots.topdown = topdownSnapshot || null;
-    snapshots.contrast = contrastSnapshot || null;
-    snapshots.dissection = dissectionSnapshot || null;
-    snapshots.textZones = textZonesSnapshot || null;
-    snapshots.damage = damageSnapshot || null;
-    snapshots.qualityGate = qualityGateSnapshot || null;
-    snapshots.featureFusion = featureFusionSnapshot || null;
-    snapshots.brandReconstruction = brandReconstructionSnapshot || null;
-    snapshots.light = lightSnapshot || null;
-    snapshots.ocrReal = ocrRealSnapshot || null;
-
-    const catalogMatchResult = runCatalogMatching({
-      shape: shapeSnapshot,
-      topdown: topdownSnapshot,
-      dissection: dissectionSnapshot,
-      textZones: textZonesSnapshot,
-      ocrReal: ocrRealSnapshot,
-      brandReconstruction: brandReconstructionSnapshot,
-      featureFusion: featureFusionSnapshot,
-    });
-    snapshots.catalogMatching = makeCatalogMatchingSnapshot(catalogMatchResult) || null;
-
-    if (onCapture) onCapture({ dataUrl, snapshots });
   };
 
   const switchCamera = () => {
@@ -732,11 +735,39 @@ export function WebCameraCapture({
         {ready && (
           <>
             <GhostKeyOverlay status={ghostOverlayStatus} />
-            {displayMessage && (
+            {displayMessage && isGuided && (
+              <div className="absolute top-2 left-2 right-2 flex justify-center z-10">
+                <span className="text-xs px-3 py-1.5 rounded-lg bg-black/70 text-white backdrop-blur-sm">
+                  {displayMessage}
+                </span>
+              </div>
+            )}
+            {displayMessage && !isGuided && (
               <div className="absolute bottom-2 left-2 right-2 flex justify-center">
                 <span className="text-xs px-3 py-1.5 rounded-lg bg-black/70 text-white backdrop-blur-sm">
                   {displayMessage}
                 </span>
+              </div>
+            )}
+            {isGuided && (
+              <div className="absolute bottom-3 left-0 right-0 flex justify-center z-10">
+                <button
+                  type="button"
+                  onClick={handleCapture}
+                  disabled={disabled || ocrRunning}
+                  aria-label={ocrRunning ? 'Procesando…' : captureLabel}
+                  className={`w-16 h-16 rounded-full flex items-center justify-center shadow-lg border-2 border-[var(--border)] transition-all active:scale-95 ${
+                    ocrRunning
+                      ? 'bg-white/40 cursor-not-allowed'
+                      : 'bg-white/90 hover:bg-white disabled:opacity-50 disabled:cursor-not-allowed'
+                  }`}
+                >
+                  {ocrRunning ? (
+                    <span className="w-5 h-5 rounded-full border-2 border-white border-t-transparent animate-spin" />
+                  ) : (
+                    <span className="w-12 h-12 rounded-full border-3 border-[var(--text-secondary)] bg-transparent" style={{ borderWidth: 3 }} />
+                  )}
+                </button>
               </div>
             )}
           </>
