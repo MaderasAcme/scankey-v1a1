@@ -5,6 +5,7 @@
 import { useState, useCallback } from 'react';
 import { analyzeKey } from '../services/api';
 import { loadJSON, saveJSON } from '../utils/storage';
+import { normalizeAnalyzeResult } from '../utils/normalizeAnalyzeResult';
 import { computeQualityGateActiveDecision, mergeQualityGateSnapshots, QUALITY_GATE_ACTIVE_ENABLED_KEY } from '../utils/qualityGateVision';
 import { safePushLimited, incrementQualityGateStat } from '../utils/storage';
 import { isWorkshopSessionValid } from '../services/auth';
@@ -70,17 +71,18 @@ export function useAnalyzeFlow(onNavigateToResults) {
         qualityOverride: Boolean(qualityOverride),
         onAttempt: (attempt, total) => setAttemptCount(attempt),
       });
-      setResult(payload);
+      const normalized = normalizeAnalyzeResult(payload);
+      setResult(normalized);
       _devLog('analyze success, navigating to Results', {
-        request_id: payload?.request_id,
-        results_count: payload?.results?.length,
+        request_id: normalized?.request_id,
+        results_count: normalized?.results?.length,
       });
       onNavigateToResults?.();
-      const top1 = payload?.results?.[0];
+      const top1 = normalized?.results?.[0];
       const historyItem = {
-        input_id: payload?.input_id,
-        timestamp: payload?.timestamp,
-        request_id: payload?.request_id,
+        input_id: normalized?.input_id,
+        timestamp: normalized?.timestamp,
+        request_id: normalized?.request_id,
         top1: top1
           ? {
               id_model_ref: top1.id_model_ref,
@@ -90,15 +92,15 @@ export function useAnalyzeFlow(onNavigateToResults) {
               confidence: top1.confidence,
             }
           : null,
-        low_confidence: payload?.low_confidence,
-        high_confidence: payload?.high_confidence,
-        manufacturer_hint: payload?.manufacturer_hint,
-        debug: payload?.debug,
-        results: payload?.results?.slice(0, 3),
+        low_confidence: normalized?.low_confidence,
+        high_confidence: normalized?.high_confidence,
+        manufacturer_hint: normalized?.manufacturer_hint,
+        debug: normalized?.debug,
+        results: normalized?.results?.slice(0, 3),
       };
       safePushLimited('scn_history', historyItem, 100);
-      if (payload?.debug?.override_used) incrementQualityGateStat('override');
-      if (payload?.debug?.quality_warning) incrementQualityGateStat('warning');
+      if (normalized?.debug?.override_used) incrementQualityGateStat('override');
+      if (normalized?.debug?.quality_warning) incrementQualityGateStat('warning');
     } catch (e) {
       _devLog('handleAnalyze error', { message: e?.message, code: e?.code });
       if (e.code === 'QUALITY_GATE') {
