@@ -36,15 +36,20 @@ export function ScanFlowScreen({
         ? [analyzeError.message, analyzeError.reasons?.join(', ')].filter(Boolean).join(': ')
         : null;
 
+  // Durante análisis: no mostrar ningún banner (solo LoaderOverlay con Intento X/2)
+  // Tras fallo: un solo mensaje de error; no mezclar con soft warning
+  const showErrorBanner = !isAnalyzing && errorMessage;
+  const showSoftWarning = !isAnalyzing && !analyzeError && softAnalyzeWarning;
+
   return (
     <div className="flex flex-col flex-1">
       <ScreenHeader title="Escanear" onBack={onBack} />
-      {softAnalyzeWarning && (
+      {showSoftWarning && (
         <div className="px-4 pb-2">
           <AlertBanner variant="info">{softAnalyzeWarning}</AlertBanner>
         </div>
       )}
-      {errorMessage && (
+      {showErrorBanner && (
         <div className="px-4 pb-2">
           <AlertBanner variant="error">{errorMessage}</AlertBanner>
           {isQualityGate && canOverride && (
