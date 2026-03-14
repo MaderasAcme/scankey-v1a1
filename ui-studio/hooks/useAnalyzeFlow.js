@@ -6,6 +6,7 @@ import { useState, useCallback } from 'react';
 import { analyzeKey } from '../services/api';
 import { loadJSON, saveJSON } from '../utils/storage';
 import { normalizeAnalyzeResult } from '../utils/normalizeAnalyzeResult';
+import { applyVisionRanking } from '../utils/rankingActive';
 import { computeQualityGateActiveDecision, mergeQualityGateSnapshots, QUALITY_GATE_ACTIVE_ENABLED_KEY } from '../utils/qualityGateVision';
 import { safePushLimited, incrementQualityGateStat } from '../utils/storage';
 import { isWorkshopSessionValid } from '../services/auth';
@@ -72,17 +73,29 @@ export function useAnalyzeFlow(onNavigateToResults) {
         onAttempt: (attempt, total) => setAttemptCount(attempt),
       });
       const normalized = normalizeAnalyzeResult(payload);
-      setResult(normalized);
+      const ranking = applyVisionRanking(normalized?.results ?? [], photos);
+      const finalResults = ranking.ranking_ready ? ranking.sortedResults : (normalized?.results ?? []);
+      const topVisible = finalResults[0];
+      const high_confidence = (topVisible?.confidence ?? 0) >= 0.95;
+      const low_confidence = (topVisible?.confidence ?? 0) < 0.60;
+      const finalResult = {
+        ...normalized,
+        results: finalResults,
+        high_confidence,
+        low_confidence,
+        ranking_ready: ranking.ranking_ready,
+      };
+      setResult(finalResult);
       _devLog('analyze success, navigating to Results', {
-        request_id: normalized?.request_id,
-        results_count: normalized?.results?.length,
+        request_id: finalResult?.request_id,
+        results_count: finalResult?.results?.length,
       });
       onNavigateToResults?.();
-      const top1 = normalized?.results?.[0];
+      const top1 = topVisible;
       const historyItem = {
-        input_id: normalized?.input_id,
-        timestamp: normalized?.timestamp,
-        request_id: normalized?.request_id,
+        input_id: finalResult?.input_id,
+        timestamp: finalResult?.timestamp,
+        request_id: finalResult?.request_id,
         top1: top1
           ? {
               id_model_ref: top1.id_model_ref,
@@ -92,15 +105,15 @@ export function useAnalyzeFlow(onNavigateToResults) {
               confidence: top1.confidence,
             }
           : null,
-        low_confidence: normalized?.low_confidence,
-        high_confidence: normalized?.high_confidence,
-        manufacturer_hint: normalized?.manufacturer_hint,
-        debug: normalized?.debug,
-        results: normalized?.results?.slice(0, 3),
+        low_confidence,
+        high_confidence,
+        manufacturer_hint: finalResult?.manufacturer_hint,
+        debug: finalResult?.debug,
+        results: finalResult?.results?.slice(0, 3),
       };
       safePushLimited('scn_history', historyItem, 100);
-      if (normalized?.debug?.override_used) incrementQualityGateStat('override');
-      if (normalized?.debug?.quality_warning) incrementQualityGateStat('warning');
+      if (finalResult?.debug?.override_used) incrementQualityGateStat('override');
+      if (finalResult?.debug?.quality_warning) incrementQualityGateStat('warning');
     } catch (e) {
       _devLog('handleAnalyze error', { message: e?.message, code: e?.code });
       if (e.code === 'QUALITY_GATE') {

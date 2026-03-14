@@ -8,7 +8,6 @@ import { CropThumbnail } from '../components/ui/CropThumbnail';
 import { ComparePanel } from '../components/ui/ComparePanel';
 import { CorrectionModal } from '../components/CorrectionModal';
 import { copy } from '../utils/copy';
-import { applyVisionRanking } from '../utils/rankingActive';
 import {
   getSourceDataUrl,
   formatTitle,
@@ -32,9 +31,8 @@ export function ResultsScreen({
   feedbackPending,
   modoTaller = false,
 }) {
-  const rawResults = result?.results || [];
-  const ranking = applyVisionRanking(rawResults, capturedPhotos);
-  const results = ranking.ranking_ready ? ranking.sortedResults : rawResults;
+  const results = result?.results || [];
+  const rankingReady = Boolean(result?.ranking_ready);
   const lowConfidence = Boolean(result?.low_confidence);
   const highConfidence = Boolean(result?.high_confidence);
   const forceCorrection = lowConfidence;
@@ -169,7 +167,7 @@ export function ResultsScreen({
           const rank = r.rank ?? i + 1;
           const isSelected = selectedRank === rank;
           const delta = r.ranking_delta;
-          const deltaLabel = delta != null && modoTaller && ranking.ranking_ready
+          const deltaLabel = delta != null && modoTaller && rankingReady
             ? (delta >= 0 ? `vision +${Math.round(delta * 100)}%` : `vision ${Math.round(delta * 100)}%`)
             : null;
 
