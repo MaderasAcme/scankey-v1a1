@@ -434,8 +434,10 @@ export const ProfileModal = memo(({ isOpen, onClose, onLogout, onResetData, onFl
               )}
             </button>
             {flushStatus === 'done' && flushResult && (
-              <AlertBanner variant="success">
-                Enviados {flushResult.sent}, quedan {flushResult.remaining}
+              <AlertBanner variant={flushResult.failed > 0 ? 'warn' : 'success'}>
+                Enviados {flushResult.sent}
+                {flushResult.remaining > 0 && ` · Quedan ${flushResult.remaining}`}
+                {flushResult.failed > 0 && ` · ${flushResult.failed} fallidos`}
               </AlertBanner>
             )}
             {flushStatus === 'error' && (

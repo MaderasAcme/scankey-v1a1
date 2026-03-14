@@ -208,9 +208,11 @@ export async function enqueueFeedback(item) {
   if (!idempotencyKey || typeof idempotencyKey !== 'string') {
     idempotencyKey = await computeFeedbackIdempotencyKey(item);
   }
+  const queue = loadJSON(FEEDBACK_QUEUE_KEY, []);
+  const exists = queue.some((q) => (q.idempotency_key || '') === idempotencyKey);
+  if (exists) return;
   const safe = _buildFeedbackQueueItem(item);
   safe.idempotency_key = idempotencyKey;
-  const queue = loadJSON(FEEDBACK_QUEUE_KEY, []);
   queue.push(safe);
   saveJSON(FEEDBACK_QUEUE_KEY, queue);
 }

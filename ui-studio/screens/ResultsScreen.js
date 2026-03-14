@@ -53,9 +53,11 @@ export function ResultsScreen({
   const buildFeedbackPayload = useCallback(
     (correction, manual, selectedRankVal, selectedIdModelRef) => {
       const r = results[selectedRankVal - 1];
-      return {
-        request_id: result?.request_id,
-        input_id: result?.input_id,
+      const inputId = result?.input_id || result?.request_id || `local-${Date.now()}`;
+      const reqId = result?.request_id || `req-${Date.now()}`;
+      const payload = {
+        request_id: reqId,
+        input_id: inputId,
         modo: 'cliente',
         selected_rank: selectedRankVal,
         selected_id_model_ref: selectedIdModelRef ?? r?.id_model_ref ?? null,
@@ -63,6 +65,8 @@ export function ResultsScreen({
         manual: manual || null,
         meta: { gateway_base: '', ui_version: '2.1.0' },
       };
+      if (manual && typeof manual === 'object') payload.manual_data = manual;
+      return payload;
     },
     [result, results]
   );
@@ -226,7 +230,10 @@ export function ResultsScreen({
         <Button
           variant={lowConfidence ? 'destructive' : 'secondary'}
           className="w-full"
-          onClick={() => setShowCorrectionModal(true)}
+          onClick={() => {
+            if (selectedRank == null) setSelectedRank(1);
+            setShowCorrectionModal(true);
+          }}
           aria-label="Corregir manualmente"
         >
           {copy.results.manual}
