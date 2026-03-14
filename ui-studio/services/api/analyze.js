@@ -98,7 +98,7 @@ export async function analyzeKey(photos, { modo, qualityOverride, onAttempt } = 
     return fd;
   };
 
-  const doRequest = (useOriginal) => {
+  const doAttempt = async (useOriginal) => {
     const form = buildFormData(useOriginal);
     const headers = { 'X-Request-ID': requestId };
     if (apiKey) headers['X-API-Key'] = apiKey;
@@ -107,29 +107,45 @@ export async function analyzeKey(photos, { modo, qualityOverride, onAttempt } = 
     if (ws?.token) headers['X-Workshop-Token'] = ws.token;
     const ac = new AbortController();
     const t = setTimeout(() => ac.abort(), ANALYZE_TIMEOUT_MS);
-    return fetch(url, { method: 'POST', headers, body: form, signal: ac.signal })
-      .finally(() => clearTimeout(t));
+    const res = await fetch(url, { method: 'POST', headers, body: form, signal: ac.signal });
+    clearTimeout(t);
+    return res;
   };
+
+  const isRetryableError = (e) =>
+    e?.name === 'AbortError' ||
+    e?.message === 'Failed to fetch' ||
+    e?.name === 'TypeError';
+
+  const isRetryableStatus = (status) =>
+    status >= 500 || status === 504 || status === 0;
 
   try {
     if (onAttempt) onAttempt(1, 2);
     let res;
     try {
-      res = await doRequest(false);
+      res = await doAttempt(false);
     } catch (fetchErr) {
       _devLog('analyze-key fetch failed', { error: fetchErr?.message, name: fetchErr?.name });
-      const msg = fetchErr?.message || String(fetchErr);
-      if (msg === 'Failed to fetch' || fetchErr?.name === 'TypeError') {
-        throw new Error(_userFacingError(0, msg));
+      if (!isRetryableError(fetchErr)) throw fetchErr;
+      _devLog('analyze-key retry with original (fetch error)', {});
+      if (onAttempt) onAttempt(2, 2);
+      try {
+        res = await doAttempt(true);
+      } catch (e2) {
+        const msg = e2?.message || String(e2);
+        throw new Error(_userFacingError(0, msg || 'Error de red'));
       }
-      throw fetchErr;
     }
     _devLog('analyze-key response', { status: res.status, ok: res.ok });
-    const needsRetry = res.status >= 500 || res.status === 504 || res.status === 0;
-    if (needsRetry) {
-      _devLog('analyze-key retry with original', { status: res.status });
+    if (isRetryableStatus(res.status)) {
+      _devLog('analyze-key retry with original (HTTP)', { status: res.status });
       if (onAttempt) onAttempt(2, 2);
-      res = await doRequest(true);
+      try {
+        res = await doAttempt(true);
+      } catch (e2) {
+        throw new Error(_userFacingError(0, e2?.message || 'Error de red'));
+      }
       _devLog('analyze-key retry response', { status: res.status, ok: res.ok });
     }
     if (!res.ok) {
@@ -161,32 +177,6 @@ export async function analyzeKey(photos, { modo, qualityOverride, onAttempt } = 
     }
     return data;
   } catch (e) {
-    if (e.name === 'AbortError') {
-      _devLog('analyze-key timeout, retrying with original', {});
-      try {
-        if (onAttempt) onAttempt(2, 2);
-        const res2 = await doRequest(true);
-        if (res2.ok) {
-          const data2 = await res2.json();
-          _devLog('analyze-key ok (timeout retry)', {
-            request_id: data2?.request_id,
-            results: data2?.results?.length,
-          });
-          return data2;
-        }
-        const text = await res2.text();
-        let body = null;
-        try {
-          if (text) body = JSON.parse(text);
-        } catch (_) {}
-        throw new Error(_userFacingError(res2.status, text || res2.statusText, body));
-      } catch (e2) {
-        if (e2.message && !e2.message.startsWith('Gateway') && !e2.message.startsWith('API') && !e2.message.startsWith('No se')) {
-          throw new Error(`Timeout en analyze-key tras reintento: ${e2.message || e2}`);
-        }
-        throw e2;
-      }
-    }
     throw e;
   }
 }
