@@ -27,9 +27,42 @@ function fileToDataUrl(file) {
 }
 
 /**
+ * Pantalla intermedia de revisión tras capturar.
+ * Muestra la imagen, botón Repetir y Usar foto.
+ */
+function CaptureReviewBlock({ dataUrl, sideLabel, onConfirm, onRepeat }) {
+  return (
+    <div className="flex flex-col gap-4 w-full">
+      <div className="rounded-xl bg-[var(--bg-secondary)] border border-[var(--border)] overflow-hidden">
+        <div className="px-4 py-2.5 border-b border-[var(--border)]">
+          <h4 className="text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wide">
+            {copy.scan.reviewTitle} — {sideLabel}
+          </h4>
+        </div>
+        <div className="relative aspect-[4/3] bg-black/40 flex items-center justify-center p-2">
+          <img
+            src={dataUrl}
+            alt={copy.scan.captured}
+            className="max-w-full max-h-full object-contain rounded"
+          />
+        </div>
+        <div className="p-4 flex flex-col gap-2 border-t border-[var(--border)]">
+          <Button variant="primary" className="w-full" onClick={onConfirm}>
+            {copy.scan.usePhoto}
+          </Button>
+          <Button variant="secondary" className="w-full" onClick={onRepeat}>
+            {copy.scan.repeat}
+          </Button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/**
  * Bloque de cámara para lado B (dentro del acordeón).
  */
-function SideBCameraBlock({ onCapture, onUploadFallback }) {
+function SideBCameraBlock({ onCapture, onCaptureForReview, onUploadFallback }) {
   const inputRef = useRef(null);
   const captureRef = useRef(null);
 
@@ -39,16 +72,29 @@ function SideBCameraBlock({ onCapture, onUploadFallback }) {
     try {
       const originalDataUrl = await fileToDataUrl(file);
       const optimizedDataUrl = await resizeDataUrl(originalDataUrl, MAX_OPTIMIZED_DIM);
-      onCapture('B', {
+      const data = {
         optimizedDataUrl,
         originalDataUrl,
         snapshots: { ...EMPTY_SNAPSHOTS },
-      });
+      };
+      if (onCaptureForReview) onCaptureForReview('B', data);
+      else onCapture('B', data);
     } catch (err) {
       console.error('Error procesando imagen:', err);
     } finally {
       e.target.value = '';
     }
+  };
+
+  const handleCameraCapture = async ({ dataUrl, snapshots }) => {
+    const optimizedDataUrl = await resizeDataUrl(dataUrl, MAX_OPTIMIZED_DIM);
+    const data = {
+      optimizedDataUrl,
+      originalDataUrl: dataUrl,
+      snapshots: { ...EMPTY_SNAPSHOTS, ...(snapshots || {}) },
+    };
+    if (onCaptureForReview) onCaptureForReview('B', data);
+    else onCapture('B', data);
   };
 
   return (
@@ -63,14 +109,7 @@ function SideBCameraBlock({ onCapture, onUploadFallback }) {
       <WebCameraCapture
         mode="standalone"
         captureLabel={copy.scan.captureB}
-        onCapture={async ({ dataUrl, snapshots }) => {
-          const optimizedDataUrl = await resizeDataUrl(dataUrl, MAX_OPTIMIZED_DIM);
-          onCapture('B', {
-            optimizedDataUrl,
-            originalDataUrl: dataUrl,
-            snapshots: { ...EMPTY_SNAPSHOTS, ...(snapshots || {}) },
-          });
-        }}
+        onCapture={handleCameraCapture}
         onError={() => {}}
         onUploadFallback={() => inputRef.current?.click()}
       />
@@ -85,6 +124,7 @@ function SideBCameraBlock({ onCapture, onUploadFallback }) {
  */
 export const ScanFlow = ({ onAnalyze, isAnalyzing = false, analyzeError = null }) => {
   const [photos, setPhotos] = useState({});
+  const [pendingReview, setPendingReview] = useState(null);
   const [hasCamera, setHasCamera] = useState(true);
   const [cameraChecked, setCameraChecked] = useState(false);
   const [scanState, setScanState] = useState(null);
@@ -92,6 +132,10 @@ export const ScanFlow = ({ onAnalyze, isAnalyzing = false, analyzeError = null }
   const captureRef = useRef(null);
   const inputRef = useRef(null);
   const { status: motorStatus } = useMotorConnection();
+
+  useEffect(() => {
+    if (hasA && !hasB) setSideBExpanded(true);
+  }, [hasA, hasB]);
 
   useEffect(() => {
     if (typeof navigator === 'undefined' || !navigator.mediaDevices?.getUserMedia) {
@@ -119,16 +163,36 @@ export const ScanFlow = ({ onAnalyze, isAnalyzing = false, analyzeError = null }
     setPhotos((p) => ({ ...p, [side]: data }));
   };
 
+  const requestCaptureReview = (side, data) => {
+    setPendingReview({ side, data });
+  };
+
+  const confirmReview = () => {
+    if (!pendingReview) return;
+    handleCapture(pendingReview.side, pendingReview.data);
+    setPendingReview(null);
+  };
+
+  const cancelReview = () => {
+    setPendingReview(null);
+  };
+
   const handleClear = (side) => {
     setPhotos((p) => {
       const next = { ...p };
       delete next[side];
+      if (side === 'A') delete next.B;
       return next;
     });
+    if (side === 'A') {
+      setPendingReview(null);
+      setSideBExpanded(false);
+    }
   };
 
   const handleAnalyze = () => {
-    if (photos.A && onAnalyze) onAnalyze(photos);
+    if (!photos.A || !photos.B || !onAnalyze) return;
+    onAnalyze(photos);
   };
 
   const handleCaptureA = () => {
@@ -141,7 +205,7 @@ export const ScanFlow = ({ onAnalyze, isAnalyzing = false, analyzeError = null }
     try {
       const originalDataUrl = await fileToDataUrl(file);
       const optimizedDataUrl = await resizeDataUrl(originalDataUrl, MAX_OPTIMIZED_DIM);
-      handleCapture('A', {
+      requestCaptureReview('A', {
         optimizedDataUrl,
         originalDataUrl,
         snapshots: { ...EMPTY_SNAPSHOTS },
@@ -168,23 +232,35 @@ export const ScanFlow = ({ onAnalyze, isAnalyzing = false, analyzeError = null }
   const canCapture = scanState?.canCapture ?? false;
   const ocrRunning = scanState?.ocrRunning ?? false;
   const primaryLoading = ocrRunning || isAnalyzing;
-  const showDetectedPreview = Boolean(previewDataUrl) && (visionStatus === 'key_detected' || visionStatus === 'key_ready');
+  const showDetectedPreview = !pendingReview && Boolean(previewDataUrl) && (visionStatus === 'key_detected' || visionStatus === 'key_ready');
 
   const analyzeStatus = isAnalyzing ? 'analyzing' : (analyzeError ? 'analyze_error' : 'idle');
 
   const motorOnline = motorStatus === 'motor_online';
   const motorOffline = motorStatus === 'motor_offline';
-  const canAnalyze = hasA && motorOnline;
+  const canAnalyze = hasA && hasB && motorOnline;
 
-  const helpTip =
-    motorOffline && hasA
+  const sideIndicator = pendingReview
+    ? (pendingReview.side === 'A' ? copy.scan.sideA : copy.scan.sideB)
+    : hasA && hasB
+      ? `${copy.scan.sideA} ✓ ${copy.scan.sideB} ✓`
+      : hasA
+        ? copy.scan.sideB
+        : copy.scan.sideA;
+
+  const helpTip = pendingReview
+    ? 'Revisa la imagen y confirma o repite la captura'
+    : motorOffline && hasA
       ? 'Motor no conectado. Reintentaremos automáticamente.'
-      : scanState?.displayMessage ||
-        (visionStatus === 'low_light' ? 'Usa más luz si hace falta' : 'Alinea y centra la llave');
+      : hasA && !hasB
+        ? 'Ahora captura el lado B de la llave'
+        : scanState?.displayMessage ||
+          (visionStatus === 'low_light' ? 'Usa más luz si hace falta' : 'Alinea y centra la llave');
 
   const primaryDisabled =
     primaryLoading ||
-    (hasA ? !motorOnline : !canCapture);
+    Boolean(pendingReview) ||
+    (hasA && hasB ? !motorOnline : !hasA && hasCamera ? !canCapture : false);
 
   if (!cameraChecked) {
     return (
@@ -194,31 +270,62 @@ export const ScanFlow = ({ onAnalyze, isAnalyzing = false, analyzeError = null }
     );
   }
 
-  if (!hasCamera) {
-    return (
-      <div className="flex-1 flex flex-col p-4 md:p-6 gap-4">
-        <div className="p-4 rounded-xl bg-[var(--bg-secondary)] border border-[var(--border)]">
-          <p className="text-[var(--danger)] text-sm font-medium">{copy.scan.noCamera}</p>
-          <p className="text-[var(--text-muted)] text-xs mt-1">{copy.scan.noCameraHint}</p>
-        </div>
-        <input
-          ref={inputRef}
-          type="file"
-          accept="image/*"
-          className="hidden"
-          onChange={handleFileA}
-        />
-        <Button variant="primary" className="w-full" onClick={() => inputRef.current?.click()}>
-          {copy.scan.uploadPhoto}
-        </Button>
+  const noCameraMainContent = pendingReview?.side === 'A' ? (
+    <CaptureReviewBlock
+      dataUrl={pendingReview.data.optimizedDataUrl}
+      sideLabel={copy.scan.sideA}
+      onConfirm={confirmReview}
+      onRepeat={cancelReview}
+    />
+  ) : pendingReview?.side === 'B' ? (
+    <CaptureReviewBlock
+      dataUrl={pendingReview.data.optimizedDataUrl}
+      sideLabel={copy.scan.sideB}
+      onConfirm={confirmReview}
+      onRepeat={cancelReview}
+    />
+  ) : hasA ? (
+    <div className="relative w-full aspect-[4/3] rounded-xl overflow-hidden bg-black">
+      <img
+        src={photos.A.optimizedDataUrl}
+        alt={copy.scan.captured}
+        className="w-full h-full object-contain"
+      />
+      <button
+        type="button"
+        className="absolute top-2 right-2 rounded-lg bg-black/70 text-white text-xs px-2 py-1"
+        onClick={() => handleClear('A')}
+        aria-label={copy.scan.repeat}
+      >
+        {copy.scan.repeat}
+      </button>
+    </div>
+  ) : (
+    <div className="flex flex-col gap-4 w-full">
+      <div className="p-4 rounded-xl bg-[var(--bg-secondary)] border border-[var(--border)]">
+        <p className="text-[var(--danger)] text-sm font-medium">{copy.scan.noCamera}</p>
+        <p className="text-[var(--text-muted)] text-xs mt-1">{copy.scan.noCameraHint}</p>
       </div>
-    );
-  }
+      <input
+        ref={inputRef}
+        type="file"
+        accept="image/*"
+        className="hidden"
+        onChange={handleFileA}
+      />
+      <Button variant="primary" className="w-full" onClick={() => inputRef.current?.click()}>
+        {copy.scan.uploadPhoto}
+      </Button>
+    </div>
+  );
 
   const rightPanel = (
     <div className="flex flex-col gap-4">
       <div className="flex flex-col gap-3">
         <div className="flex flex-wrap gap-2 min-h-[2.25rem] items-center">
+          <span className="text-xs font-medium px-2.5 py-1 rounded-md bg-[var(--bg)] border border-[var(--border)] text-[var(--text-secondary)]">
+            {sideIndicator}
+          </span>
           <VisionStateBadge status={visionStatus} />
           <MotorConnectionBadge status={motorStatus} />
           <AnalyzeStateBadge status={analyzeStatus} />
@@ -254,11 +361,11 @@ export const ScanFlow = ({ onAnalyze, isAnalyzing = false, analyzeError = null }
         <ReadableCandidatesPanel candidates={readableCandidates} />
       )}
       <ScanActionPanel
-        primaryLabel={hasA ? copy.scan.analyzeKey : copy.scan.captureA}
+        primaryLabel={hasA && hasB ? copy.scan.analyzeKey : hasA ? copy.scan.captureB : copy.scan.captureA}
         primaryDisabled={primaryDisabled}
         primaryLoading={primaryLoading}
-        onPrimary={hasA ? handleAnalyze : handleCaptureA}
-        secondaryLabel="Capturar lado B (opcional)"
+        onPrimary={hasA && hasB ? handleAnalyze : hasA ? () => setSideBExpanded(true) : (hasCamera ? handleCaptureA : () => inputRef.current?.click())}
+        secondaryLabel={copy.scan.captureB}
         secondaryVisible={hasA && !hasB}
         onSecondary={() => setSideBExpanded(true)}
       />
@@ -266,16 +373,39 @@ export const ScanFlow = ({ onAnalyze, isAnalyzing = false, analyzeError = null }
           isExpanded={sideBExpanded}
           onToggle={setSideBExpanded}
           photo={photos.B}
+          pendingReview={pendingReview}
           onCapture={handleCapture}
+          onCaptureForReview={requestCaptureReview}
+          onConfirmReview={confirmReview}
+          onCancelReview={cancelReview}
           onClear={handleClear}
           hasA={hasA}
         >
-          <SideBCameraBlock onCapture={handleCapture} />
+          <SideBCameraBlock
+            onCapture={handleCapture}
+            onCaptureForReview={requestCaptureReview}
+          />
         </OptionalSideBCollapse>
     </div>
   );
 
-  const mainPreview = !hasA ? (
+  const mainPreview = !hasCamera ? (
+    noCameraMainContent
+  ) : pendingReview?.side === 'A' ? (
+    <CaptureReviewBlock
+      dataUrl={pendingReview.data.optimizedDataUrl}
+      sideLabel={copy.scan.sideA}
+      onConfirm={confirmReview}
+      onRepeat={cancelReview}
+    />
+  ) : pendingReview?.side === 'B' ? (
+    <CaptureReviewBlock
+      dataUrl={pendingReview.data.optimizedDataUrl}
+      sideLabel={copy.scan.sideB}
+      onConfirm={confirmReview}
+      onRepeat={cancelReview}
+    />
+  ) : !hasA ? (
     <div className="w-full">
       <input
         ref={inputRef}
@@ -290,7 +420,7 @@ export const ScanFlow = ({ onAnalyze, isAnalyzing = false, analyzeError = null }
         onScanState={setScanState}
         onCapture={async ({ dataUrl, snapshots }) => {
           const optimizedDataUrl = await resizeDataUrl(dataUrl, MAX_OPTIMIZED_DIM);
-          handleCapture('A', {
+          requestCaptureReview('A', {
             optimizedDataUrl,
             originalDataUrl: dataUrl,
             snapshots: { ...EMPTY_SNAPSHOTS, ...(snapshots || {}) },
@@ -323,6 +453,9 @@ export const ScanFlow = ({ onAnalyze, isAnalyzing = false, analyzeError = null }
       {/* MÓVIL: columna única */}
       <div className="flex flex-col gap-4 md:hidden">
         <div className="flex flex-wrap justify-center gap-2 min-h-[2.25rem] items-center">
+          <span className="text-xs font-medium px-2.5 py-1 rounded-md bg-[var(--bg)] border border-[var(--border)] text-[var(--text-secondary)]">
+            {sideIndicator}
+          </span>
           <VisionStateBadge status={visionStatus} />
           <MotorConnectionBadge status={motorStatus} />
           <AnalyzeStateBadge status={analyzeStatus} />
@@ -336,11 +469,11 @@ export const ScanFlow = ({ onAnalyze, isAnalyzing = false, analyzeError = null }
         )}
         <ScanHelpTip tip={helpTip} />
         <ScanActionPanel
-          primaryLabel={hasA ? copy.scan.analyzeKey : copy.scan.captureA}
+          primaryLabel={hasA && hasB ? copy.scan.analyzeKey : hasA ? copy.scan.captureB : copy.scan.captureA}
           primaryDisabled={primaryDisabled}
           primaryLoading={primaryLoading}
-          onPrimary={hasA ? handleAnalyze : handleCaptureA}
-          secondaryLabel="Capturar lado B (opcional)"
+          onPrimary={hasA && hasB ? handleAnalyze : hasA ? () => setSideBExpanded(true) : (hasCamera ? handleCaptureA : () => inputRef.current?.click())}
+          secondaryLabel={copy.scan.captureB}
           secondaryVisible={hasA && !hasB}
           onSecondary={() => setSideBExpanded(true)}
         />
@@ -348,11 +481,18 @@ export const ScanFlow = ({ onAnalyze, isAnalyzing = false, analyzeError = null }
           isExpanded={sideBExpanded}
           onToggle={setSideBExpanded}
           photo={photos.B}
+          pendingReview={pendingReview}
           onCapture={handleCapture}
+          onCaptureForReview={requestCaptureReview}
+          onConfirmReview={confirmReview}
+          onCancelReview={cancelReview}
           onClear={handleClear}
           hasA={hasA}
         >
-          <SideBCameraBlock onCapture={handleCapture} />
+          <SideBCameraBlock
+            onCapture={handleCapture}
+            onCaptureForReview={requestCaptureReview}
+          />
         </OptionalSideBCollapse>
       </div>
 
