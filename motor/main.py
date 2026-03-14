@@ -208,13 +208,20 @@ async def add_request_id_middleware(request, call_next):
     if not request_id:
         request_id = str(uuid.uuid4())
     request.state.request_id = request_id
+    start_time = time.time()
     response = await call_next(request)
+    latency_ms = int((time.time() - start_time) * 1000)
     response.headers["X-Request-ID"] = request_id
+    response.headers["X-Process-Time-Ms"] = str(latency_ms)
+    status_code = getattr(response, "status_code", 0)
+    _log.info("http_request", extra={"request_id": request_id, "path": request.url.path, "status_code": status_code, "latency_ms": latency_ms})
     return response
 
+_cors_origins = os.getenv("CORS_ORIGINS", "").strip()
+CORS_ORIGINS_LIST = [x.strip() for x in _cors_origins.split(",") if x.strip()] if _cors_origins else ["*"]
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=CORS_ORIGINS_LIST,
     allow_credentials=False,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -782,6 +789,9 @@ def health():
     return {
         "ok": True,
         "uptime_s": round(time.time() - BOOT_TS, 2),
+        "timestamp": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+        "region": os.getenv("K_SERVICE", "local-dev"),
+        "build_sha": os.getenv("BUILD_SHA", "unknown"),
         "model_ready": bool(STATE["model_ready"]),
         "model_loading": bool(STATE["model_loading"]),
         "labels_count": int(STATE["labels_count"] or 0),
